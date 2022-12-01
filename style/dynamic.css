@@ -1,0 +1,90 @@
+#skinDiv {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0 0 0 / 61%);
+    overflow: hidden;
+    z-index: 11;
+    opacity: 0;
+    display: none;
+}
+
+#skinDiv2 {
+    background-image: url("../images/base/skinDiv.png");
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-position: right;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.skinBox {
+    top: 50%;
+    left: 50%;
+    display: flex;
+    position: relative;
+    overflow: scroll;
+    transform: translate(-29.5%, -46%);
+}
+
+.skinBox > div {
+    width: 30%;
+    height: 100%;
+    /*background-image: url("../../images/base/skin_bg.png");*/
+    background-size: 106%;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    flex: none;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 2%;
+}
+
+.skinBox > div > img {
+    width: 89%;
+    border-radius: 10px;
+    position: relative;
+    bottom: 1%;
+    left: 6%;
+}
+
+@media screen and (min-width: 1200px) {
+    #skinDiv2 {
+        height: 455px;
+        width: 828px;
+    }
+    .skinBox {
+        width: 499px;
+        height: 265px;
+    }
+    .skinBox > div > img {
+        width: 90%;
+        bottom: 3%;
+        left: 5%;
+    }
+}
+
+@media screen and (min-width: 700px) and (max-width: 1200px) {
+    #skinDiv2 {
+        height: 390px;
+        width: 690px;
+    }
+    .skinBox {
+        width: 411px;
+        height: 223px;
+    }
+}
+
+.switchSkinButton {
+    display: block;
+    width: 58px;
+    height: 50px;
+    position: absolute;
+    top: 60%;
+    right: 0;
+    background-image: url("../images/base/pifu.png");
+    background-size: 100% 100%;
+    z-index:10;
+    transform: translateY(-60%);
+}

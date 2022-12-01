@@ -1,0 +1,160 @@
+.editDynamic {
+    height: 40%;
+    width: 22%;
+    position: absolute;
+    top: 7%;
+    right: 2%;
+    z-index: 100;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
+    border: 1px solid black;
+
+    background: url(../../../theme/woodden/wood2.jpg);
+    background-repeat: repeat;
+    background-size: cover;
+    color: rgba(77, 60, 51,0.8);
+    text-shadow: none;
+    border-radius: 4px;
+}
+
+
+
+.editDynamic .group {
+    width: 48%;
+    margin: 2%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-items: center;
+}
+
+
+
+.editDynamic .btn {
+    text-align: center;
+    position: relative;
+    box-shadow: rgb(0 0 0 / 20%) 0 0 0 1px, rgb(0 0 0 / 45%) 0 3px 10px;
+    border-radius: 4px;
+    margin-top: 4%;
+}
+
+.adjust-position {
+    border: 2px solid black;
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    background: red;
+    position: absolute;
+    z-index: 1000;
+}
+
+.hidden-adjust {
+    display: none;
+}
+
+.adjust-select {
+    background: orange;
+}
+
+.editDynamic .posNum {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #f1f1f1;
+}
+.editDynamic .posNum span {
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: top;
+    margin-left: 2px;
+}
+
+.editDynamic .posNum input{
+    width: 32px;
+    height: 16px;
+    line-height: 20px;
+    text-align: center;
+    border-radius: 4px;
+    border: 1px solid #515151;
+    color: #323232;
+    vertical-align: top;
+    margin-left: -0.08rem;
+    border-left-style: none;
+    box-sizing: content-box;
+
+}
+
+.editDynamic .pointer {
+    cursor: pointer;
+}
+
+.editDynamic .posNum i{
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    border-radius: 4px;
+    display: inline-block;
+    border: 1px solid #515151;
+    color: #323232;
+    cursor: pointer;
+}
+
+.editDynamic .posNum .plus {
+    border-left-style: none;
+}
+
+.adjust-position-select {
+    box-shadow: 1px 1px 2px 2px rgb(64 242 55 / 70%), 2px 2px 3px 3px rgb(242 161 55 / 80%), 3px 3px 4px 4px rgb(21 93 240 / 80%), 0 0 5px 5px rgb(240 21 67 / 80%);
+}
+
+
+.adjustDirection {
+    text-align: center;
+    position: absolute;
+    top: 34%;
+    left: 2%;
+    width: 135px;
+    height: 135px;
+    z-index: 100;
+}
+.adjustDirection .directionDiv {
+    position: relative;
+    width: 45px;
+    height: 45px;
+}
+
+.adjustDirection .directionDiv i {
+    border: solid black;
+    border-width: 0 3px 3px 0;
+    display: inline-block;
+    padding: 4px;
+}
+
+.adjustDirection .directionDiv button {
+    width: 75%;
+    height: 75%;
+}
+
+.adjustDirection .directionDiv .right {
+    transform: rotate(-45deg);
+    -webkit-transform: rotate(-45deg);
+}
+
+.adjustDirection .directionDiv .left {
+    transform: rotate(135deg);
+    -webkit-transform: rotate(135deg);
+}
+
+.adjustDirection .directionDiv .up {
+    transform: rotate(-135deg);
+    -webkit-transform: rotate(-135deg);
+}
+
+.adjustDirection .directionDiv .down {
+    transform: rotate(45deg);
+    -webkit-transform: rotate(45deg);
+}
+
