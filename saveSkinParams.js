@@ -1,2 +1,3 @@
-window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.saveSkinParams =
-{"hetaihou":{"蛇蝎为心":{"gongji":{"x":[5,0.73],"y":[0,0.5],"scale":0.46}},"战场绝版":{"gongji":{"x":[4,0.5],"y":[0,0.56],"scale":0.7}}},"re_huangyueying":{"木牛流马":{"gongji":{"x":[4,0.8],"y":[0,0.61],"scale":0.53}}},"re_daqiao":{"衣垂绿川":{"x":[60,0.55],"y":[0,0.18],"scale":0.5}},"zhanglu":{"张鲁静皮":{"x":[-70,0.87],"y":[15,0.58],"scale":0.35}}}}
+window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.saveSkinParams = {}
+
+}

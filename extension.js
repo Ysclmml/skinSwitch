@@ -178,10 +178,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 if (keys.length < 2) return;
                                 // 创建换肤按钮, 也就是右上角的换肤功能.
                                 let div = ui.create.div('.switchSkinButton', ui.arena);
-                                div.onclick = function () {
+                                div.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                                     skinSwitch.dynamic.skinDivShowOrHide(true);
                                     game.playAudio("..", "extension", "皮肤切换/audio/game", "Menu.mp3");
-                                };
+                                })
                                 let hf = skinSwitch.huanfu;
                                 // 播放换肤动画
                                 dcdAnim.loadSpine(hf.name, "skel");
@@ -797,23 +797,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                         var skinDiv = ui.create.div("#skinDiv", ui.window);
                         skinSwitch.dynamic.skinDiv = skinDiv;
-                        skinDiv.onclick = function () {
+                        skinDiv.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                             skinSwitch.dynamic.skinDivShowOrHide()
-                        }
+                        })
                         var skinDiv2 = ui.create.div("#skinDiv2", skinDiv);
-                        skinDiv2.onclick = function (e) {
+                        skinDiv2.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function (e) {
                             e.stopPropagation();
-                        }
+                        })
                         var skinBox = ui.create.div(".skinBox", skinDiv2);
-                        skinBox.onclick = function (e) {
+                        skinBox.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function (e) {
                             e.stopPropagation();
-                        }
+                        })
                         var keys = Object.keys(skins)
                         for (let i = 0; i < keys.length; i++) {
                             var t = ui.create.div(".engSkin",skinBox);
-                            t.onclick = function (e) {
+                            t.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function (e) {
                                 e.stopPropagation();
-                            }
+                            })
                             let path = skinSwitch.url + "/images/character/" + skinSwitch.dynamic.judgingRealName(name) + "/" + keys[i] + ".png";
                             let img = document.createElement("img");
                             let saveDynamic = lib.config[skinSwitch.configKey.dynamicSkin];
@@ -827,11 +827,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
 
                             img.alt = keys[i];
-                            img.onclick = function (e) {
+                            img.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function (e) {
                                 e.stopPropagation();
                                 this.parentNode.alt = this.alt;
                                 skinSwitch.dynamic.selectSkin(this.parentNode);
-                            }
+                            })
                             img.src = path;
                             img.onerror = function () {
                                 this.src = skinSwitch.url + "/images/character/小杀.png";
@@ -994,7 +994,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         if (res.dynamic.gongji && res.dynamic.gongji.name) {
                                             playName = res.dynamic.gongji.name
                                         } else {
-                                            playName = res.dynamic.nam
+                                            playName = res.dynamic.name
                                         }
                                         if (res.dynamic.localePath && playName.startsWith(res.dynamic.localePath)) {
                                             playName = playName.substr(res.dynamic.localePath.length + 1, playName.length)
@@ -1147,7 +1147,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     let isClosed = false   // 全局信号, 通知关闭, 停止渲染
 
-                    document.getElementById('closePreviewWindow').onclick = function () {
+                    document.getElementById('closePreviewWindow').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                         // 删除自己当前节点即可
                         let self = document.getElementById('previewWindowDiv')
                         let parent = self.parentElement
@@ -1157,7 +1157,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             // 延时删除节点, 等待最后一次渲染完成
                             parent.removeChild(self)
                         }, 200)
-                    }
+                    })
 
                     function init () {
                         // Setup canvas and WebGL context. We pass alpha: false to canvas.getContext() so we don't use premultiplied alpha when
@@ -1952,16 +1952,16 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 }
 
                 // 给几个按钮添加移动位置事件
-                daijiXPosNum.querySelector('.minus').onclick = changeXYPos('daiji', 'x', -1)
-                daijiXPosNum.querySelector('.plus').onclick = changeXYPos('daiji', 'x', 1)
-                daijiYPosNum.querySelector('.minus').onclick = changeXYPos('daiji', 'y', -1)
-                daijiYPosNum.querySelector('.plus').onclick = changeXYPos('daiji', 'y', 1)
-                chuKuangXPosNum.querySelector('.minus').onclick = changeXYPos('chukuang', 'x', -1)
-                chuKuangXPosNum.querySelector('.plus').onclick = changeXYPos('chukuang', 'x', 1)
-                chuKuangYPosNum.querySelector('.minus').onclick = changeXYPos('chukuang', 'y', -1)
-                chuKuangYPosNum.querySelector('.plus').onclick = changeXYPos('chukuang', 'y', 1)
+                daijiXPosNum.querySelector('.minus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('daiji', 'x', -1))
+                daijiXPosNum.querySelector('.plus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('daiji', 'x', 1))
+                daijiYPosNum.querySelector('.minus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('daiji', 'y', -1))
+                daijiYPosNum.querySelector('.plus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('daiji', 'y', 1))
+                chuKuangXPosNum.querySelector('.minus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('chukuang', 'x', -1))
+                chuKuangXPosNum.querySelector('.plus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('chukuang', 'x', 1))
+                chuKuangYPosNum.querySelector('.minus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('chukuang', 'y', -1))
+                chuKuangYPosNum.querySelector('.plus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('chukuang', 'y', 1))
 
-                daijiEdit.onclick = function () {
+                daijiEdit.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                     selfLoopPlay('daiji')
                     if (currentPlay !== 'daiji') {
                         // 隐藏调整框
@@ -1970,9 +1970,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         daijiAdjust.classList.remove('adjust-select')
                     }
                     currentPlay = 'daiji'
-                }
+                })
 
-                daijiAdjust.onclick = function () {
+                daijiAdjust.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                     // 只有当前播放动画是出框的时候才可以调整位置
                     if (currentPlay === 'chukuang') {
                         return
@@ -1996,9 +1996,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     // }
                     //
 
-                }
+                })
 
-                chuKuangEdit.onclick = function () {
+                chuKuangEdit.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                     // 先调整编辑出框
                     selfLoopPlay('chukuang')
 
@@ -2010,9 +2010,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
 
                     currentPlay = 'chukuang'
-                }
+                })
 
-                chuKuangAdjust.onclick = function () {
+                chuKuangAdjust.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
 
                     // 只有当前播放动画是出框的时候才可以调整位置
                     if (currentPlay === 'daiji') {
@@ -2035,7 +2035,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     //     getCurPosition('chukuang')
                     //     show(adjustPos)
                     // }
-                }
+                })
 
                 let copyToClipboard = function (data) {
                     // 保存当前动皮参数
@@ -2138,7 +2138,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
                 }
 
-                daijiSave.onclick = function () {
+                daijiSave.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                     // 获取当前的位置参数
                     getDynamicPos('daiji', function (e) {
                         // 同时写入到文件中
@@ -2147,14 +2147,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             copyToClipboard(e.data)
                         }
                     })
-                }
-                chuKuangSave.onclick = function () {
+                })
+                chuKuangSave.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                     // 获取当前的位置参数
                     getDynamicPos('chukuang', function (e) {
                         saveToFile(e.data, 'chukuang')
                         copyToClipboard(e.data)
                     })
-                }
+                })
 
                 // 初始化动皮相对位置.
                 // adjustPos = ui.create.div('.adjust-position .hidden-adjust', ui.window)
