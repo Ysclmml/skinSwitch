@@ -791,6 +791,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     temp: "",
                     value: "",
                 },
+                // 触发以下武器技能不触发角色的特殊动画
                 filterSkills: [
                     'zhangba_skill', 'guding_skill',
                     'zhuque_skill', 'hanbing_skill',
@@ -981,10 +982,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         obj.style.opacity = 1;
                     },
                 },
-                renderOnMessage: {
-                    dynamicEvents: {},
+
+                // 统一管理向worker发送消息后, 防止worker回复的消息被覆盖而出的异常
+                rendererOnMessage: {
+                    dynamicEvents: {},  // 内部动皮事件管理器
                     onmessage: function (e) {
-                        let _this = skinSwitch.renderOnMessage
+                        let _this = skinSwitch.rendererOnMessage
                         let data = e.data
 
                         if (typeof data !== "object") return
@@ -999,7 +1002,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         }
                     },
-                   addListener: function (player, type, callback) {
+                    /**
+                     * 添加worker对应消息类型的回调, 当worker发出对应的消息, 当前线程(主线程)调用对应的回调函数
+                     * @param player 当前角色
+                     * @param type  处理worker传回发回的消息类型
+                     * @param callback  回调
+                     * @param bind  调用回调函数时绑定this的对象, 默认为player
+                     */
+                   addListener: function (player, type, callback, bind) {
                         let id = player.dynamic.id
                         let renderer = player.dynamic.renderer
                         if (renderer.onmessage !== this.onmessage) {
@@ -1008,8 +1018,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (!(id in this.dynamicEvents)) {
                             this.dynamicEvents[id] = {}
                         }
-                        // 直接覆盖之前的消息
-                        this.dynamicEvents[id][type] = callback.bind(player)
+                        // 直接覆盖之前的消息, 并且绑定回调函数的this为player
+                        this.dynamicEvents[id][type] = callback.bind(bind || player)
                         // if (!(type in this.dynamicEvents[id])) {
                         //     this.dynamicEvents[id][type] = callback.bind(player)
                         // }
@@ -1020,24 +1030,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     _onchangeDynamicWindow: function(player, res) {
                         let canvas = player.getElementsByClassName("animation-player")[0];
                         let dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
-                        skinSwitch.renderOnMessage.addListener(player, 'chukuangFirst', function (e) {
-                            let canvas = player.getElementsByClassName("animation-player")[0];
-                            let dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                        skinSwitch.rendererOnMessage.addListener(player, 'chukuangFirst', function (data) {
                             // 直接设置属性, 第一优先生效, 这里播放攻击动画, 调整播放canvas的位置, 不再跟随皮肤框,也就是动皮出框
                             dynamicWrap.style.zIndex = "63";
                             canvas.style.position = "fixed";
+                            canvas.style.height = 0;
                             canvas.style.height = "100%";
                             canvas.style.width = "100%";
                             player.style.zIndex = 10;
-
                             // 防止闪烁,
                             canvas.classList.add('hidden')
-                            setTimeout(() => {
-                                canvas.classList.remove('hidden')
-                            }, 250)
+                            // setTimeout(() => {
+                            //     canvas.classList.remove('hidden')
+                            // }, 250)
                         })
 
-                        skinSwitch.renderOnMessage.addListener(player, 'canvasRecover', function (e) {
+                        skinSwitch.rendererOnMessage.addListener(player, 'canvasRecover', function (data) {
                             dynamicWrap.style.zIndex = "60";
                             canvas.style.height = null;
                             canvas.style.width = null;
@@ -1046,7 +1054,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             player.GongJi = false;
                         })
 
-                        skinSwitch.renderOnMessage.addListener(player, 'chukuangSecond', function (e) {
+                        skinSwitch.rendererOnMessage.addListener(player, 'chukuangSecond', function (data) {
+                            // 这里表示动画已经准备好了, 可以显示
+                            setTimeout(()=>{
+                                canvas.classList.remove('hidden')
+                            }, 100)
+
                             let playName
                             if (res.dynamic.gongji && res.dynamic.gongji.name) {
                                 playName = res.dynamic.gongji.name
@@ -1058,63 +1071,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                             game.playAudio("..", "extension", "皮肤切换/audio/effect", playName + ".mp3");
                         })
-
-                        // return function (e) {
-                        //     window[player.name] = player
-                        //     // 这里必须写在里面, 不然就会发生错误
-                        //     console.log('player==, change.. firsteeeee', player.dynamic, e)
-                        //     let renderer = player.dynamic.renderer;
-                        //     let canvas = player.getElementsByClassName("animation-player")[0];
-                        //     let dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
-                        //     if (e.data) {
-                        //         // 直接设置属性, 第一优先生效, 这里播放攻击动画, 调整播放canvas的位置, 不再跟随皮肤框,也就是动皮出框
-                        //         dynamicWrap.style.zIndex = "63";
-                        //         canvas.style.position = "fixed";
-                        //         canvas.style.height = "100%";
-                        //         canvas.style.width = "100%";
-                        //         player.style.zIndex = 10;
-                        //
-                        //         // 防止闪烁,
-                        //         canvas.classList.add('hidden')
-                        //         setTimeout(() => {
-                        //             canvas.classList.remove('hidden')
-                        //         }, 250)
-                        //
-                        //         // 动画开始播放, worker会发送第二个消息, .
-                        //         renderer.onmessage = function (e) {
-                        //             console.log('second eeeeee====', e)
-                        //             if (e.data) {
-                        //                 let playName
-                        //                 if (res.dynamic.gongji && res.dynamic.gongji.name) {
-                        //                     playName = res.dynamic.gongji.name
-                        //                 } else {
-                        //                     playName = res.dynamic.name
-                        //                 }
-                        //                 if (res.dynamic.localePath && playName.startsWith(res.dynamic.localePath)) {
-                        //                     playName = playName.substr(res.dynamic.localePath.length + 1, playName.length)
-                        //                 }
-                        //                 game.playAudio("..", "extension", "皮肤切换/audio/effect", playName + ".mp3");
-                        //                 console.log(renderer.onmessage.toString(), 'xxx', 'player===', player)
-                        //                 // worker发送第三个消息, 回复动皮原本的位置
-                        //                 renderer.onmessage = function (e) {
-                        //                     console.log('lasteeeeeeee====', e)
-                        //                     dynamicWrap.style.zIndex = "60";
-                        //                     canvas.style.height = null;
-                        //                     canvas.style.width = null;
-                        //                     canvas.style.position = null;
-                        //                     player.style.zIndex = 4;
-                        //                     player.GongJi = false;
-                        //                 };
-                        //             }
-                        //         };
-                        //     } else {
-                        //         dynamicWrap = null;
-                        //         canvas = null;
-                        //         renderer = null;
-                        //         res = null
-                        //         return player.GongJi = false;
-                        //     }
-                        // }
                     },
                     /**
                      * 请求worker播放对应的动画
@@ -1137,7 +1093,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 needHide: res.needHide,
                                 me: me,
                                 direction: me ? false : skinSwitch.getDirection(player),
-                                player: pp
+                                player: pp,
+                                selfPhase: _status.currentPhase === player  // 是否是自己的回合
                             })
                         }
                         return res
@@ -1146,21 +1103,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let r = this.action(player, 'TeShu')
                         let _this = this
                         if (r) {
-                            console.log('player teshu......', player.name)
-                            // player.dynamic.renderer.onmessage = function (e) {
-                            //     let data = e.data
-                            //     if (data.message === 'action' && data.chukuang) {
-                            //         player.dynamic.renderer.onmessage = _this._onchangeDynamicWindow(player, r)
-                            //     }
-                            // }
+                            skinSwitch.rendererOnMessage.addListener(player, 'teshuChuKuang', function (data) {
+                                if (data.chukuang) {
+                                    this._onchangeDynamicWindow(player, r)
+                                }
+                            }, this)
                         }
                     },
                     actionGongJi: function(player) {
-                        let _this = this
                         let r = this.action(player, 'GongJi')
                         if (r) {
                             this._onchangeDynamicWindow(player, r)
-                            // player.dynamic.renderer.onmessage = _this._onchangeDynamicWindow(player, r)
                         }
                     },
                     debug: function (player, mode) {
@@ -1827,32 +1780,30 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 let getDynamicPos = function (mode, func) {
                     skinSwitch.postMsgApi.position(player, mode)
-                    renderer.onmessage = function (e) {
-                        func(e)
-                    }
+                    skinSwitch.rendererOnMessage.addListener(player, 'position', func)
                 }
 
                 let getCurPosition = function (mode) {
-                    getDynamicPos(mode, function (e) {
-                        if (e.data) {
-                            updateAdjustPos(e.data, mode)
+                    getDynamicPos(mode, function (data) {
+                        if (data) {
+                            updateAdjustPos(data, mode)
 
                             // 同时改变输入框的值
                             if (mode === 'daiji') {
-                                daijiXPosNum.querySelector('input').value = e.data.x[0]
-                                daijiYPosNum.querySelector('input').value = e.data.y[0]
-                                daijiScale.querySelector('input').value = e.data.scale
-                                if (e.data.angle !== undefined) {
-                                    daijiAngle.querySelector('input').value = e.data.angle
+                                daijiXPosNum.querySelector('input').value = data.x[0]
+                                daijiYPosNum.querySelector('input').value = data.y[0]
+                                daijiScale.querySelector('input').value = data.scale
+                                if (data.angle !== undefined) {
+                                    daijiAngle.querySelector('input').value = data.angle
                                 } else {
                                     daijiAngle.querySelector('input').value = ''
                                 }
-                                daijiPos.querySelector('span').innerHTML = `x:${e.data.x}<br/>y:${e.data.y}`
+                                daijiPos.querySelector('span').innerHTML = `x:${data.x}<br/>y:${data.y}`
                             } else {
-                                chuKuangXPosNum.querySelector('input').value = e.data.x[0]
-                                chuKuangYPosNum.querySelector('input').value = e.data.y[0]
-                                chuKuangScale.querySelector('input').value = e.data.scale
-                                chuKuangPos.querySelector('span').innerHTML = `x:${e.data.x}<br/>y:${e.data.y}`
+                                chuKuangXPosNum.querySelector('input').value = data.x[0]
+                                chuKuangYPosNum.querySelector('input').value = data.y[0]
+                                chuKuangScale.querySelector('input').value = data.scale
+                                chuKuangPos.querySelector('span').innerHTML = `x:${data.x}<br/>y:${data.y}`
                             }
                         }
                     })
@@ -1863,7 +1814,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
 
                     skinSwitch.postMsgApi.debug(player, mode)
-                    skinSwitch.renderOnMessage.addListener(player, 'debugChuKuang', function (e) {
+                    skinSwitch.rendererOnMessage.addListener(player, 'debugChuKuang', function (e) {
                         dynamicWrap.style.zIndex = "63";
                         canvas.style.position = "fixed";
                         canvas.style.height = "100%";
@@ -1873,7 +1824,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         }, 250)
                     })
-                    skinSwitch.renderOnMessage.addListener(player, 'canvasRecover', function (e) {
+                    skinSwitch.rendererOnMessage.addListener(player, 'canvasRecover', function (e) {
                         dynamicWrap.style.zIndex = "60";
                         canvas.style.height = null;
                         canvas.style.width = null;
@@ -2232,20 +2183,20 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 daijiSave.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                     // 获取当前的位置参数
-                    getDynamicPos('daiji', function (e) {
+                    getDynamicPos('daiji', function (data) {
                         // 同时写入到文件中
-                        if (e.data) {
-                            saveToFile(e.data, 'daiji')
-                            copyToClipboard(e.data)
+                        if (data) {
+                            saveToFile(data, 'daiji')
+                            copyToClipboard(data)
                         }
                     })
                 })
                 chuKuangSave.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                     // 获取当前的位置参数
-                    getDynamicPos('chukuang', function (e) {
-                        if (e.data) {
-                            saveToFile(e.data, 'chukuang')
-                            copyToClipboard(e.data)
+                    getDynamicPos('chukuang', function (data) {
+                        if (data) {
+                            saveToFile(data, 'chukuang')
+                            copyToClipboard(data)
                         }
                     })
                 })
