@@ -146,6 +146,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             content: function () {
                                 player.GongJi = true;
                                 // 判定当前是否可以攻击, 可能是国战有隐藏武将
+                                console.log('gongji====', Object.assign({}, player))
                                 let res = skinSwitch.dynamic.checkCanBeAction(player);
                                 if (!res) return player.GongJi = false;
                                 else {
@@ -242,6 +243,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                         Player.init = function (character, character2, skill) {
+                            console.log('init======', character, 'xxxxxxxxx')
                             // EngEX设计的动皮露头外框, 还是比较好看的.
                             let isYh = this.getElementsByClassName("skinYh");
                             if (isYh.length > 0) {
@@ -266,7 +268,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 decadeUI.MAX_DYNAMIC = MAX_DYNAMIC;
                             }
 
-                            if (this.dynamic) this.stopDynamic();
+                            // 这里会有一个bug, 就是在自定义的乱斗模式里, 同一个角色会快速初始化两次, 所以导致当骨骼还没完全加载好,就取执行stop函数,导致删除node失败
+                            // 最后会出现重影,就是有两个apnode同时渲染
+                            if (this.dynamic) {
+                                if (this.dynamic.primary) this.stopDynamic(true, false)
+                                if (this.dynamic.deputy) this.stopDynamic(false, true)
+                            }
                             let showDynamic = (this.dynamic || CUR_DYNAMIC < MAX_DYNAMIC) && duicfg.dynamicSkin;
                             let y = false;
                             if (showDynamic && _status.mode != null) {
@@ -327,8 +334,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                                     // 检测皮肤是否放在其他位置, 更换皮肤名字
                                     if (skin.localePath) {
-                                        skin.name = skin.localePath + '/' + skin.name
-                                        skin.background = skin.localePath + '/' + skin.background
+                                        // 防止同一个武将重复初始化出错找不到骨骼
+                                        if (!skin.name.startsWith(skin.localePath + '/')) {
+                                            skin.name = skin.localePath + '/' + skin.name
+                                            skin.background = skin.localePath + '/' + skin.background
+                                        }
                                     }
 
                                     this.playDynamic(skin, i === 1);
@@ -971,53 +981,140 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         obj.style.opacity = 1;
                     },
                 },
+                renderOnMessage: {
+                    dynamicEvents: {},
+                    onmessage: function (e) {
+                        let _this = skinSwitch.renderOnMessage
+                        let data = e.data
+
+                        if (typeof data !== "object") return
+                        if (data) {
+                            // 读取data.id, 来确定是那个角色发出的消息的返回
+                            let id = data.id
+                            let type = data.type
+                            if (id in _this.dynamicEvents && type in _this.dynamicEvents[id]) {
+                                // 调用之前注册的方法
+                                _this.dynamicEvents[id][type](data)
+                            }
+
+                        }
+                    },
+                   addListener: function (player, type, callback) {
+                        let id = player.dynamic.id
+                        let renderer = player.dynamic.renderer
+                        if (renderer.onmessage !== this.onmessage) {
+                            renderer.onmessage = this.onmessage
+                        }
+                        if (!(id in this.dynamicEvents)) {
+                            this.dynamicEvents[id] = {}
+                        }
+                        // 直接覆盖之前的消息
+                        this.dynamicEvents[id][type] = callback.bind(player)
+                        // if (!(type in this.dynamicEvents[id])) {
+                        //     this.dynamicEvents[id][type] = callback.bind(player)
+                        // }
+                    }
+                },
                 // 向worker通信发送的消息api, 统一管理
                 postMsgApi: {
                     _onchangeDynamicWindow: function(player, res) {
-                        let renderer = player.dynamic.renderer;
                         let canvas = player.getElementsByClassName("animation-player")[0];
                         let dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
-                        return function (e) {
-                            if (e.data) {
-                                // 直接设置属性, 第一优先生效, 这里播放攻击动画, 调整播放canvas的位置, 不再跟随皮肤框,也就是动皮出框
-                                dynamicWrap.style.zIndex = "63";
-                                canvas.style.position = "fixed";
-                                canvas.style.height = "100%";
-                                canvas.style.width = "100%";
-                                player.style.zIndex = 10;
+                        skinSwitch.renderOnMessage.addListener(player, 'chukuangFirst', function (e) {
+                            let canvas = player.getElementsByClassName("animation-player")[0];
+                            let dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                            // 直接设置属性, 第一优先生效, 这里播放攻击动画, 调整播放canvas的位置, 不再跟随皮肤框,也就是动皮出框
+                            dynamicWrap.style.zIndex = "63";
+                            canvas.style.position = "fixed";
+                            canvas.style.height = "100%";
+                            canvas.style.width = "100%";
+                            player.style.zIndex = 10;
 
-                                // 动画播放完毕, worker会发送第二个消息, 回复动皮原本的位置.
-                                renderer.onmessage = function (e) {
-                                    if (e.data) {
-                                        console.log('playaudio', res.dynamic)
-                                        let playName
-                                        if (res.dynamic.gongji && res.dynamic.gongji.name) {
-                                            playName = res.dynamic.gongji.name
-                                        } else {
-                                            playName = res.dynamic.name
-                                        }
-                                        if (res.dynamic.localePath && playName.startsWith(res.dynamic.localePath)) {
-                                            playName = playName.substr(res.dynamic.localePath.length + 1, playName.length)
-                                        }
-                                        game.playAudio("..", "extension", "皮肤切换/audio/effect", playName + ".mp3");
-                                        renderer.onmessage = function (e) {
-                                            dynamicWrap.style.zIndex = "60";
-                                            canvas.style.height = null;
-                                            canvas.style.width = null;
-                                            canvas.style.position = null;
-                                            player.style.zIndex = 4;
-                                            player.GongJi = false;
-                                        };
-                                    }
-                                };
+                            // 防止闪烁,
+                            canvas.classList.add('hidden')
+                            setTimeout(() => {
+                                canvas.classList.remove('hidden')
+                            }, 250)
+                        })
+
+                        skinSwitch.renderOnMessage.addListener(player, 'canvasRecover', function (e) {
+                            dynamicWrap.style.zIndex = "60";
+                            canvas.style.height = null;
+                            canvas.style.width = null;
+                            canvas.style.position = null;
+                            player.style.zIndex = 4;
+                            player.GongJi = false;
+                        })
+
+                        skinSwitch.renderOnMessage.addListener(player, 'chukuangSecond', function (e) {
+                            let playName
+                            if (res.dynamic.gongji && res.dynamic.gongji.name) {
+                                playName = res.dynamic.gongji.name
                             } else {
-                                dynamicWrap = null;
-                                canvas = null;
-                                renderer = null;
-                                res = null
-                                return player.GongJi = false;
+                                playName = res.dynamic.name
                             }
-                        }
+                            if (res.dynamic.localePath && playName.startsWith(res.dynamic.localePath)) {
+                                playName = playName.substr(res.dynamic.localePath.length + 1, playName.length)
+                            }
+                            game.playAudio("..", "extension", "皮肤切换/audio/effect", playName + ".mp3");
+                        })
+
+                        // return function (e) {
+                        //     window[player.name] = player
+                        //     // 这里必须写在里面, 不然就会发生错误
+                        //     console.log('player==, change.. firsteeeee', player.dynamic, e)
+                        //     let renderer = player.dynamic.renderer;
+                        //     let canvas = player.getElementsByClassName("animation-player")[0];
+                        //     let dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                        //     if (e.data) {
+                        //         // 直接设置属性, 第一优先生效, 这里播放攻击动画, 调整播放canvas的位置, 不再跟随皮肤框,也就是动皮出框
+                        //         dynamicWrap.style.zIndex = "63";
+                        //         canvas.style.position = "fixed";
+                        //         canvas.style.height = "100%";
+                        //         canvas.style.width = "100%";
+                        //         player.style.zIndex = 10;
+                        //
+                        //         // 防止闪烁,
+                        //         canvas.classList.add('hidden')
+                        //         setTimeout(() => {
+                        //             canvas.classList.remove('hidden')
+                        //         }, 250)
+                        //
+                        //         // 动画开始播放, worker会发送第二个消息, .
+                        //         renderer.onmessage = function (e) {
+                        //             console.log('second eeeeee====', e)
+                        //             if (e.data) {
+                        //                 let playName
+                        //                 if (res.dynamic.gongji && res.dynamic.gongji.name) {
+                        //                     playName = res.dynamic.gongji.name
+                        //                 } else {
+                        //                     playName = res.dynamic.name
+                        //                 }
+                        //                 if (res.dynamic.localePath && playName.startsWith(res.dynamic.localePath)) {
+                        //                     playName = playName.substr(res.dynamic.localePath.length + 1, playName.length)
+                        //                 }
+                        //                 game.playAudio("..", "extension", "皮肤切换/audio/effect", playName + ".mp3");
+                        //                 console.log(renderer.onmessage.toString(), 'xxx', 'player===', player)
+                        //                 // worker发送第三个消息, 回复动皮原本的位置
+                        //                 renderer.onmessage = function (e) {
+                        //                     console.log('lasteeeeeeee====', e)
+                        //                     dynamicWrap.style.zIndex = "60";
+                        //                     canvas.style.height = null;
+                        //                     canvas.style.width = null;
+                        //                     canvas.style.position = null;
+                        //                     player.style.zIndex = 4;
+                        //                     player.GongJi = false;
+                        //                 };
+                        //             }
+                        //         };
+                        //     } else {
+                        //         dynamicWrap = null;
+                        //         canvas = null;
+                        //         renderer = null;
+                        //         res = null
+                        //         return player.GongJi = false;
+                        //     }
+                        // }
                     },
                     /**
                      * 请求worker播放对应的动画
@@ -1049,19 +1146,21 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let r = this.action(player, 'TeShu')
                         let _this = this
                         if (r) {
-                            player.dynamic.renderer.onmessage = function (e) {
-                                let data = e.data
-                                if (data.message === 'action' && data.chukuang) {
-                                    player.dynamic.renderer.onmessage = _this._onchangeDynamicWindow(player, r)
-                                }
-                            }
+                            console.log('player teshu......', player.name)
+                            // player.dynamic.renderer.onmessage = function (e) {
+                            //     let data = e.data
+                            //     if (data.message === 'action' && data.chukuang) {
+                            //         player.dynamic.renderer.onmessage = _this._onchangeDynamicWindow(player, r)
+                            //     }
+                            // }
                         }
                     },
                     actionGongJi: function(player) {
                         let _this = this
                         let r = this.action(player, 'GongJi')
                         if (r) {
-                            player.dynamic.renderer.onmessage = _this._onchangeDynamicWindow(player, r)
+                            this._onchangeDynamicWindow(player, r)
+                            // player.dynamic.renderer.onmessage = _this._onchangeDynamicWindow(player, r)
                         }
                     },
                     debug: function (player, mode) {
@@ -1764,30 +1863,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
 
                     skinSwitch.postMsgApi.debug(player, mode)
-                    renderer.onmessage = function (e) {
-                        // 没有攻击动画播放, 恢复原样
-                        if (!e.data) {
-                            dynamicWrap.style.zIndex = "60";
-                            canvas.style.height = null;
-                            canvas.style.width = null;
-                            canvas.style.position = null;
-                            player.style.zIndex = 4;
-                        } else {
-                            if (mode === 'daiji') {
-                                dynamicWrap.style.zIndex = "60";
-                                canvas.style.height = null;
-                                canvas.style.width = null;
-                                canvas.style.position = null;
-                                player.style.zIndex = 4;
-                            } else {
-                                dynamicWrap.style.zIndex = "63";
-                                canvas.style.position = "fixed";
-                                canvas.style.height = "100%";
-                                canvas.style.width = "100%";
-                                player.style.zIndex = 10;
-                            }
-                        }
-                    }
+                    skinSwitch.renderOnMessage.addListener(player, 'debugChuKuang', function (e) {
+                        dynamicWrap.style.zIndex = "63";
+                        canvas.style.position = "fixed";
+                        canvas.style.height = "100%";
+                        canvas.style.width = "100%";
+                        player.style.zIndex = 10;
+                        setTimeout(() => {
+
+                        }, 250)
+                    })
+                    skinSwitch.renderOnMessage.addListener(player, 'canvasRecover', function (e) {
+                        dynamicWrap.style.zIndex = "60";
+                        canvas.style.height = null;
+                        canvas.style.width = null;
+                        canvas.style.position = null;
+                        player.style.zIndex = 4;
+                    })
 
                 }
 
@@ -2123,8 +2215,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (isWrite) {
                             // 写到文件
                             let str = `window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.saveSkinParams =\n`
-                            str += JSON.stringify(skinSwitch.saveSkinParams)
-                            str += '}'
+                            str += JSON.stringify(skinSwitch.saveSkinParams, null, 4)
+                            str += '\n}'
                             game.writeFile(str, skinSwitch.path, 'saveSkinParams.js', function () {
                                 console.log('写入saveSkinParams.js成功')
                                 skinSwitchMessage.show({
@@ -2151,8 +2243,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 chuKuangSave.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                     // 获取当前的位置参数
                     getDynamicPos('chukuang', function (e) {
-                        saveToFile(e.data, 'chukuang')
-                        copyToClipboard(e.data)
+                        if (e.data) {
+                            saveToFile(e.data, 'chukuang')
+                            copyToClipboard(e.data)
+                        }
                     })
                 })
 
