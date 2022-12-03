@@ -243,7 +243,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                         Player.init = function (character, character2, skill) {
-                            console.log('init======', character, 'xxxxxxxxx')
                             // EngEX设计的动皮露头外框, 还是比较好看的.
                             let isYh = this.getElementsByClassName("skinYh");
                             if (isYh.length > 0) {
@@ -799,6 +798,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'guanshi_skill', 'cixiong_skill',
                     'fangtian_skill', 'qilin_skill',
                     'qinggang_skill', 'zhuge_skill',
+                    'bagua_skill'
                 ],
                 dynamic: {
                     initSwitch: function (player,skins) {
@@ -1083,7 +1083,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let res = skinSwitch.dynamic.checkCanBeAction(player)
                         let pp = skinSwitch.getCoordinate(player, true)
                         let me = player === game.me
-                        if (res) {
+                        if (res && res.dynamic) {
                             player.dynamic.renderer.postMessage({
                                 message: 'ACTION',
                                 id: player.dynamic.id,
@@ -1097,6 +1097,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 player: pp,
                                 selfPhase: _status.currentPhase === player  // 是否是自己的回合
                             })
+                        } else {
+                            player.GongJi = false
                         }
                         return res
                     },
@@ -1118,6 +1120,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                     },
                     debug: function (player, mode) {
+                        if (!(player.dynamic && player.dynamic.primary)) {
+                            skinSwitchMessage.show({
+                                type: 'error',
+                                text: '只有当前角色是动皮时才可以编辑动皮参数',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
                         // 当前角色位置
                         let pp = skinSwitch.getCoordinate(player, true)
                         player.dynamic.renderer.postMessage({
@@ -1134,6 +1144,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         })
                     },
                     position: function (player, mode) {
+                        if (!(player.dynamic && player.dynamic.primary)) {
+                            skinSwitchMessage.show({
+                                type: 'error',
+                                text: '只有当前角色是动皮时才可以编辑动皮参数',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
                         player.dynamic.renderer.postMessage({
                             message: "POSITION",
                             id: player.dynamic.id,
@@ -1142,6 +1160,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         })
                     },
                     adjust: function (player, mode, posData) {
+                        if (!(player.dynamic && player.dynamic.primary)) {
+                            skinSwitchMessage.show({
+                                type: 'error',
+                                text: '只有当前角色是动皮时才可以编辑动皮参数',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
                         player.dynamic.renderer.postMessage({
                             message: "ADJUST",
                             id: player.dynamic.id,
@@ -1155,6 +1181,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         })
                     },
                     show: function (player, skinId) {
+                        if (!(player.dynamic && player.dynamic.primary)) {
+                            skinSwitchMessage.show({
+                                type: 'error',
+                                text: '只有当前角色是动皮时才可以编辑动皮参数',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
                         player.dynamic.renderer.postMessage({
                             message: 'SHOW',
                             id: player.dynamic.id,
@@ -1821,8 +1855,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         canvas.style.height = "100%";
                         canvas.style.width = "100%";
                         player.style.zIndex = 10;
+                        canvas.classList.add('hidden')
                         setTimeout(() => {
-
+                            canvas.classList.remove('hidden')
                         }, 250)
                     })
                     skinSwitch.rendererOnMessage.addListener(player, 'canvasRecover', function (e) {
@@ -1831,6 +1866,20 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         canvas.style.width = null;
                         canvas.style.position = null;
                         player.style.zIndex = 4;
+                    })
+                    skinSwitch.rendererOnMessage.addListener(player, 'debugNoChuKuang', function (e) {
+                        // 没有出框动画无法调整
+                        currentPlay = 'daiji'
+                        chuKuangAdjust.classList.remove('adjust-select')
+                        daijiAdjust.classList.add('adjust-select')
+
+                        skinSwitchMessage.show({
+                            type: 'warning',
+                            text: '当前动皮暂无出框参数',
+                            duration: 1500,    // 显示时间
+                            closeable: false, // 可手动关闭
+                        })
+
                     })
 
                 }
@@ -1982,7 +2031,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 editBox.updateGlobalParams = function (){
                     // 检查全局参数的引用是否发生变化. 如果发生变化需要进行重新初始化
                     player = game.me
-                    console.log('updateGlobalParams', player, dynamic)
+                    player.GongJi = false
                     renderer = player.dynamic.renderer;
                     dynamic = player.dynamic.primary  // 这个是指代主将的sprite也就是APNode对象
                     setTimeout(() => {
@@ -2183,6 +2232,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 }
 
                 daijiSave.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
+                    if (currentPlay === 'chukuang') {
+                        return
+                    }
                     // 获取当前的位置参数
                     getDynamicPos('daiji', function (data) {
                         // 同时写入到文件中
@@ -2193,6 +2245,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     })
                 })
                 chuKuangSave.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
+                    if (currentPlay === 'daiji') {
+                        return
+                    }
                     // 获取当前的位置参数
                     getDynamicPos('chukuang', function (data) {
                         if (data) {
@@ -2267,7 +2322,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             // 只能编辑自己
                             if (game.me) {
                                 let player = game.me
-                                if (!player.dynamic) {
+                                if (!player.dynamic || (!player.dynamic.primary)) {
                                     // alert("只能编辑当前角色的动皮位置参数")
                                     skinSwitchMessage.show({
                                         type: 'warning',
