@@ -4095,6 +4095,7 @@ content:function(config, pack){
 							if (animation === undefined) return console.error('playDynamic: 参数1不能为空');
 							// 当前角色的动皮管理对象
 							var dynamic = this.dynamic;
+							console.log('初始化===')
 							if (!dynamic) {
 								// 动皮管理对象初始化. 动皮放在dynamic文件夹下
 								dynamic = new duilib.DynamicPlayer('assets/dynamic/');
@@ -4155,7 +4156,7 @@ content:function(config, pack){
 						stopDynamic:function(primary, deputy){
 							var dynamic = this.dynamic;
 							if (!dynamic) return;
-							
+
 							primary = primary === true;
 							deputy  = deputy  === true;
 							

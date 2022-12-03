@@ -716,7 +716,6 @@ var duilib;
 			// 标记骨骼加载状态为true
 			skeleton.completed = true;
 
-			// 下面三行代码作用未知
 			skeleton.setSkinByName('default');
 			skeleton.setToSetupPose();
 			skeleton.updateWorldTransform();
@@ -774,7 +773,7 @@ var duilib;
 			
 			sprite.completed = false;
 			skeleton.completed = false;
-			
+
 			if (position != undefined) {
 				sprite.x = position.x;
 				sprite.y = position.y;
@@ -814,7 +813,6 @@ var duilib;
 		AnimationPlayer.prototype.stopSpine = function (sprite) {
 			var nodes = this.nodes;
 			var id = sprite.id == undefined ? sprite : sprite.id;
-			
 			for (var i = 0; i < nodes.length; i++) {
 				sprite = nodes[i];
 				if (sprite.id == id) {
@@ -1202,6 +1200,7 @@ var duilib;
 		};
 		
 		DynamicPlayer.prototype.stop = function (sprite) {
+			console.log('DynamicPlayer stop...')
 			if (this.offscreen) {
 				this.renderer.postMessage({
 					message: 'STOP',

@@ -106,10 +106,10 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				y: [0, 0.2],
 				scale: 0.5,
 				clipSlots: ['san'],
-				hideSlots: ['qjhua1', 'qjhua2', 'qjhua3', 'qjhua4', 'qjhua5', 'guangxian', 'yun1', 'yun3', 'effect/guang2_00', 'effect/yan'],
+				// hideSlots: ['qjhua1', 'qjhua2', 'qjhua3', 'qjhua4', 'qjhua5', 'guangxian', 'yun1', 'yun3', 'effect/guang2_00', 'effect/yan'],
 				background: 'skin_daqiao_QingXiaoQingLi_bg.png',
 				isChuKuang: true,
-				actionParams: {
+				gongji: {
 					scale: 0.55,
 					pos: {
 						x: [-10, 0.8],
@@ -162,6 +162,41 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				scale: 0.6,
 				background: 'skin_diaochan_YuChanXianZi_bg.png',
 
+			},
+			驭魂千机: {
+				name: 'skin_diaochan_YuHunQianJi',
+				x: [0, 0.49],
+				y: [0, 0.13],
+				angle: 10,
+				scale: 0.62,
+				action: 'DaiJi',
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				background: 'skin_diaochan_YuHunQianJi_bg.png',
+				skinName: "驭魂千机"
+			},
+			绝世倾城: {
+				name: 'skin_diaochan_JueShiQingCheng',
+				x: [0, 0.55],
+				y: [0, 0.35],
+				scale: 0.4,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				background: 'skin_diaochan_JueShiQingCheng_bg.png',
+				skinName: "绝世倾城"
+			},
+			鼠年七夕: {
+				name: 'skin_diaochan_ShuNianQiXi',
+				x: [0, 0.35],
+				y: [0, 0.3],
+				scale: 0.5,
+				//action: 'DaiJi',
+				background: 'skin_diaochan_YuHunQianJi_bg.png',
+				skinName: "鼠年七夕"
 			},
 		},
 		guozhao:{
@@ -219,13 +254,12 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				scale: 0.8,
 				background: 'skin_hetaihou_YaoZiMiHuan_bg.png',
 				// gongji: true,  // 在中间攻击
-				gongji: {
-					name: 'skin_hetaihou_YaoZiMiHuan',  // name可以是其他骨骼皮肤, 不填则默认是当前皮肤
-					x: [0, 0.5],
-					y: [0, 0.5],
-					scale: 0.6,
-				},
-
+				// gongji: {
+				// 	name: 'skin_hetaihou_YaoZiMiHuan',  // name可以是其他骨骼皮肤, 不填则默认是当前皮肤
+				// 	x: [0, 0.5],
+				// 	y: [0, 0.5],
+				// 	scale: 0.6,
+				// },
 
 			},
 			蛇蝎为心:{
@@ -244,29 +278,53 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				skinName: '蛇蝎为心',
 			},
 			战场绝版: {
-				// name: 'hetaihou_zhanchangjueban',
-				name: 'skin_hetaihou_zhanchangjueban',
-				x: [0, 0.5],
-				y: [0, 0.5],
-				scale: 0.83,
-				background: 'skin_hetaihou_zhanchangjueban_bg.png',
+				name: 'daiji',
+				x: [0, 1.55],
+				y: [0, 0.3],
+				scale: 0.45,
+				background: '何太后战场骨骼/beijing.png',
 				skinName: "战场绝版",
-				localePath: '何太后',  // 为了方便管理, 放在文件夹里面
-				// 攻击特效参数, 原来是使用特效测试的, 如果是手杀真动皮, 就不需要填写
-				// teshu: {
-				// 	name: 'hetaihou_zhanchangjueban',
-				// 	action: 'jineng'
-				// },
-				teshu: 'play3',  // 播放动作标签, 不出框, 当然也可以出框, 这里简写说明是动作是和待机放一块的
+				localePath: '何太后战场骨骼',  // 为了方便管理, 放在文件夹里面
+				// teshu: 'play2',  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
 				gongji: {
-					name:"hetaihou_zhanchangjueban",
+					name:"chuchang2",
+					action: 'gongji',  // action不写是默认播放第一个动作
 					scale: 0.7,
 					x: [0, 0.5],
 					y: [0, 0.5],
 				},  // 通常是出框需要播放的参数
-
-			},
+				teshu: {
+					name:"chuchang2",
+					action: 'gongji',  // action不写是默认播放第一个动作
+					scale: 0.7,
+					x: [0, 0.5],
+					y: [0, 0.5],
+				}
+			}
 		},
+		// 	战场绝版: {
+		// 		name: 'skin_hetaihou_zhanchangjueban',
+		// 		x: [0, 0.5],
+		// 		y: [0, 0.5],
+		// 		scale: 0.83,
+		// 		background: 'skin_hetaihou_zhanchangjueban_bg.png',
+		// 		skinName: "战场绝版",
+		// 		localePath: '何太后',  // 为了方便管理, 放在文件夹里面
+		// 		// 攻击特效参数, 原来是使用特效测试的, 如果是手杀真动皮, 就不需要填写
+		// 		// teshu: {
+		// 		// 	name: 'hetaihou_zhanchangjueban',
+		// 		// 	action: 'jineng'
+		// 		// },
+		// 		teshu: 'play3',  // 播放动作标签, 不出框, 当然也可以出框, 这里简写说明是动作是和待机放一个骨骼里的
+		// 		gongji: {
+		// 			name:"hetaihou_zhanchangjueban",
+		// 			scale: 0.7,
+		// 			x: [0, 0.5],
+		// 			y: [0, 0.5],
+		// 		},  // 通常是出框需要播放的参数
+		//
+		// 	},
+		// },
 		huaman:{
 			花俏蛮娇:{
 				name: 'skin_huaman_HuaQiaoManJiao',
@@ -313,6 +371,15 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				y: [10, 0.3],
 				scale: 0.52,
 				background: 'skin_panshu_FanYouYinFang_bg.png',
+
+				// 可以随意搭配指定
+				teshu: {
+					name:"何太后战场骨骼/chuchang2",
+					action: 'gongji',  // action不写是默认播放第一个动作
+					scale: 0.7,
+					x: [0, 0.5],
+					y: [0, 0.5],
+				}
 			},
 		},
 		sunluban:{
@@ -432,6 +499,20 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				scale: 0.5,
 				background: 'skin_xiaoqiao_HuaHaoYueYuan_bg.png',
 			},
+			战场绝版: {
+				name: 'skin_xiaoqiao_zhanchangjueban',
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: 0.72,
+				action: 'DaiJi',
+				background: 'sin_xiaoqiao_zhanchangjueban_bg.png',
+				skinName: "战场绝版",
+				localePath: '小乔',
+				// gongji: {
+				// 	name:"gongji_xiaoqiao",
+				// 	action: 'gongji'
+				// },
+			},
 		},
 		xinxianying:{
 			英装素果:{
@@ -522,6 +603,20 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				scale: 0.5,
 				background: 'skin_zhugeguo_LanHeAiLian_bg.png',
 			},
+		},
+		zhanglu:{
+			张鲁静皮:{
+				name: 'skin_zhanglu_November',
+				action: 'DaiJi',
+				x: [-70, 0.5],
+				y: [15, 0.2],
+				scale: 0.45,
+				background: 'skin_zhanglu_November_bg.png',
+				teshu: 'TeShu',
+				// gongji: {
+				// 	'action': 'DaiJi'
+				// }
+			}
 		},
 	};
 	

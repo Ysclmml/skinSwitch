@@ -605,7 +605,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
         precontent:function() {
             window.skinSwitch = {
                 name: "皮肤切换",
-                version: 1.0,
+                version: 1.01,
                 url: lib.assetURL + "extension/皮肤切换/",
                 path: 'extension/皮肤切换',
                 dcdPath: 'extension/十周年UI',
@@ -614,6 +614,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'bakeup': 'extension_皮肤切换_bakeup', // 备份与替换十周年文件数据
                     'dynamicSkin': 'extension_皮肤切换_dynamicSkin', // 保存选择的皮肤的历史数据
                     'showEditMenu': 'extension_皮肤切换_showEditMenu', // 是否加入顶部菜单
+                    'showPreviewDynamicMenu': 'extension_皮肤切换_showPreviewDynamicMenu', // 预览是否加入顶部菜单
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -2293,6 +2294,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }, true)
                 }
 
+                if (lib.config[skinSwitch.configKey.showPreviewDynamicMenu]) {
+                    ui.create.system('预览spine', function() {
+                        skinSwitch.previewDynamic()
+                    }, true)
+                }
+
 
                 // 引入js
                 let js = function (path) {
@@ -2333,9 +2340,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 clear: true
             },
             "showEditMenu": {
-                "name": "加入顶部菜单",
+                "name": "编辑动态皮肤加入顶部菜单",
                 "init": false,
                 "intro": "将编辑动态皮肤参数界面加入顶部菜单栏",
+            },
+            "showPreviewDynamicMenu": {
+                name: "预览spine加入顶部菜单",
+                "init": false,
+                "intro": "将预览动态皮肤参数界面加入顶部菜单栏",
             },
         },
         help:{},
@@ -2366,7 +2378,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             author:"yscl",
             diskURL:"",
             forumURL:"",
-            version:"1.0",
+            version:"1.01",
         },
         files:{"character":[],"card":[],"skill":[]}}
 })
