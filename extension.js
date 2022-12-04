@@ -8,9 +8,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 return
             }
             // if (!lib.config[skinSwitch.configKey.bakeup]) {
-                // alert('皮肤切换需要先在设置里导入备份十周年文件')
-                // console.log('皮肤切换需要先在设置里导入备份十周年文件')
-                // return
+            // alert('皮肤切换需要先在设置里导入备份十周年文件')
+            // console.log('皮肤切换需要先在设置里导入备份十周年文件')
+            // return
             // }
             // 根据本地的存储内容, 更改十周年UI的skinDynamic的数据
             function updateDecadeDynamicSkin() {
@@ -27,8 +27,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     for (let k in skinSwitch.saveSkinParams) {
                         // 只更新存在key的数据
                         for (let m in skinSwitch.saveSkinParams[k]) {
-                            let gongji = decadeUI.dynamicSkin[k][m].gongji
                             if (decadeUI.dynamicSkin[k] && decadeUI.dynamicSkin[k][m]) {
+                                let gongji = decadeUI.dynamicSkin[k][m].gongji
                                 if (skinSwitch.saveSkinParams[k][m].gongji) {
                                     if (typeof gongji === 'string') {
                                         gongji = {
@@ -43,6 +43,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                                 decadeUI.dynamicSkin[k][m] = Object.assign(decadeUI.dynamicSkin[k][m], skinSwitch.saveSkinParams[k][m])
                                 decadeUI.dynamicSkin[k][m].gongji = gongji
+
+                                // 添加上千幻雷修的调整参数
+                                if (skinSwitch.saveSkinParams[k][m].qhlx) {
+                                    decadeUI.dynamicSkin[k][m].qhlx = skinSwitch.saveSkinParams[k][m].qhlx
+                                }
                             }
                         }
                     }
@@ -700,7 +705,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let current = 0
 
                         skinSwitch.addProgress(progressBar, current, tasks)
-                        // 判断原来有没有备份过, 查看本地有没有皮肤切换_开头的备份文件
 
                         // 如果已经备份过, 就不重新备份了
                         if (!lib.config[skinSwitch.configKey.bakeup]) {
@@ -856,6 +860,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     selectSkin: function (e) {
                         game.playAudio("..", "extension", "皮肤切换/audio/game", "Notice02.mp3");
                         let temp = skinSwitch.selectSkinData.temp;
+                        if (temp === "") {
+                            skinSwitch.selectSkinData.temp = e;
+                            skinSwitch.selectSkinData.value = e.alt
+                            return
+                        }
                         if (temp != e) {
                             if (skinSwitch.dynamic.selectSkin.cd) {
                                 skinSwitch.dynamic.selectSkin.cd = false;
@@ -1010,7 +1019,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                      * @param callback  回调
                      * @param bind  调用回调函数时绑定this的对象, 默认为player
                      */
-                   addListener: function (player, type, callback, bind) {
+                    addListener: function (player, type, callback, bind) {
                         let id = player.dynamic.id
                         let renderer = player.dynamic.renderer
                         if (renderer.onmessage !== this.onmessage) {
@@ -1030,15 +1039,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 postMsgApi: {
                     _onchangeDynamicWindow: function(player, res) {
                         let canvas = player.getElementsByClassName("animation-player")[0];
-                        let dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                        let dynamicWrap
+                        if (player.isQhlx) {
+                            dynamicWrap = player.getElementsByClassName("qhdynamic-big-wrap")[0];
+                        } else {
+                            dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                        }
                         skinSwitch.rendererOnMessage.addListener(player, 'chukuangFirst', function (data) {
                             // 直接设置属性, 第一优先生效, 这里播放攻击动画, 调整播放canvas的位置, 不再跟随皮肤框,也就是动皮出框
-                            dynamicWrap.style.zIndex = "63";
+                            dynamicWrap.style.zIndex = "64";
                             canvas.style.position = "fixed";
-                            canvas.style.height = 0;
                             canvas.style.height = "100%";
                             canvas.style.width = "100%";
-                            player.style.zIndex = 10;
+                            if (!player.isQhlx) {
+                                player.style.zIndex = 10;
+                            } else {
+                                player.style.zIndex = 64  // 防止遮住血量
+                            }
                             // 防止闪烁,
                             canvas.classList.add('hidden')
                             // setTimeout(() => {
@@ -1051,7 +1068,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             canvas.style.height = null;
                             canvas.style.width = null;
                             canvas.style.position = null;
-                            player.style.zIndex = 4;
+                            if (player.isQhlx) {
+                                player.style.zIndex = 62;
+                                dynamicWrap.style.zIndex = "62"
+                                player.style.zIndex = 62
+                            }
+                            else player.style.zIndex = 4;
                             player.GongJi = false;
                         })
 
@@ -1083,6 +1105,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let res = skinSwitch.dynamic.checkCanBeAction(player)
                         let pp = skinSwitch.getCoordinate(player, true)
                         let me = player === game.me
+                        if (player.isQhlx) me = true
                         if (res && res.dynamic) {
                             player.dynamic.renderer.postMessage({
                                 message: 'ACTION',
@@ -1567,6 +1590,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 }
             };
+            window.eng = window.skinSwitch
+
             skinSwitch.dynamic.selectSkin.cd = true;
 
             lib.init.css(skinSwitch.url + "style", "base")
@@ -1614,7 +1639,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 let chuKuangEdit = ui.create.div('.btn .pointer', chukuangGroup)
                 let chuKuangAdjust = ui.create.div('.btn .pointer', chukuangGroup)
                 let chuKuangScale = ui.create.div('.btn', chukuangGroup)
-                let empty = ui.create.div('.btn', chukuangGroup)  // 占位
+                // let empty = ui.create.div('.btn', chukuangGroup)  // 占位
+                let qhlxAdjust = ui.create.div('.btn', chukuangGroup)  // 调整千幻雷修版本的待机和出框
                 let chuKuangXPosNum = ui.create.div('.btn .posNum', chukuangGroup)
                 let chuKuangYPosNum = ui.create.div('.btn .posNum', chukuangGroup)
                 let chuKuangPos = ui.create.div('.btn', chukuangGroup)
@@ -1642,7 +1668,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 chuKuangEdit.innerHTML = '播放出框'
                 chuKuangAdjust.innerHTML = '调整出框'
                 chuKuangScale.innerHTML = `大小: <input type="text" value="" style="width:32px;border-radius: 4px;">`
-                empty.innerHTML = `不调整`
+                qhlxAdjust.innerHTML = `调整千幻`
                 chuKuangXPosNum.innerHTML = `<span>x</span><i class="minus">-</i><input value="0"><i class="plus">+</i>`
                 chuKuangYPosNum.innerHTML = `<span>y</span><i class="minus">-</i><input value="0"><i class="plus">+</i>`
                 chuKuangPos.innerHTML = `<span style="font-size: 12px;font-weight: bold;">位置</span>`
@@ -1717,6 +1743,36 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         chukuangXYPos.y = pos.y
                     }
                 }
+
+                qhlxAdjust.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
+                    // 必须保证当前已经打开了千幻的皮肤选择界面.
+                    let nodePlayer = document.getElementById('mainView')
+                    if (!nodePlayer || !nodePlayer.dynamic || !nodePlayer.dynamic.primary) {
+                        skinSwitchMessage.show({
+                            'type': 'error',
+                            'text': '必须打开皮肤预览页面且选择的是动皮才可以进行编辑调整'
+                        })
+                        return
+                    }
+                    // 停止原来的自动播放攻击动画和待机..
+                    clearInterval(_status.texiaoTimer);
+                    clearTimeout(_status.texiaoTimer2);
+
+                    // 检查全局参数的引用是否发生变化. 如果发生变化需要进行重新初始化
+                    player = nodePlayer
+                    player.isQhlx = true // 表示当前动皮角色是千幻雷修版本的
+
+                    player.GongJi = false
+                    renderer = player.dynamic.renderer;
+                    dynamic = player.dynamic.primary  // 这个是指代主将的sprite也就是APNode对象
+                    setTimeout(() => {
+                        // 给一个发消息的缓冲时间
+                        getCurPosition('daiji')
+                        setTimeout(() => {
+                            getCurPosition('chukuang')
+                        }, 100)
+                    }, 100)
+                })
 
                 // 点击计算屏幕百分比计算不准确, 放弃使用这种方式调整.
                 // let updateAdjustPos = function (pos, mode) {
@@ -1846,7 +1902,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 let selfLoopPlay = function(mode) {
                     let canvas = player.getElementsByClassName("animation-player")[0];
-                    let dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                    let dynamicWrap
+                    if (player.isQhlx) {
+                        dynamicWrap = player.getElementsByClassName("qhdynamic-big-wrap")[0];
+                    } else {
+                        dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                    }
 
                     skinSwitch.postMsgApi.debug(player, mode)
                     skinSwitch.rendererOnMessage.addListener(player, 'debugChuKuang', function (e) {
@@ -2165,35 +2226,96 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             break
                         }
                     }
+                    data = {scale: data.scale, x: data.x, y: data.y, angle: data.angle}
                     let isWrite = false
+                    // 如果当前是调整千幻雷修的情况下, 那么保存千幻雷修的相关参数
                     if (saveKey) {
                         // 比对两者的数据, 如果不一样,才进行保存
                         if (skinSwitch.saveSkinParams[player.name]) {
                             if (skinSwitch.saveSkinParams[player.name][saveKey]) {
                                 let saveData = skinSwitch.saveSkinParams[player.name][saveKey]
-                                for (let k in data) {
-                                    if (data[k] !== undefined) {
-                                        // 更新新的值
-                                        if (mode === 'daiji') {
-                                            if (saveData[k] === undefined || (saveData[k].toString() !== data[k].toString())) {
-                                                saveData[k] = data[k]
-                                                isWrite = true
-                                            }
-                                        } else {
-                                            if (!saveData.gongji) {
-                                                saveData.gongji = {}
-                                                saveData.gongji[k] = data[k]
-                                                isWrite = true
+                                // 千幻雷修就不检查重复key了, 每次都进行更新
+                                if (player.isQhlx) {
+                                    let k = mode === 'daiji' ? 'daiji' : 'gongji'
+                                    if (saveData['qhlx']) {
+                                        saveData['qhlx'][k] = data
+                                    } else {
+                                        saveData['qhlx'] = {}
+                                        saveData['qhlx'][k] = data
+                                    }
+                                    isWrite = true
+                                } else {
+                                    for (let k in data) {
+                                        if (data[k] !== undefined) {
+                                            if (player.isQhlx) {
+                                                // 更新新的值
+                                                if (mode === 'daiji') {
+                                                    if (saveData[k] === undefined || (saveData[k].toString() !== data[k].toString())) {
+                                                        saveData[k] = data[k]
+                                                        isWrite = true
+                                                    }
+                                                } else {
+                                                    if (!saveData.gongji) {
+                                                        saveData.gongji = {}
+                                                        saveData.gongji[k] = data[k]
+                                                        isWrite = true
+                                                    } else {
+                                                        if (saveData.gongji[k] === undefined || (saveData.gongji[k].toString() !== data[k].toString())) {
+                                                            saveData.gongji[k] = data[k]
+                                                            isWrite = true
+                                                        }
+                                                    }
+                                                }
                                             } else {
-                                                if (saveData.gongji[k] === undefined || (saveData.gongji[k].toString() !== data[k].toString())) {
-                                                    saveData.gongji[k] = data[k]
-                                                    isWrite = true
+                                                // 更新新的值
+                                                if (mode === 'daiji') {
+                                                    if (saveData[k] === undefined || (saveData[k].toString() !== data[k].toString())) {
+                                                        saveData[k] = data[k]
+                                                        isWrite = true
+                                                    }
+                                                } else {
+                                                    if (!saveData.gongji) {
+                                                        saveData.gongji = {}
+                                                        saveData.gongji[k] = data[k]
+                                                        isWrite = true
+                                                    } else {
+                                                        if (saveData.gongji[k] === undefined || (saveData.gongji[k].toString() !== data[k].toString())) {
+                                                            saveData.gongji[k] = data[k]
+                                                            isWrite = true
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
-
                                     }
                                 }
+                            } else {
+                                if (player.isQhlx) {
+                                    let k = mode === 'daiji' ? 'daiji' : 'gongji'
+                                    skinSwitch.saveSkinParams[player.name][saveKey] = {}
+                                    skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'] = {}
+                                    skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'][k] = data
+
+                                } else {
+                                    if (mode === 'daiji') {
+                                        skinSwitch.saveSkinParams[player.name][saveKey] = data
+                                    } else {
+                                        skinSwitch.saveSkinParams[player.name][saveKey] = {}
+                                        skinSwitch.saveSkinParams[player.name][saveKey].gongji = data
+                                    }
+                                    isWrite = true
+                                }
+
+                            }
+                        } else {
+                            skinSwitch.saveSkinParams[player.name] = {}
+
+                            if (player.isQhlx) {
+                                let k = mode === 'daiji' ? 'daiji' : 'gongji'
+                                skinSwitch.saveSkinParams[player.name][saveKey] = {}
+                                skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'] = {}
+                                skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'][k] = data
+
                             } else {
                                 if (mode === 'daiji') {
                                     skinSwitch.saveSkinParams[player.name][saveKey] = data
@@ -2201,15 +2323,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     skinSwitch.saveSkinParams[player.name][saveKey] = {}
                                     skinSwitch.saveSkinParams[player.name][saveKey].gongji = data
                                 }
-                                isWrite = true
-                            }
-                        } else {
-                            skinSwitch.saveSkinParams[player.name] = {}
-                            if (mode === 'daiji') {
-                                skinSwitch.saveSkinParams[player.name][saveKey] = data
-                            } else {
-                                skinSwitch.saveSkinParams[player.name][saveKey] = {}
-                                skinSwitch.saveSkinParams[player.name][saveKey].gongji = data
                             }
                             isWrite = true
                         }
