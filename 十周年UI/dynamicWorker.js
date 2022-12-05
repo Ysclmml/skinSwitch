@@ -55,6 +55,26 @@ function playSkin(dynamic, data) {
 	let sprite = (typeof data.sprite == 'string') ? {name: data.sprite} : data.sprite;
 	sprite.loop = true;
 
+	// 兼容雷修千幻
+	// 获取保存的参数, 如果存在保存的参数, 则使用保存的参数进行播放.
+	if (sprite.player.qhlxBigAvatar) {
+		if (sprite.player.qhlx) {
+			if (sprite.player.qhlx.gongji) {
+				if (!sprite.player.gongji) {
+					sprite.player.gongji = {}
+				}
+				sprite.player.gongji = Object.assign(sprite.player.gongji, sprite.player.qhlx.gongji)
+			}
+			if (sprite.player.qhlx.daiji) {
+				sprite = Object.assign(sprite, sprite.player.qhlx.daiji)
+				sprite.player = Object.assign(sprite.player, sprite.player.qhlx.daiji)
+			}
+		} else {
+			sprite.player.scale = sprite.scale
+		}
+
+	}
+
 	let run = function () {
 		let t = dynamic.playSpine(sprite);
 		t.opacity = 0
@@ -82,6 +102,7 @@ function playSkin(dynamic, data) {
 		dynamic.loadSpine(sprite.name, 'skel', run);
 	}
 }
+
 
 /*************** 每个函数处理worker消息 start ***************/
 
@@ -134,7 +155,7 @@ function action(data) {
 	let apnode = getDynamic(dynamic, data.skinID);
 	if (!apnode) return
 	let animation
-
+	console.log('data:::: ', data)
 	let qhlyAction = function () {
 		if (data.action === 'Qhly') animation = apnode.skeleton.data.findAnimation('GongJi');
 		if (!animation) {
@@ -157,6 +178,7 @@ function action(data) {
 		window.postMessage(true);
 		apnode.x = [apnode.player.x[0] * 0.58, apnode.player.x[1] * 0.58];
 		apnode.y = [apnode.player.y[0] * 1.4, apnode.player.y[1] * 1.4];
+
 		if (apnode.player.angle) {
 			apnode.angle = apnode.player.angle;
 		}
@@ -239,7 +261,6 @@ function action(data) {
 
 	let playChuKuangSpine = function (apnode, animation, playNode) {
 		let hideNode
-		// todo: 如果一号动皮没有攻击动作, 那么查找2号动皮是否有攻击动作, 如果有, 那么就攻击
 		if (data.isDouble) {
 			if (data.needHide !== undefined) {
 				hideNode = getHideDynamic(dynamic, data.needHide);
@@ -302,10 +323,16 @@ function action(data) {
 						// 原来的节点恢复显示
 						apnode.opacity = 1
 						if (hideNode) hideNode.opacity = 1;
-						apnode.skeleton.state.setAnimation(0, apnode.action || getDefaultAction(dynamic, apnode.name).name, true, -0.01);
+						console.log('apnode', apnode.action, apnode)
+						// 假动皮不需要回复原有姿势
+						if (!playNode && apnode.skeleton.defaultAction === animation.name) {
+							console.log('aaaa', apnode, animation)
+						} else {
+							apnode.skeleton.state.setAnimation(0, apnode.action || apnode.skeleton.defaultAction, true)
+						}
 					}, 200);
 				}, 450);
-			}, animation.duration * 1000 - 500);
+			}, (animation.showTime || animation.duration) * 1000 - 500);
 			if (playNode) {
 				// 重新恢复攻击pose
 				// playNode.skeleton.setToSetupPose()
@@ -377,12 +404,14 @@ function action(data) {
 					return
 				}
 			}
-			console.log('xxxxx')
 			if (!animation.duration) {
 				animation.duration = duration
 			} else {
 				// 如果是假动皮
-				if (actionParams.action === apnode.action || apnode.skeleton.defaultAction === actionParams.action) animation.duration = actionParams.showTime || duration
+				if (actionParams.action === apnode.action || apnode.skeleton.defaultAction === actionParams.action) {
+					// animation.duration = actionParams.showTime || duration
+					animation.showTime = actionParams.showTime || 2
+				}
 			}
 			playChuKuangSpine(apnode, animation)
 
@@ -505,6 +534,7 @@ function debug(data) {
 
 				let actualPlayNode = playNode ? playNode : apnode
 				setPos(actualPlayNode, data);
+				console.log('debug: actualPlayNode', actualPlayNode)
 				actualPlayNode.angle = undefined
 				setTimeout(() => {
 					if (playNode) {
@@ -826,56 +856,56 @@ function completeParams(node) {
 			teshuAction.action = teshu
 		}
 	} else {
-			// 只指定了攻击的动画标签, 那么使用当前动皮指定的标签在屏幕中间播放
-			if (gongjiType === 'string') {
-				gongjiAction = {
-					name: node.name,  // 和原来的皮肤一样
-					x: [0, 0.5],
-					y: [0, 0.5],
-					scale: player.scale,  //
-					action: player.gongji,
-				}
+		// 只指定了攻击的动画标签, 那么使用当前动皮指定的标签在屏幕中间播放
+		if (gongjiType === 'string') {
+			gongjiAction = {
+				name: node.name,  // 和原来的皮肤一样
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: player.scale,  //
+				action: player.gongji,
 			}
-			// 如果是简单的设置为true, 那么说明当前动皮是静态皮肤, 也想出框, 那么和上面一样, 播放当前待机动作到中央
-			else if (gongji === true) {
-				gongjiAction = {
-					name: node.name,  // 和原来的皮肤一样
-					x: [0, 0.5],
-					y: [0, 0.5],
-					scale: player.scale,  //
-					showTime: 2  // 静态皮肤可以指定出框的时间, 因为有些静态皮肤的待机动作时间太长了, 需要提前结束
-				}
-			} else if (gongjiType === 'object') {
-				gongjiAction = gongji
-				if (!gongjiAction.name) {
-					gongjiAction.name = node.name
-				} else {
-					gongjiAction.name = getFullName(player.localePath, gongjiAction.name)
-				}
-				if (!gongjiAction.x) {gongjiAction.x = [0, 0.5]}
-				if (!gongjiAction.y) {gongjiAction.y = [0, 0.5]}
-				if (!gongjiAction.scale) {gongjiAction.scale = player.scale}
+		}
+		// 如果是简单的设置为true, 那么说明当前动皮是静态皮肤, 也想出框, 那么和上面一样, 播放当前待机动作到中央
+		else if (gongji === true) {
+			gongjiAction = {
+				name: node.name,  // 和原来的皮肤一样
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: player.scale,  //
+				showTime: 2  // 静态皮肤可以指定出框的时间, 因为有些静态皮肤的待机动作时间太长了, 需要提前结束
+			}
+		} else if (gongjiType === 'object') {
+			gongjiAction = gongji
+			if (!gongjiAction.name) {
+				gongjiAction.name = node.name
 			} else {
-				// 默认从当前皮肤的GongJi标签来播放动作
-				gongjiAction = {
-					name: node.name,  // 和原来的皮肤一样
-					x: [0, 0.5],
-					y: [0, 0.5],
-					scale: player.scale,
-					action: 'GongJi'  // 寻找默认的攻击动画标签名称
-				}
+				gongjiAction.name = getFullName(player.localePath, gongjiAction.name)
 			}
+			if (!gongjiAction.x) {gongjiAction.x = [0, 0.5]}
+			if (!gongjiAction.y) {gongjiAction.y = [0, 0.5]}
+			if (!gongjiAction.scale) {gongjiAction.scale = player.scale}
+		} else {
+			// 默认从当前皮肤的GongJi标签来播放动作
+			gongjiAction = {
+				name: node.name,  // 和原来的皮肤一样
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: player.scale,
+				action: 'GongJi'  // 寻找默认的攻击动画标签名称
+			}
+		}
 
-			// 特殊动作同样处理
-			if (teshuType === 'string') {
-				teshuAction = {
-					name: node.name,  // 和原来的皮肤一样
-					x: [0, 0.5],
-					y: [0, 0.5],
-					scale: player.scale,
-					action: player.teshu,
-				}
+		// 特殊动作同样处理
+		if (teshuType === 'string') {
+			teshuAction = {
+				name: node.name,  // 和原来的皮肤一样
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: player.scale,
+				action: player.teshu,
 			}
+		}
 			// 特殊动作, 原地播放待机动画没啥意义, 就不提供
 			// else if (teshuType === true) {
 			// 	gongjiAction = {
@@ -886,35 +916,35 @@ function completeParams(node) {
 			// 		action: player.gongji,
 			// 		showTime: 2  // 静态皮肤可以指定出框的时间, 因为有些静态皮肤的待机动作时间太长了, 需要提前结束
 			// 	}
-			// }
-			else if (teshuType === 'object') {
-				teshuAction = teshu
-				if (!teshuAction.name) {
-					teshuAction.name = node.name
-				} else {
-					teshuAction.name = getFullName(player.localePath, teshu.name)
-				}
-				// 特殊动画还是最好不要出框, 不然触发频率太高了...
-				if (teshuAction.name !== node.name) {
-					if (!teshuAction.x) {teshuAction.x = [0, 0.5]}
-					if (!teshuAction.y) {teshuAction.y = [0, 0.5]}
-
-				} else {
-					if (!teshuAction.x) {teshuAction.x = player.x}
-					if (!teshuAction.y) {teshuAction.y = player.y}
-				}
-				if (!teshuAction.scale) {teshuAction.scale = player.scale}
-				if (!teshuAction.showTime) {teshuAction.showTime = 2}
+		// }
+		else if (teshuType === 'object') {
+			teshuAction = teshu
+			if (!teshuAction.name) {
+				teshuAction.name = node.name
 			} else {
-				// 默认从当前皮肤的GongJi标签来播放动作
-				teshuAction = {
-					name: node.name,  // 和原来的皮肤一样
-					x: [0, 0.5],
-					y: [0, 0.5],
-					scale: player.scale,
-					action: 'TeShu'  // 寻找默认的攻击动画标签名称
-				}
+				teshuAction.name = getFullName(player.localePath, teshu.name)
 			}
+			// 特殊动画还是最好不要出框, 不然触发频率太高了...
+			if (teshuAction.name !== node.name) {
+				if (!teshuAction.x) {teshuAction.x = [0, 0.5]}
+				if (!teshuAction.y) {teshuAction.y = [0, 0.5]}
+
+			} else {
+				if (!teshuAction.x) {teshuAction.x = player.x}
+				if (!teshuAction.y) {teshuAction.y = player.y}
+			}
+			if (!teshuAction.scale) {teshuAction.scale = player.scale}
+			if (!teshuAction.showTime) {teshuAction.showTime = 2}
+		} else {
+			// 默认从当前皮肤的GongJi标签来播放动作
+			teshuAction = {
+				name: node.name,  // 和原来的皮肤一样
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: player.scale,
+				action: 'TeShu'  // 寻找默认的攻击动画标签名称
+			}
+		}
 	}
 	node.player.gongji = gongjiAction
 	node.player.teshu = teshuAction  // 重新赋值

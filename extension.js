@@ -22,7 +22,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         updateDecadeDynamicSkin()
                     }, 200)
                 } else{
-                    console.log('加载成功')
                     if (!skinSwitch.saveSkinParams) return
                     for (let k in skinSwitch.saveSkinParams) {
                         // 只更新存在key的数据
@@ -609,7 +608,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
         precontent:function() {
             window.skinSwitch = {
                 name: "皮肤切换",
-                version: 1.01,
+                version: 1.02,
                 url: lib.assetURL + "extension/皮肤切换/",
                 path: 'extension/皮肤切换',
                 dcdPath: 'extension/十周年UI',
@@ -1235,10 +1234,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <span>骨骼:</span><select id="skeletonList"></select>
                         <span>动画标签:</span><select id="animationList"></select>
                         <span>Debug:</span><input type="checkbox" id="debug">
+                        <span>α预乘:</span><input type="checkbox" id="premultipliedAlpha">
                         <span>大小:<input id="scale" type="number" value="0.5" step="0.05"></span>
                         <span>x: <input id="posX" type="number" value="0.5" step="0.05"></span>
                         <span>y: <input id="posY" type="number" value="0.5" step="0.05"></span>
-                        <span id="closePreviewWindow">关闭预览窗口</span>
+                        <button id="closePreviewWindow" style="margin-left: 20px">关闭预览窗口</button>
                     </div>
                     `
                     let canvas;
@@ -1343,6 +1343,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         document.getElementById('posY').oninput = function (e) {
                             let v = e.srcElement.value
                             skeletons[activeSkeleton].previewParams.posY = v
+                        }
+
+                        document.getElementById('premultipliedAlpha').onchange = function (e) {
+                            skeletons[activeSkeleton].previewParams.premultipliedAlpha = e.target.checked
                         }
 
                     }
@@ -1474,10 +1478,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         skeletonList.onchange = function() {
                             activeSkeleton = skeletonList.options[skeletonList.selectedIndex].text
                             // 输入框的值也改成存储的值
-                            console.log('skeletons...', skeletons)
                             document.getElementById('scale').value = skeletons[activeSkeleton].previewParams.scale
                             document.getElementById('posX').value = skeletons[activeSkeleton].previewParams.posX
                             document.getElementById('posY').value = skeletons[activeSkeleton].previewParams.posY
+                            document.getElementById('premultipliedAlpha').checked = Boolean(skeletons[activeSkeleton].previewParams.premultipliedAlpha)
                             setupAnimationUI();
                         }
                         setupAnimationUI();
@@ -1520,9 +1524,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         batcher.begin(shader);
 
                         skeleton.opacity = 1
-
+                        skeletonRenderer.premultipliedAlpha = Boolean(skeletons[activeSkeleton].previewParams.premultipliedAlpha)
                         // skeletonRenderer.premultipliedAlpha = true;
-                        // console.log(skeleton)
                         skeletonRenderer.draw(batcher, skeleton);
                         batcher.end();
 
@@ -1590,7 +1593,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 }
             };
-            window.eng = window.skinSwitch
 
             skinSwitch.dynamic.selectSkin.cd = true;
 
@@ -1746,32 +1748,50 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 qhlxAdjust.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                     // 必须保证当前已经打开了千幻的皮肤选择界面.
-                    let nodePlayer = document.getElementById('mainView')
-                    if (!nodePlayer || !nodePlayer.dynamic || !nodePlayer.dynamic.primary) {
-                        skinSwitchMessage.show({
-                            'type': 'error',
-                            'text': '必须打开皮肤预览页面且选择的是动皮才可以进行编辑调整'
-                        })
-                        return
-                    }
-                    // 停止原来的自动播放攻击动画和待机..
-                    clearInterval(_status.texiaoTimer);
-                    clearTimeout(_status.texiaoTimer2);
+                    if (qhlxAdjust.isAdjust) {
+                        // 判断当前是在调整页面还是在游戏画面中.
+                        qhlxAdjust.isAdjust = false
+                        editBox.updateGlobalParams()  // 更新一下参数状态
 
-                    // 检查全局参数的引用是否发生变化. 如果发生变化需要进行重新初始化
-                    player = nodePlayer
-                    player.isQhlx = true // 表示当前动皮角色是千幻雷修版本的
+                        daijiAdjust.classList.remove('adjust-select')
+                        chuKuangAdjust.classList.remove('adjust-select')
+                        qhlxAdjust.classList.remove('adjust-select')
+                        currentPlay = 'daiji'
 
-                    player.GongJi = false
-                    renderer = player.dynamic.renderer;
-                    dynamic = player.dynamic.primary  // 这个是指代主将的sprite也就是APNode对象
-                    setTimeout(() => {
-                        // 给一个发消息的缓冲时间
-                        getCurPosition('daiji')
+                    } else {
+                        let nodePlayer = document.getElementById('mainView')
+                        if (!nodePlayer || !nodePlayer.dynamic || !nodePlayer.dynamic.primary) {
+                            skinSwitchMessage.show({
+                                'type': 'error',
+                                'text': '必须打开皮肤预览页面且选择的是动皮才可以进行编辑调整'
+                            })
+                            return
+                        }
+                        // 停止原来的自动播放攻击动画和待机..
+                        clearInterval(_status.texiaoTimer);
+                        clearTimeout(_status.texiaoTimer2);
+
+                        daijiAdjust.classList.remove('adjust-select')
+                        chuKuangAdjust.classList.remove('adjust-select')
+                        qhlxAdjust.classList.add('adjust-select')
+                        qhlxAdjust.isAdjust = true
+
+
+                        // 检查全局参数的引用是否发生变化. 如果发生变化需要进行重新初始化
+                        player = nodePlayer
+                        player.isQhlx = true // 表示当前动皮角色是千幻雷修版本的
+
+                        player.GongJi = false
+                        renderer = player.dynamic.renderer;
+                        dynamic = player.dynamic.primary  // 这个是指代主将的sprite也就是APNode对象
                         setTimeout(() => {
-                            getCurPosition('chukuang')
+                            // 给一个发消息的缓冲时间
+                            getCurPosition('daiji')
+                            setTimeout(() => {
+                                getCurPosition('chukuang')
+                            }, 100)
                         }, 100)
-                    }, 100)
+                    }
                 })
 
                 // 点击计算屏幕百分比计算不准确, 放弃使用这种方式调整.
@@ -1907,6 +1927,19 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         dynamicWrap = player.getElementsByClassName("qhdynamic-big-wrap")[0];
                     } else {
                         dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                    }
+                    if (player.isQhlx) {
+                        if (document.getElementsByClassName('qhdynamic-big-wrap').length === 0) {
+                            // 需要再次点击表示退出千幻动皮预览界面了.
+                            skinSwitchMessage.show({
+                                type: 'warning',
+                                text: '请取消调整千幻状态',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                            return
+
+                        }
                     }
 
                     skinSwitch.postMsgApi.debug(player, mode)
@@ -2092,6 +2125,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 editBox.updateGlobalParams = function (){
                     // 检查全局参数的引用是否发生变化. 如果发生变化需要进行重新初始化
                     player = game.me
+                    if (!player.dynamic) return
                     player.GongJi = false
                     renderer = player.dynamic.renderer;
                     dynamic = player.dynamic.primary  // 这个是指代主将的sprite也就是APNode对象
@@ -2340,6 +2374,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     closeable: false, // 可手动关闭
                                 })
                             })
+                            // 修改千幻雷修版本的值
+                            if (skinSwitch.saveSkinParams[player.name][saveKey].qhlx) {
+                                decadeUI.dynamicSkin[player.name][saveKey].qhlx = skinSwitch.saveSkinParams[player.name][saveKey].qhlx
+                            }
                         }
                     }
                 }
@@ -2546,7 +2584,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             author:"yscl",
             diskURL:"",
             forumURL:"",
-            version:"1.01",
+            version:"1.02",
         },
         files:{"character":[],"card":[],"skill":[]}}
 })
