@@ -1085,7 +1085,7 @@ var duilib;
 	})();
 	
 	duilib.BUILT_ID = 0;
-	duilib.DynamicWorkers = new Array(2);
+	duilib.DynamicWorkers = new Array(3);
 	duilib.DynamicPlayer = (function(){
 
 		// 动态皮肤管理对象, 这个是绑定在角色player上的, 军八国战最多有8个角色, 所以定义的WebWorker有两个, 并且每个worker的capacity容量为4

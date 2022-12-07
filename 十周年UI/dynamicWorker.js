@@ -57,7 +57,7 @@ function playSkin(dynamic, data) {
 
 	// 兼容雷修千幻
 	// 获取保存的参数, 如果存在保存的参数, 则使用保存的参数进行播放.
-	if (sprite.player.qhlxBigAvatar) {
+	if (sprite.qhlxBigAvatar) {
 		if (sprite.player.qhlx) {
 			if (sprite.player.qhlx.gongji) {
 				if (!sprite.player.gongji) {
@@ -71,6 +71,12 @@ function playSkin(dynamic, data) {
 			}
 		} else {
 			sprite.player.scale = sprite.scale
+			if (!sprite.player.gongji) {
+				sprite.player.gongji = {}
+			}
+			// fix 大屏预览参数使用雷修默认的出框偏移
+			sprite.player.gongji.x = [sprite.player.x[0] * 0.58, sprite.player.x[1] * 0.58];
+			sprite.player.gongji.y = [sprite.player.y[0] * 1.4, sprite.player.y[1] * 1.4];
 		}
 
 	}
@@ -94,7 +100,10 @@ function playSkin(dynamic, data) {
 		} else {
 			t.opacity = 1;
 		}
+		// 将node保存一下, 表示是千幻大屏预览的node
+		t.qhlxBigAvatar = sprite.qhlxBigAvatar
 	}
+	console.log('play...', sprite)
 
 	if (dynamic.hasSpine(sprite.name)) {
 		run();
@@ -103,6 +112,16 @@ function playSkin(dynamic, data) {
 	}
 }
 
+// 返回0-a-1中的随机整数
+function randomInt(a) {
+	return Math.floor(Math.random() * a)
+}
+
+// 返回数组中的随机一个值, 如果数组为空则放回undefined
+function randomChoice(arr) {
+	if (!arr || arr.length === 0) return undefined
+	return arr[randomInt(arr.length)]
+}
 
 /*************** 每个函数处理worker消息 start ***************/
 
@@ -155,7 +174,7 @@ function action(data) {
 	let apnode = getDynamic(dynamic, data.skinID);
 	if (!apnode) return
 	let animation
-	console.log('data:::: ', data)
+	// 这里只是单纯的和雷修原来自带的手杀大页播放的功能兼容,保留.
 	let qhlyAction = function () {
 		if (data.action === 'Qhly') animation = apnode.skeleton.data.findAnimation('GongJi');
 		if (!animation) {
@@ -215,6 +234,7 @@ function action(data) {
 			}
 			if (tempParams.name === apnode.name) {
 				if (!tempParams.action) return true  // 说明是播放假动皮的出框动作
+				if (Array.isArray(tempParams.action)) return true  // 手动填写了多个攻击动作
 				let animation = apnode.skeleton.data.findAnimation(tempParams.action)
 				return Boolean(animation)
 			}
@@ -282,10 +302,9 @@ function action(data) {
 		postMessage({id: data.id, type: 'chukuangFirst'})
 		setTimeout(() => {
 			actualPlayNode.opacity = 1
-			setTimeout(() => {
-				// 播放完动画在500毫秒内从播放的位置移动到待机的位置
-				actualPlayNode.moveTo(data.player.x, data.player.y, 500);
 
+			// 播放完动画从播放的位置移动到待机的位置
+			let recoverDaiji = () => {
 				setTimeout(() => {
 					actualPlayNode.opacity = 0
 					actualPlayNode.x = apnode.player.x;
@@ -332,7 +351,19 @@ function action(data) {
 						}
 					}, 200);
 				}, 450);
-			}, (animation.showTime || animation.duration) * 1000 - 500);
+			}
+
+			setTimeout(() => {
+				// 如果是手杀大屏预览的页面则不位移到原处
+				if (apnode.qhlxBigAvatar) {
+					recoverDaiji()
+				}
+				else {
+					actualPlayNode.moveTo(data.player.x, data.player.y, 500);
+					recoverDaiji()
+				}
+
+			}, (animation.showTime || animation.duration) * 1000 - 500)
 			if (playNode) {
 				// 重新恢复攻击pose
 				// playNode.skeleton.setToSetupPose()
@@ -346,6 +377,13 @@ function action(data) {
 	// 说明出框和待机动作不是同一个皮肤, 那么需要临时重新加载
 	let playChukuang = function (actionParams) {
 		actionParams.id = chukuangId++
+		if (Array.isArray(actionParams.action) && actionParams.action.length > 0) {
+			actionParams._oldAction = actionParams.action
+			actionParams.action = randomChoice(actionParams.action)
+		} else if (actionParams._oldAction) {
+			// 防止第二次进来就不随机了
+			actionParams.action = randomChoice(actionParams._oldAction)
+		}
 		let playedSprite = dynamic.playSpine(actionParams)
 		// 播放当前节点的动画, 隐藏原来的节点动画
 		playedSprite.opacity = 0
@@ -372,14 +410,29 @@ function action(data) {
 			// 查找动画
 			let actionName = actionParams.action
 			let duration
-
+			if (Array.isArray(actionName)) {
+				if (actionName.length === 0) {
+					actionName = undefined
+				}
+				actionName = randomChoice(actionParams.action)
+				actionParams._oldAction = actionParams.action
+			}else if (actionParams._oldAction) {
+				// 防止第二次进来就不随机了
+				actionName = randomChoice(actionParams._oldAction)
+			}
 			// 允许调整出框的大小和静态的大小不一致
 			if (actionParams.scale) {
 				apnode.scale = actionParams.scale
 			}
+			// 假动皮在千幻雷修的大页面播放下
 			if (!actionName) {
 				let defaultGongJiAction = getDefaultGongJiAction(dynamic, actionParams.name)
 				if (!defaultGongJiAction) return
+				// 防止假动皮出框
+				if (apnode.qhlxBigAvatar &&defaultGongJiAction.name !== 'GongJi') {
+					postMessage({id: data.id, type: 'canvasRecover'})
+					return
+				}
 				actionName = defaultGongJiAction.name
 				actionParams.action = actionName
 				// 有些静皮时间有点久, 需要重新指定一下
@@ -563,6 +616,16 @@ function debug(data) {
 				if (actionParams.scale) {
 					apnode.scale = actionParams.scale
 				}
+				if (Array.isArray(actionName)) {
+					if (actionName.length === 0) {
+						actionName = undefined
+					}
+					actionName = randomChoice(actionParams.action)
+					actionParams._oldAction = actionParams.action
+				}else if (actionParams._oldAction) {
+					// 防止第二次进来就不随机了
+					actionName = randomChoice(actionParams._oldAction)
+				}
 				if (!actionName) {
 					// 获取攻击动作
 					let defaultGongJiAction = getDefaultGongJiAction(dynamic, actionParams.name)
@@ -580,6 +643,13 @@ function debug(data) {
 			} else {
 				let playChukuang = function () {
 					actionParams.id = chukuangId++
+					if (Array.isArray(actionParams.action) && actionParams.action.length > 0) {
+						actionParams._oldAction = actionParams.action
+						actionParams.action = randomChoice(actionParams.action)
+					}else if (actionParams._oldAction) {
+						// 防止第二次进来就不随机了
+						actionParams.action = randomChoice(actionParams._oldAction)
+					}
 					let playedSprite = dynamic.playSpine(actionParams)
 					// 播放当前节点的动画, 隐藏原来的节点动画
 					playedSprite.opacity = 0

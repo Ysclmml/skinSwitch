@@ -618,6 +618,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'dynamicSkin': 'extension_皮肤切换_dynamicSkin', // 保存选择的皮肤的历史数据
                     'showEditMenu': 'extension_皮肤切换_showEditMenu', // 是否加入顶部菜单
                     'showPreviewDynamicMenu': 'extension_皮肤切换_showPreviewDynamicMenu', // 预览是否加入顶部菜单
+                    'closeXYPosAdjust': 'extension_皮肤切换_closeXYPosAdjust',  // 是否显示坐标微调
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -1046,7 +1047,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                         skinSwitch.rendererOnMessage.addListener(player, 'chukuangFirst', function (data) {
                             // 直接设置属性, 第一优先生效, 这里播放攻击动画, 调整播放canvas的位置, 不再跟随皮肤框,也就是动皮出框
-                            dynamicWrap.style.zIndex = "64";
+                            dynamicWrap.style.zIndex = 64;
                             canvas.style.position = "fixed";
                             canvas.style.height = "100%";
                             canvas.style.width = "100%";
@@ -1068,8 +1069,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             canvas.style.width = null;
                             canvas.style.position = null;
                             if (player.isQhlx) {
-                                player.style.zIndex = 62;
-                                dynamicWrap.style.zIndex = "62"
+                                dynamicWrap.style.zIndex = 62
                                 player.style.zIndex = 62
                             }
                             else player.style.zIndex = 4;
@@ -1106,6 +1106,18 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let me = player === game.me
                         if (player.isQhlx) me = true
                         if (res && res.dynamic) {
+                            if (!player.dynamic.renderer.postMessage) {
+                                skinSwitchMessage.show({
+                                    type: 'warning',
+                                    text: '当前动皮过多',
+                                    duration: 1500,    // 显示时间
+                                    closeable: false, // 可手动关闭
+                                })
+                                // 尝试清除千幻对应的特效
+                                clearInterval(_status.texiaoTimer);
+                                clearTimeout(_status.texiaoTimer2);
+                                return
+                            }
                             player.dynamic.renderer.postMessage({
                                 message: 'ACTION',
                                 id: player.dynamic.id,
@@ -1150,6 +1162,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 closeable: false, // 可手动关闭
                             })
                         }
+                        if (!player.dynamic.renderer.postMessage) {
+                            skinSwitchMessage.show({
+                                type: 'warning',
+                                text: '当前动皮过多',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
                         // 当前角色位置
                         let pp = skinSwitch.getCoordinate(player, true)
                         player.dynamic.renderer.postMessage({
@@ -1174,6 +1194,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 closeable: false, // 可手动关闭
                             })
                         }
+                        if (!player.dynamic.renderer.postMessage) {
+                            return
+                        }
                         player.dynamic.renderer.postMessage({
                             message: "POSITION",
                             id: player.dynamic.id,
@@ -1186,6 +1209,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             skinSwitchMessage.show({
                                 type: 'error',
                                 text: '只有当前角色是动皮时才可以编辑动皮参数',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
+                        if (!player.dynamic.renderer.postMessage) {
+                            skinSwitchMessage.show({
+                                type: 'warning',
+                                text: '当前动皮过多',
                                 duration: 1500,    // 显示时间
                                 closeable: false, // 可手动关闭
                             })
@@ -1207,6 +1238,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             skinSwitchMessage.show({
                                 type: 'error',
                                 text: '只有当前角色是动皮时才可以编辑动皮参数',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
+                        if (!player.dynamic.renderer.postMessage) {
+                            skinSwitchMessage.show({
+                                type: 'warning',
+                                text: '当前动皮过多',
                                 duration: 1500,    // 显示时间
                                 closeable: false, // 可手动关闭
                             })
@@ -1633,6 +1672,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 let daijiAdjust = ui.create.div('.btn .pointer', daijiGroup)
                 let daijiScale = ui.create.div('.btn', daijiGroup)
                 let daijiAngle = ui.create.div('.btn', daijiGroup)
+
                 let daijiXPosNum = ui.create.div('.btn .posNum', daijiGroup)
                 let daijiYPosNum = ui.create.div('.btn .posNum', daijiGroup)
                 let daijiPos = ui.create.div('.btn', daijiGroup)  // 位置参数显示
@@ -1656,6 +1696,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 let chukuangXYPos = {
                     x: [0, 0.5],
                     y: [0, 0.5]
+                }
+
+                if (lib.config[skinSwitch.configKey.closeXYPosAdjust]) {
+                    daijiXPosNum.classList.add('hidden-adjust')
+                    daijiYPosNum.classList.add('hidden-adjust')
+                    chuKuangXPosNum.classList.add('hidden-adjust')
+                    chuKuangYPosNum.classList.add('hidden-adjust')
                 }
 
                 daijiEdit.innerHTML = '播放待机'
@@ -1924,7 +1971,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let canvas = player.getElementsByClassName("animation-player")[0];
                     let dynamicWrap
                     if (player.isQhlx) {
-                        dynamicWrap = player.getElementsByClassName("qhdynamic-big-wrap")[0];
+                        dynamicWrap = window.getElementsByClassName("qhdynamic-big-wrap")[0];
                     } else {
                         dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
                     }
@@ -2545,6 +2592,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 intro: "当你更换的dynamicSkin.js与上一个版本内容差距较大时，需重置",
                 clear: true
             },
+            'closeXYPosAdjust': {
+                name: "是否关闭位置微调",
+                "init": true,
+                "intro": "预览窗口空间有点不够,这个微调功能用到比较少,所以可以选择关闭",
+            },
             "showEditMenu": {
                 "name": "编辑动态皮肤加入顶部菜单",
                 "init": false,
@@ -2588,3 +2640,20 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
         },
         files:{"character":[],"card":[],"skill":[]}}
 })
+
+/** 1.02版本更新:
+ 1. 主要增加对千幻聆音雷修版本的兼容与对应功能的适配.
+ 原来雷修版本因为要做到通用, 所以大屏页面播放的适配头像都比较大, 我对比了手杀的动皮播放页面发现还是需要做更多的微调兼容,
+ 现在可以使用原来调整待机动画的方式调整大屏页面播放的大小与位置细节了.  不过需要对千幻雷修的extension.js文件做一定的修改,
+ readme.md中我会详细记录如何修改以使得雷修版本比较好的进行兼容.
+ 2. 如果一个动皮的攻击动作有两个(比如吕绮玲的战场绝版), 可以两个动作标签都进行填写了, 这样进行攻击操作会随机播放一个动作.
+ 3. spine预览页面增加α预乘选项
+ 4. 简单的做了调整框的适配, 现在默认会关闭微调xy坐标的,实际上用到的比较少, 也是节省调整的空间.
+ 5. 修复了保存的一些bug
+ */
+
+/** 1.03版本更新:
+ 增加千幻大屏动皮出框没有调整使用雷佬默认的出框参数
+ 修复假动皮预览自动出框攻击的bug
+ 测试了8个动皮的场景, 修改部分千幻雷修代码使得兼容.
+ */

@@ -13,30 +13,30 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     0.47
                 ]
             },
-            "qhlx": {
-                "gongji": {
-                    "scale": 1,
-                    "x": [
-                        0,
-                        0.27
-                    ],
-                    "y": [
-                        0,
-                        0.5
-                    ]
-                },
-                "daiji": {
-                    "scale": 1,
-                    "x": [
-                        0,
-                        0.91
-                    ],
-                    "y": [
-                        0,
-                        0.38
-                    ]
-                }
-            }
+            // "qhlx": {
+            //     "gongji": {
+            //         "scale": 1,
+            //         "x": [
+            //             0,
+            //             0.25
+            //         ],
+            //         "y": [
+            //             0,
+            //             0.51
+            //         ]
+            //     },
+            //     "daiji": {
+            //         "scale": 1,
+            //         "x": [
+            //             0,
+            //             0.93
+            //         ],
+            //         "y": [
+            //             0,
+            //             0.41
+            //         ]
+            //     }
+            // }
         },
         "蛇蝎为心": {
             "qhlx": {
@@ -138,11 +138,11 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     "scale": 0.75,
                     "x": [
                         0,
-                        0.25
+                        0.27
                     ],
                     "y": [
                         0,
-                        0.59
+                        0.55
                     ]
                 }
             }
@@ -153,7 +153,7 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
             "scale": 0.5,
             "x": [
                 0,
-                0.17
+                0.19
             ],
             "y": [
                 0,
@@ -163,34 +163,34 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 "scale": 0.7,
                 "x": [
                     0,
-                    0.73
+                    0.81
                 ],
                 "y": [
                     0,
-                    0.38
+                    0.4
                 ]
             },
             "qhlx": {
+                "daiji": {
+                    "scale": 1.1,
+                    "x": [
+                        0,
+                        0.5
+                    ],
+                    "y": [
+                        0,
+                        0.43
+                    ]
+                },
                 "gongji": {
-                    "scale": 0.9,
+                    "scale": 1.1,
                     "x": [
                         0,
                         0.31
                     ],
                     "y": [
                         0,
-                        0.45
-                    ]
-                },
-                "daiji": {
-                    "scale": 0.8,
-                    "x": [
-                        0,
-                        0.58
-                    ],
-                    "y": [
-                        0,
-                        0.51
+                        0.49
                     ]
                 }
             }

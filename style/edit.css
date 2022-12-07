@@ -37,7 +37,8 @@
     position: relative;
     box-shadow: rgb(0 0 0 / 20%) 0 0 0 1px, rgb(0 0 0 / 45%) 0 3px 10px;
     border-radius: 4px;
-    margin-top: 4%;
+    margin: 3%;
+    flex: 1;
 }
 
 .adjust-position {
@@ -51,7 +52,7 @@
 }
 
 .hidden-adjust {
-    display: none;
+    display: none !important;
 }
 
 .adjust-select {
@@ -118,7 +119,7 @@
     left: 2%;
     width: 135px;
     height: 135px;
-    z-index: 100;
+    z-index: 1000;
 }
 .adjustDirection .directionDiv {
     position: relative;
