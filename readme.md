@@ -473,6 +473,14 @@ game.playShoushaAvatar = function (node) {
 
 大概在8394行关闭手杀大屏页面时候,同时缓存该dynamic, 然后在下一次打开手杀大屏页面, 重新挂载到新的node上
 
+在这里还需要添加一行:
+
+```js
+ subView.avatar.name = name  // 还需要添加当前角色name
+```
+
+
+
 ![](./doc/千幻6.png)
 
 ```js

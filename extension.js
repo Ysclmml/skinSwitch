@@ -1261,7 +1261,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 previewDynamic: function () {
                     let previewWindow = ui.create.div('.previewWindow', ui.window)
                     previewWindow.id = 'previewWindowDiv'
-                    previewWindow.style = `background: rgb(60,60,60);z-index: 99999;position: fixed; width: 100%; height: 100%;`
+                    previewWindow.style = `background: rgb(60,60,60);z-index: 3000;position: fixed; width: 100%; height: 100%;`
                     previewWindow.innerHTML = `
                     <style>
                         #preview-canvas { position: absolute; width: 100% ;height: 100%; }
@@ -1270,6 +1270,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     <canvas id="preview-canvas"></canvas>
                     <div style="color: #fff; position: absolute; top: 0; left: 30px;">
                         <span style="font-weight: bold">spine动画预览窗口</span>
+                        <span>目录:</span><select id="folders"></select>
                         <span>骨骼:</span><select id="skeletonList"></select>
                         <span>动画标签:</span><select id="animationList"></select>
                         <span>Debug:</span><input type="checkbox" id="debug">
@@ -1277,6 +1278,15 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <span>大小:<input id="scale" type="number" value="0.5" step="0.05"></span>
                         <span>x: <input id="posX" type="number" value="0.5" step="0.05"></span>
                         <span>y: <input id="posY" type="number" value="0.5" step="0.05"></span>
+<!--                        <form id="form">-->
+<!--                          <select name="state" id="state">-->
+<!--                          <option value="">-&#45;&#45;</option>-->
+<!--                          <option value="MO">Missouri</option>-->
+<!--                        \t\t\t<option value="WA">Washington</option>-->
+<!--                        \t\t\t<option value="CA">California</option>-->
+<!--                        \t\t</select>-->
+<!--                          <select name="city" id="city"></select>-->
+<!--                        </form>-->
                         <button id="closePreviewWindow" style="margin-left: 20px">关闭预览窗口</button>
                     </div>
                     `
@@ -1290,9 +1300,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let debugRenderer;
                     let shapes;
                     let lastFrameTime;
-                    let skeletons = {};
                     let activeSkeleton = "";
-                    let loadSkels = {}
+
+                    let curDir = '根目录'  // 标明当前预览的目录, 默认是根目录
+                    let skeletons = {}
+                    let allLoadSkels = {}  // 管理所有已经加载好的骨骼文件
+                    let allLoadAssetType = {}  // 管理所有已经加载好的骨骼文件
+                    let allSkels = {}  // 管理所有骨骼数据. 骨骼名称和骨骼后缀
 
                     let isClosed = false   // 全局信号, 通知关闭, 停止渲染
 
@@ -1307,6 +1321,28 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             parent.removeChild(self)
                         }, 200)
                     })
+
+                    let loadAssets = (fold, skels) => {
+                        // 先加载根目录下的所有骨骼
+                        let loadSkels = {}
+                        let prefix = ''
+                        if (fold === '根目录') prefix = ''
+                        else prefix = fold + '/'
+                        for (let k in skels) {
+                            let values = skels[k]
+                            if ('atlas' in values && 'json' in values) {
+                                assetManager.loadText(prefix + values['json']);
+                                assetManager.loadTextureAtlas(prefix + values['atlas']);
+                                loadSkels[k] = 'json'
+                            } else if ('atlas' in values && 'skel' in values) {
+                                assetManager.loadBinary(prefix + values['skel']);
+                                assetManager.loadTextureAtlas(prefix + values['atlas']);
+                                loadSkels[k] = 'skel'
+                            }
+                        }
+                        allLoadAssetType[fold] = loadSkels
+                    }
+
 
                     function init () {
                         // Setup canvas and WebGL context. We pass alpha: false to canvas.getContext() so we don't use premultiplied alpha when
@@ -1342,50 +1378,76 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         // Tell AssetManager to load the resources for each skeleton, including the exported .skel file, the .atlas file and the .png
                         // file for the atlas. We then wait until all resources are loaded in the load() method.
 
+
                         // 动态的获取放入asset文件夹下的所有文件, 然后下拉进行预览
                         game.getFileList(skinSwitch.path + '/assets', function (folds, files) {
-                            let arr = Array.from(files);
-                            let skels = {}
-                            arr.forEach(file => {
-                                let name = file.substring(0, file.lastIndexOf("."))
-                                let ext = file.substring(file.lastIndexOf(".")+1)
-                                if (!(name in skels)) {
-                                    skels[name] = {}
-                                }
-                                skels[name][ext] = file
 
-                            })
-                            // 加载所有骨骼
-                            for (let k in skels) {
-                                let values = skels[k]
-                                if ('atlas' in values && 'json' in values) {
-                                    assetManager.loadText(values['json']);
-                                    assetManager.loadTextureAtlas(values['atlas']);
-                                    loadSkels[k] = 'json'
-                                } else if ('atlas' in values && 'skel' in values) {
-                                    assetManager.loadBinary(values['skel']);
-                                    assetManager.loadTextureAtlas(values['atlas']);
-                                    loadSkels[k] = 'skel'
-                                }
+                            let getDynamicFiles = files => {
+                                let skels = {}
+                                files.forEach(file => {
+                                    let name = file.substring(0, file.lastIndexOf("."))
+                                    let ext = file.substring(file.lastIndexOf(".")+1)
+                                    if (!(name in skels)) {
+                                        skels[name] = {}
+                                    }
+                                    skels[name][ext] = file
+                                })
+                                return skels
                             }
+                            // 加载主目录下的所有文件
+                            allSkels['根目录'] = getDynamicFiles(files)
+                            let folderSel = document.getElementById('folders')
+                            let folderAdd = function (folder, selected) {
+                                let option = document.createElement('option')
+                                option.setAttribute('value', folder)
+                                option.text = folder
+                                if (selected) option.setAttribute('selected', selected)
+                                folderSel.options.add(option)
+                            }
+                            folderAdd('根目录', true)
+
+
+                            // 获取以及和二级目录对应的文件信息
+                            folds.forEach(fold => {
+                                game.getFileList(skinSwitch.path + '/assets/' + fold, function (folds, files)  {
+                                    allSkels[fold] = getDynamicFiles(files)
+                                    folderAdd(fold, false)
+                                })
+                            })
+
+                            // 先加载根目录下的所有骨骼
+                            loadAssets('根目录', allSkels['根目录'])
                             requestAnimationFrame(load)
                         })
 
                         document.getElementById('scale').oninput = function (e) {
                             let v = e.srcElement.value
-                            skeletons[activeSkeleton].previewParams.scale = v
+                            allLoadSkels[curDir][activeSkeleton].previewParams.scale = v
                         }
                         document.getElementById('posX').oninput = function (e) {
                             let v = e.srcElement.value
-                            skeletons[activeSkeleton].previewParams.posX = v
+                            allLoadSkels[curDir][activeSkeleton].previewParams.posX = v
                         }
                         document.getElementById('posY').oninput = function (e) {
                             let v = e.srcElement.value
-                            skeletons[activeSkeleton].previewParams.posY = v
+                            allLoadSkels[curDir][activeSkeleton].previewParams.posY = v
                         }
 
                         document.getElementById('premultipliedAlpha').onchange = function (e) {
-                            skeletons[activeSkeleton].previewParams.premultipliedAlpha = e.target.checked
+                            allLoadSkels[curDir][activeSkeleton].previewParams.premultipliedAlpha = e.target.checked
+                        }
+
+                        document.getElementById('folders').onchange = function (e) {
+                            curDir = this.options[this.selectedIndex].text
+                            // 输入框的值也改成存储的值
+                            if (!allLoadAssetType[curDir]) {
+                                requestAnimationFrame(load)
+                            } else {
+                                setupUI();
+                                lastFrameTime = Date.now() / 1000;
+                                resize();
+                                requestAnimationFrame(render)
+                            }
                         }
 
                     }
@@ -1393,16 +1455,36 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     function load () {
                         // Wait until the AssetManager has loaded all resources, then load the skeletons.
                         if (assetManager.isLoadingComplete()) {
+                            let loadAssetType = allLoadAssetType[curDir]
+                            if (!loadAssetType) {
+                                loadAssets(curDir, allSkels[curDir])
+                                return requestAnimationFrame(load)
 
-                            let i = 0
+                            }
+                            let tmpSkeletons = {}
                             // 保存所有的骨骼数据
-                            for (let k in loadSkels) {
-                                if (i === 0 ){
-                                    activeSkeleton = k
-                                    i++
+                            for (let k in loadAssetType) {
+                                let name = k
+                                if (curDir !== '根目录') {
+                                    name = curDir + '/' + k
                                 }
-                                skeletons[k] = loadSkeleton(k, loadSkels[k])
-                                skeletons[k].previewParams = {scale: 0.5, posX: 0.5, posY: 0.5}
+                                try {
+
+                                    tmpSkeletons[name] = loadSkeleton(name, loadAssetType[k])
+                                    skeletons[name] = tmpSkeletons[name]
+                                } catch (e) {
+                                    console.log(`加载${curDir}骨骼${k}出错, 请检查骨骼是否正确`)
+                                    if (window.skinSwitchMessage) {
+                                        skinSwitchMessage.show({
+                                            'type': 'warning',
+                                            'text': `加载${curDir}中骨骼${k}出错, 请检查骨骼是否正确`,
+                                            'duration': 3000
+                                        })
+                                    }
+                                    continue
+                                }
+                                tmpSkeletons[name].previewParams = {scale: 0.5, posX: 0.5, posY: 0.5}
+                                allLoadSkels[curDir] = tmpSkeletons
                             }
                             setupUI();
                             lastFrameTime = Date.now() / 1000;
@@ -1480,10 +1562,21 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     function setupUI () {
                         let skeletonList = document.getElementById('skeletonList')
+                        // 获取所有当前目录开头的文件
+                        let skeletons = allLoadSkels[curDir]
+                        skeletonList.options.length = 0
+                        let i = 0
                         for (let skeletonName in skeletons) {
+                            if (i === 0 ){
+                                activeSkeleton = skeletonName
+                                i++
+                            }
                             let option = document.createElement('option')
                             option.setAttribute('value', skeletonName)
-                            option.text = skeletonName
+                            if (skeletonName.startsWith(curDir + '/'))
+                                option.text = skeletonName.substr(curDir.length + 1, skeletonName.length)
+                            else
+                                option.text = skeletonName
                             if (skeletonName === activeSkeleton)  option.setAttribute('selected', 'selected')
                             skeletonList.options.add(option)
                         }
@@ -1515,7 +1608,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                         skeletonList.onchange = function() {
-                            activeSkeleton = skeletonList.options[skeletonList.selectedIndex].text
+                            activeSkeleton = skeletonList.options[skeletonList.selectedIndex].value
                             // 输入框的值也改成存储的值
                             document.getElementById('scale').value = skeletons[activeSkeleton].previewParams.scale
                             document.getElementById('posX').value = skeletons[activeSkeleton].previewParams.posX
@@ -1971,7 +2064,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let canvas = player.getElementsByClassName("animation-player")[0];
                     let dynamicWrap
                     if (player.isQhlx) {
-                        dynamicWrap = window.getElementsByClassName("qhdynamic-big-wrap")[0];
+                        dynamicWrap = player.getElementsByClassName("qhdynamic-big-wrap")[0];
                     } else {
                         dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
                     }

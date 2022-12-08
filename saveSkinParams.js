@@ -13,30 +13,30 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     0.47
                 ]
             },
-            // "qhlx": {
-            //     "gongji": {
-            //         "scale": 1,
-            //         "x": [
-            //             0,
-            //             0.25
-            //         ],
-            //         "y": [
-            //             0,
-            //             0.51
-            //         ]
-            //     },
-            //     "daiji": {
-            //         "scale": 1,
-            //         "x": [
-            //             0,
-            //             0.93
-            //         ],
-            //         "y": [
-            //             0,
-            //             0.41
-            //         ]
-            //     }
-            // }
+            "qhlx": {
+                "gongji": {
+                    "scale": 1,
+                    "x": [
+                        0,
+                        0.27
+                    ],
+                    "y": [
+                        0,
+                        0.43
+                    ]
+                },
+                "daiji": {
+                    "scale": 1,
+                    "x": [
+                        0,
+                        0.9
+                    ],
+                    "y": [
+                        0,
+                        0.48
+                    ]
+                }
+            }
         },
         "蛇蝎为心": {
             "qhlx": {
@@ -191,6 +191,23 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     "y": [
                         0,
                         0.49
+                    ]
+                }
+            }
+        }
+    },
+    "guozhao": {
+        "雍容尊雅": {
+            "qhlx": {
+                "daiji": {
+                    "scale": 1.2,
+                    "x": [
+                        -80,
+                        0.6
+                    ],
+                    "y": [
+                        8,
+                        0.45
                     ]
                 }
             }
