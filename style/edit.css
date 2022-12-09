@@ -159,3 +159,29 @@
     -webkit-transform: rotate(45deg);
 }
 
+.pfqhFadeInEffect {
+    animation: fadeIn 0.05s;
+    -webkit-animation: fadeIn 0.05s;
+}
+
+@keyframes pfqhFadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@-webkit-keyframes pfqhFadeIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+

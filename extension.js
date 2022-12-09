@@ -228,6 +228,38 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                         };
 
+                        // 检查游戏开始, 检查自己的是否是十周年真动皮, 播放出场动画, 暂时不考虑双将模式
+                        lib.skill._checkDcdChang = {
+                            trigger:{
+                                global:"phaseBefore",
+                            },
+                            forced: true,
+                            filter: function (event, player) {
+                                console.log(event)
+                                return game.players.length > 1 && player.phaseNumber===0 && player === event.player && !player.doubleAvatar && player.dynamic
+                            },
+                            content: function () {
+                                console.log(player, 'chuchang.....')
+                                skinSwitch.postMsgApi.actionChuChang(player)
+                            }
+                        };
+                        lib.skill._checkDcdShan = {
+                            trigger:{
+                                player:'useCard'
+                            },
+                            forced: true,
+                            filter: function (event, player) {
+                                // 打出闪时
+                                return event.card.name === 'shan' && player.dynamic
+                            },
+                            content: function () {
+                                console.log(player, 'shan.....')
+                                if (player.dynamic.primary && player.dynamic.primary.player.shizhounian) {
+                                    skinSwitch.postMsgApi.action(player, player.dynamic.primary.player.shan || 'play3')
+                                }
+                            }
+                        };
+
                         lib.skill._setDoubleAvatarBackground = {
                             trigger: {
                                 global: 'gameStart'
@@ -639,7 +671,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         x: rect.left,
                         y: decadeUI.get.bodySize().height - (subtr ? rect.bottom : 0),
                         width: rect.width,
-                        height: rect.height
+                        height: rect.height,
+                        bodyWidth: decadeUI.get.bodySize().width,
+                        bodyHeight: decadeUI.get.bodySize().height,
                     };
                 },
                 // 计算其他角色的方向与位置, 播放动画可以调整
@@ -1047,7 +1081,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                         skinSwitch.rendererOnMessage.addListener(player, 'chukuangFirst', function (data) {
                             // 直接设置属性, 第一优先生效, 这里播放攻击动画, 调整播放canvas的位置, 不再跟随皮肤框,也就是动皮出框
-                            dynamicWrap.style.zIndex = 64;
+                            dynamicWrap.style.zIndex = 100;
                             canvas.style.position = "fixed";
                             canvas.style.height = "100%";
                             canvas.style.width = "100%";
@@ -1056,8 +1090,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             } else {
                                 player.style.zIndex = 64  // 防止遮住血量
                             }
+                            // canvas.style.opacity = 0
                             // 防止闪烁,
-                            canvas.classList.add('hidden')
+                            // canvas.classList.add('pfqhFadeInEffect')
                             // setTimeout(() => {
                             //     canvas.classList.remove('hidden')
                             // }, 250)
@@ -1078,9 +1113,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         skinSwitch.rendererOnMessage.addListener(player, 'chukuangSecond', function (data) {
                             // 这里表示动画已经准备好了, 可以显示
-                            setTimeout(()=>{
-                                canvas.classList.remove('hidden')
-                            }, 100)
+                            // setTimeout(()=>{
+                            //     canvas.classList.remove('pfqhFadeIn')
+                            // }, 50)
 
                             let playName
                             if (res.dynamic.gongji && res.dynamic.gongji.name) {
@@ -1104,7 +1139,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let res = skinSwitch.dynamic.checkCanBeAction(player)
                         let pp = skinSwitch.getCoordinate(player, true)
                         let me = player === game.me
-                        if (player.isQhlx) me = true
+                        if (player.name === game.me.name) me = true
                         if (res && res.dynamic) {
                             if (!player.dynamic.renderer.postMessage) {
                                 skinSwitchMessage.show({
@@ -1145,6 +1180,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     this._onchangeDynamicWindow(player, r)
                                 }
                             }, this)
+                        }
+                    },
+                    // 播放十周年的出场动画
+                    actionChuChang: function(player) {
+                        let r = this.action(player, 'chuchang')
+                        player.GongJi = false
+                        if (r) {
+                            this._onchangeDynamicWindow(player, r)
                         }
                     },
                     actionGongJi: function(player) {
@@ -1859,7 +1902,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 break
                         }
                         console.log(dat, currentPlay)
-                        skinSwitch.postMsgApi.adjust(player, currentPlay, {x: dat.x[1], y: dat.y[1]})
+                        skinSwitch.postMsgApi.adjust(player, currentPlay, {x: dat.x, y: dat.y})
 
                         // 改变文本值
                         if (currentPlay === 'daiji') {
@@ -1877,10 +1920,21 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
 
                 let updateAdjustPos = function (pos, mode) {
+                    let bodyH = decadeUI.get.bodySize().height
+                    let bodyW = decadeUI.get.bodySize().width
                     if (mode === 'daiji') {
+                        if (!Array.isArray(pos.x)) {
+                            // 转化为百分比
+                            pos.x = [0, Number((pos.x / bodyW).toFixed(2))]
+                            pos.y = [0, Number((1 - pos.y / bodyH).toFixed(2))]
+                        }
                         daijiXYPos.x = pos.x
                         daijiXYPos.y = pos.y
                     } else {
+                        if (!Array.isArray(pos.x)) {
+                            pos.x = [0, Number((pos.x / bodyW).toFixed(2))]
+                            pos.y = [0, Number((1 - pos.y / bodyH).toFixed(2))]
+                        }
                         chukuangXYPos.x = pos.x
                         chukuangXYPos.y = pos.y
                     }
@@ -2084,7 +2138,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     skinSwitch.postMsgApi.debug(player, mode)
                     skinSwitch.rendererOnMessage.addListener(player, 'debugChuKuang', function (e) {
-                        dynamicWrap.style.zIndex = "63";
+                        dynamicWrap.style.zIndex = "100";
                         canvas.style.position = "fixed";
                         canvas.style.height = "100%";
                         canvas.style.width = "100%";
@@ -2749,4 +2803,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  增加千幻大屏动皮出框没有调整使用雷佬默认的出框参数
  修复假动皮预览自动出框攻击的bug
  测试了8个动皮的场景, 修改部分千幻雷修代码使得兼容.
+ */
+
+
+/** 1.04版本更新:
+ spine预览现在可以直接放进去文件夹进行预览
  */

@@ -2,42 +2,16 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
 {
     "hetaihou": {
         "战场绝版": {
-            "gongji": {
-                "scale": 0.7,
-                "x": [
-                    0,
-                    0.64
-                ],
-                "y": [
-                    0,
-                    0.47
-                ]
+            "scale": 1,
+            "x": [
+                0,
+                0.72
+            ],
+            "y": [
+                0,
+                0.41
+            ],
             },
-            "qhlx": {
-                "gongji": {
-                    "scale": 1,
-                    "x": [
-                        0,
-                        0.27
-                    ],
-                    "y": [
-                        0,
-                        0.43
-                    ]
-                },
-                "daiji": {
-                    "scale": 1,
-                    "x": [
-                        0,
-                        0.9
-                    ],
-                    "y": [
-                        0,
-                        0.48
-                    ]
-                }
-            }
-        },
         "蛇蝎为心": {
             "qhlx": {
                 "daiji": {
@@ -148,54 +122,6 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
             }
         }
     },
-    "lvlingqi": {
-        "战场绝版": {
-            "scale": 0.5,
-            "x": [
-                0,
-                0.19
-            ],
-            "y": [
-                0,
-                0.46
-            ],
-            "gongji": {
-                "scale": 0.7,
-                "x": [
-                    0,
-                    0.81
-                ],
-                "y": [
-                    0,
-                    0.4
-                ]
-            },
-            "qhlx": {
-                "daiji": {
-                    "scale": 1.1,
-                    "x": [
-                        0,
-                        0.5
-                    ],
-                    "y": [
-                        0,
-                        0.43
-                    ]
-                },
-                "gongji": {
-                    "scale": 1.1,
-                    "x": [
-                        0,
-                        0.31
-                    ],
-                    "y": [
-                        0,
-                        0.49
-                    ]
-                }
-            }
-        }
-    },
     "guozhao": {
         "雍容尊雅": {
             "qhlx": {
@@ -211,6 +137,45 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     ]
                 }
             }
+        }
+    },
+    "lvlingqi": {
+        "战场绝版": {
+            "scale": 1,
+            "x": [
+                0,
+                0.22
+            ],
+            "y": [
+                0,
+                0.46
+            ],
+            "qhlx": {
+                "gongji": {
+                    "scale": 1,
+                    "x": [
+                        0,
+                        0.27
+                    ],
+                    "y": [
+                        0,
+                        0.49
+                    ]
+                }
+            }
+        }
+    },
+    "xushao": {
+        "评世雕龙": {
+            "scale": 0.6,
+            "x": [
+                0,
+                0.53
+            ],
+            "y": [
+                0,
+                0.32
+            ]
         }
     }
 }

@@ -506,6 +506,28 @@ function action(data) {
 			}
 		}
 
+	} else if (data.action === 'chuchang') {
+		// 暂时只让不同皮肤出框.
+		let actionParams = player.chuchangAction
+		if (!actionParams) return
+		// 如果是同一个节点
+		if (actionParams.name === apnode.name) {
+			animation = apnode.skeleton.data.findAnimation(actionParams.action)
+			if (!animation) return
+			if (!animation.duration && !actionParams.showTime) {
+				animation.showTime = 2
+			}
+			playChuKuangSpine(apnode, animation)
+		} else {
+			if (!dynamic.hasSpine(actionParams.name)) {
+				dynamic.loadSpine(actionParams.name, "skel", function () {
+					playChukuang(actionParams)
+				}, errPlaySpine)
+			} else {
+				playChukuang(actionParams)
+			}
+		}
+
 	} else {
 		animation = apnode.skeleton.data.findAnimation(data.action)
 		apnode.skeleton.state.setAnimationWith(0, animation, false)
@@ -899,6 +921,23 @@ function completeParams(node) {
 	let teshu = player.teshu
 	let gongjiType = typeof gongji
 	let teshuType = typeof teshu
+
+	// 定义为十周年的开局出场
+	let chuchang = player.chuchang
+	let chuchangType = typeof chuchang
+
+	// 如果填写了出场参数, 基本确认是十周年的真动皮
+	if (chuchang) {
+		if (chuchangType === 'object') {
+			if (!chuchang.name) {chuchang.name = node.name}
+			if (!chuchang.action) {chuchang.action = 'chuchang'}
+			if (!chuchang.x) {chuchang.x = [0, 0.8]}
+			if (!chuchang.y) {chuchang.y = [0, 0.1]}
+			if (!chuchang.scale) {chuchang.scale = player.scale}
+			player.chuchangAction = chuchang
+		}
+	}
+
 	// 这是原来的EngEX扩展的判断手杀真动皮的写法. player.pos用来调整出框位置参数, 兼容此种写法, 如果填写了pos认为是原来的真动皮
 	if (player.pos) {
 		gongjiAction = {
