@@ -350,7 +350,6 @@ content:function(config, pack){
 			
 			var Player = (function(Player){
 				// Player.init = function (character, character2, skill) {
-				// 	// 判断是否是双将
 				// 	this.doubleAvatar = (character2 && lib.character[character2]) != undefined;
 				//
 				// 	var CUR_DYNAMIC = decadeUI.CUR_DYNAMIC;
@@ -361,27 +360,22 @@ content:function(config, pack){
 				// 	}
 				//
 				// 	if (MAX_DYNAMIC == undefined) {
-				// 		// 定义最多手机, 如果支持离屏那么最多显示10个动皮, 否则2个
 				// 		MAX_DYNAMIC = decadeUI.isMobile() ? 2 : 10;
 				// 		if (window.OffscreenCanvas)
 				// 			MAX_DYNAMIC += 8;
 				// 		decadeUI.MAX_DYNAMIC = MAX_DYNAMIC;
 				// 	}
-				// 	// 停止之前的动皮动画. dynamic是DynamicPlayer对象
+				//
 				// 	if (this.dynamic)
 				// 		this.stopDynamic();
-				//
-				// 	// 必须要开启动皮选项或者动皮数量小于最大限制或者当前角色存在动皮管理对象
 				// 	var showDynamic = (this.dynamic || CUR_DYNAMIC < MAX_DYNAMIC) && duicfg.dynamicSkin;
 				// 	if (showDynamic && _status.mode != null) {
 				// 		var skins;
 				// 		var dskins = decadeUI.dynamicSkin;
 				// 		var avatars = this.doubleAvatar ? [character, character2] : [character];
 				// 		var increased;
-				// 		// 根据是否是双将播放对应的动画
-				// 		for (var i = 0; i < avatars.length; i++) {
 				//
-				// 			// 根据当前角色的获取提前配置的动皮参数. 如果没有, 就直接返回
+				// 		for (var i = 0; i < avatars.length; i++) {
 				// 			skins = dskins[avatars[i]];
 				// 			if (skins == undefined)
 				// 				continue;
@@ -392,14 +386,9 @@ content:function(config, pack){
 				// 				continue;
 				// 			}
 				//
-				// 			// 默认只展示第一个皮肤, 这就可以根据这个来进行更换.
 				// 			var skin = skins[Object.keys(skins)[0]];
 				// 			if (skin.speed == undefined)
 				// 				skin.speed = 1;
-				//
-				// 			console.log("十周年原始初始化.........")
-				//
-				// 			// 播放动皮, 传参
 				// 			this.playDynamic({
 				// 				name: skin.name,		//	string 骨骼文件名，一般是assets/dynamic 下的动皮文件，也可以使用.. 来寻找其他文件目录
 				// 				action: skin.action,	// string 播放动作 不填为默认
@@ -421,7 +410,6 @@ content:function(config, pack){
 				// 				clipSlots: skin.clipSlots,	// 剪掉超出头的部件，仅针对露头动皮，其他勿用
 				// 			}, i == 1);
 				//
-				// 			// 设置的动皮背景
 				// 			this.$dynamicWrap.style.backgroundImage = 'url("' + extensionPath + 'assets/dynamic/' + skin.background + '")';
 				// 			if (!increased) {
 				// 				increased = true;
@@ -4090,21 +4078,16 @@ content:function(config, pack){
 						},
 						
 						playDynamic:function(animation, deputy){
-							// 是否是副将
 							deputy = deputy === true;
-							if (animation === undefined) return console.error('playDynamic: 参数1不能为空');
-							// 当前角色的动皮管理对象
+							if (animation == undefined) return console.error('playDynamic: 参数1不能为空');
 							var dynamic = this.dynamic;
 							if (!dynamic) {
-								// 动皮管理对象初始化. 动皮放在dynamic文件夹下
 								dynamic = new duilib.DynamicPlayer('assets/dynamic/');
 								dynamic.dprAdaptive = true;
 								this.dynamic = dynamic;
-								// 将动皮自带的canvas挂载到动皮播放的的div容器中.
 								this.$dynamicWrap.appendChild(dynamic.canvas);
 							}
 							// else {
-							// 	// 停止原来的动皮效果
 							// 	if (deputy && dynamic.deputy) {
 							// 		dynamic.stop(dynamic.deputy);
 							// 		dynamic.deputy = null;
@@ -4115,7 +4098,6 @@ content:function(config, pack){
 							// }
 							
 							if (typeof animation == 'string') animation = { name: animation };
-							// 如果双将, 那么需要进行裁剪,调整位置
 							if (this.doubleAvatar) {
 								if (Array.isArray(animation.x)) {
 									animation.x = animation.x.concat();
@@ -4140,9 +4122,7 @@ content:function(config, pack){
 							if (this.$dynamicWrap.parentNode != this) this.appendChild(this.$dynamicWrap);
 							
 							dynamic.outcropMask = duicfg.dynamicSkinOutcrop;
-							// 调用动皮管理对象的play方法, 即DynamicPlayer.play方法
 							var avatar = dynamic.play(animation);
-							// 保存动皮管理对象的主将和副将, primary和deputy是对象APNode, 存储这的皮肤动画的NodeId
 							if (deputy === true) {
 								dynamic.deputy = avatar;
 							} else {
@@ -4155,7 +4135,7 @@ content:function(config, pack){
 						stopDynamic:function(primary, deputy){
 							var dynamic = this.dynamic;
 							if (!dynamic) return;
-
+							
 							primary = primary === true;
 							deputy  = deputy  === true;
 							
@@ -9764,7 +9744,7 @@ content:function(config, pack){
 	
 	decadeUI.game = {
 		loop:function(){
-			if (game.looping) return false;
+			if (game.looping) return false; 
 			game.looping = true;
 			var event = _status.event;
 			var step = event.step;

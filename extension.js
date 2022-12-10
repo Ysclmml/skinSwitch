@@ -1,4 +1,5 @@
 game.import("extension",function(lib,game,ui,get,ai,_status) {
+
     return {
         name: "皮肤切换",
         content:function(config,pack) {
@@ -125,6 +126,64 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             } else if (info && info.logv !== false) {
                                 game.logv(this, name, targets);
                             }
+
+                            if (info) {
+                                var player = this;
+                                var players = player.getSkills(null, false, false);
+                                var equips = player.getSkills('e');
+                                var global = lib.skill.global.slice(0);
+                                var logInfo = {
+                                    skill: name,
+                                    targets: targets,
+                                    event: _status.event,
+                                };
+                                if (info.sourceSkill) {
+                                    logInfo.sourceSkill = name;
+                                    if (global.contains(name)) {
+                                        logInfo.type = 'global';
+                                    } else if (players.contains(name)) {
+                                        logInfo.type = 'player';
+                                    } else if (equips.contains(name)) {
+                                        logInfo.type = 'equip';
+                                    }
+                                } else {
+                                    if (global.contains(name)) {
+                                        logInfo.sourceSkill = name;
+                                        logInfo.type = 'global';
+                                    } else if (players.contains(name)) {
+                                        logInfo.sourceSkill = name;
+                                        logInfo.type = 'player';
+                                    } else if (equips.contains(name)) {
+                                        logInfo.sourceSkill = name;
+                                        logInfo.type = 'equip';
+                                    } else {
+                                        var bool = false;
+                                        for (var i of players) {
+                                            var expand = [i];
+                                            game.expandSkills(expand);
+                                            if (expand.contains(name)) {
+                                                bool = true;
+                                                logInfo.sourceSkill = i;
+                                                logInfo.type = 'player';
+                                                break;
+                                            }
+                                        }
+                                        if (!bool) {
+                                            for (var i of players) {
+                                                var expand = [i];
+                                                game.expandSkills(expand);
+                                                if (expand.contains(name)) {
+                                                    logInfo.sourceSkill = i;
+                                                    logInfo.type = 'equip';
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                player.getHistory('useSkill').push(logInfo);
+                            }
+
                             if (this._hookTrigger) {
                                 for (var i = 0; i < this._hookTrigger.length; i++) {
                                     var info = lib.skill[this._hookTrigger[i]].hookTrigger;
@@ -150,7 +209,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             content: function () {
                                 player.GongJi = true;
                                 // 判定当前是否可以攻击, 可能是国战有隐藏武将
-                                console.log('gongji====', Object.assign({}, player))
                                 let res = skinSwitch.dynamic.checkCanBeAction(player);
                                 if (!res) return player.GongJi = false;
                                 else {
@@ -229,17 +287,15 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         };
 
                         // 检查游戏开始, 检查自己的是否是十周年真动皮, 播放出场动画, 暂时不考虑双将模式
-                        lib.skill._checkDcdChang = {
+                        lib.skill._checkDcdChuChang = {
                             trigger:{
                                 global:"phaseBefore",
                             },
                             forced: true,
                             filter: function (event, player) {
-                                console.log(event)
                                 return game.players.length > 1 && player.phaseNumber===0 && player === event.player && !player.doubleAvatar && player.dynamic
                             },
                             content: function () {
-                                console.log(player, 'chuchang.....')
                                 skinSwitch.postMsgApi.actionChuChang(player)
                             }
                         };
@@ -250,15 +306,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             forced: true,
                             filter: function (event, player) {
                                 // 打出闪时
-                                return event.card.name === 'shan' && player.dynamic
+                                return event.card.name === 'shan' && player.dynamic && player.dynamic.primary && player.dynamic.primary.player.shizhounian
                             },
                             content: function () {
                                 console.log(player, 'shan.....')
-                                if (player.dynamic.primary && player.dynamic.primary.player.shizhounian) {
-                                    skinSwitch.postMsgApi.action(player, player.dynamic.primary.player.shan || 'play3')
-                                }
+                                skinSwitch.postMsgApi.action(player, player.dynamic.primary.player.shan || 'play3')
                             }
-                        };
+                        }
 
                         lib.skill._setDoubleAvatarBackground = {
                             trigger: {
@@ -399,8 +453,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     var yh = skinSwitch.createYH(forces);
                                     this.appendChild(yh);
                                 }
-                            }
 
+                                skinSwitch.dynamic.startPlay2Random(this)
+                            }
                             var jie;
                             if (character && duicfg.showJieMark) {
                                 if (lib.characterPack.refresh)
@@ -626,8 +681,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
             }
             function overrides (dest, src) {
+                if (!src) return;
                 if (!dest._super) dest._super = {};
-                for (let key in src) {
+                for (var key in src) {
                     if (dest[key])
                         dest._super[key] = dest[key];
 
@@ -741,13 +797,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         skinSwitch.addProgress(progressBar, current, tasks)
 
                         // 如果已经备份过, 就不重新备份了
-                        if (!lib.config[skinSwitch.configKey.bakeup]) {
-                            for (let f of files) {
-                                skinSwitch.backupFileDui(skinSwitch.dcdPath, f, function () {
-                                    skinSwitch.addProgress(progressBar, ++current, tasks)
-                                })
-                            }
-                        }
+                        // if (!lib.config[skinSwitch.configKey.bakeup]) {
+                        //     for (let f of files) {
+                        //         skinSwitch.backupFileDui(skinSwitch.dcdPath, f, function () {
+                        //             skinSwitch.addProgress(progressBar, ++current, tasks)
+                        //         })
+                        //     }
+                        // }
 
                         // 修改十周年文件.
                         // 将本地的worker文件copy,
@@ -764,7 +820,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                 progressBG.remove();
                                                 game.reload();
                                             }
-                                        }, 2000)
+                                        }, 2500)
                                     }
                                 })
                             })
@@ -1025,6 +1081,72 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         obj.style.backgroundSize = "100% 93.5%";
                         obj.style.opacity = 1;
                     },
+
+                    // 随机播放十周年动皮的play2动画
+                    startPlay2Random: function (player) {
+                        // 检查当前角色的动皮
+                        let checkCanPlay2 = (isPrimary) => {
+                            if (!player.dynamic) return false
+                            let avatar = isPrimary ? player.dynamic.primary : player.dynamic.deputy
+                            if (avatar) {
+                                let sprite = avatar.player
+                                return sprite.shizhounian;
+                            }
+                            return false
+                        }
+                        let getPlay2Action = (sprite) => {
+                            let action = 'play2'  // 默认播放的动画标签名称
+                            if (typeof sprite.teshu === 'string') {
+                                action = sprite.teshu
+                            } else if (typeof sprite.teshu === 'object') {
+                                if (sprite.name === sprite.teshu.name) {
+                                    action = sprite.teshu.action || 'play2'
+                                }
+                            }
+                            return action
+                        }
+                        if (!player.playPrimaryTimer) {
+                            if (checkCanPlay2(true)) {
+                                let sprite = player.dynamic.primary.player
+                                let action = getPlay2Action(sprite)
+                                let randomInterval = function () {
+                                    if (!checkCanPlay2(true)) {
+                                        clearTimeout(player.playPrimaryTimer)
+                                        return
+                                    }
+                                    // 只有非攻击状态才播放play2
+                                    if ((!player.lastPlayTime || (new Date().getTime() - player.lastPlayTime) > 8000) && !player.GongJi) {
+                                        skinSwitch.postMsgApi.playAvatar(player, true, action)
+                                    }
+                                    player.playPrimaryTimer = setTimeout(() => {
+                                        randomInterval()
+                                    }, Math.floor(Math.random() * 6000) + 8000)
+                                }
+                                // 10s后开启自动播放play2模式
+                                setTimeout(randomInterval, 10 * 1000)
+                            }
+                        }
+                        if (!player.playDeputyTimer) {
+                            if (checkCanPlay2(false)) {
+                                let sprite = player.dynamic.deputy.player
+                                let action = getPlay2Action(sprite)
+                                let randomInterval = function () {
+                                    if (!checkCanPlay2(false)) {
+                                        clearTimeout(player.playDeputyTimer)
+                                        return
+                                    }
+                                    if ((!player.lastPlayTeshuTime || (new Date().getTime() - player.lastPlayTeshuTime) > 3) && !player.GongJi) {
+                                        skinSwitch.postMsgApi.playAvatar(player, true, action)
+                                    }
+                                    player.playDeputyTimer = setTimeout(() => {
+                                        randomInterval()
+                                    }, Math.floor(Math.random() * 6) + 8)
+                                }
+                                // 10s后开启自动播放play2模式
+                                setTimeout(randomInterval, 10 * 1000)
+                            }
+                        }
+                    }
                 },
 
                 // 统一管理向worker发送消息后, 防止worker回复的消息被覆盖而出的异常
@@ -1129,6 +1251,24 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             game.playAudio("..", "extension", "皮肤切换/audio/effect", playName + ".mp3");
                         })
                     },
+
+                    /**
+                     * 单独播放某个角色的动画
+                     * @param player  当前角色
+                     * @param isPrimary  是否是主将的
+                     * @param action  动画标签
+                     */
+                    playAvatar: function (player, isPrimary, action) {
+                        if (!player.dynamic) return
+                        let avatar = isPrimary ? player.dynamic.primary : player.dynamic.deputy
+                        if (!avatar) return
+                        player.dynamic.renderer.postMessage({
+                            message: 'ACTION',
+                            id: player.dynamic.id,
+                            action: action,
+                            skinID: avatar.id,
+                        })
+                    },
                     /**
                      * 请求worker播放对应的动画
                      * @param player  当前player对象, 自己就是game.me
@@ -1173,8 +1313,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     },
                     actionTeShu: function(player) {
                         let r = this.action(player, 'TeShu')
-                        let _this = this
                         if (r) {
+                            // 记录teshu上次的时间, 防止重复播放特殊动画
+                            player.lastPlayTime = new Date().getTime()
                             skinSwitch.rendererOnMessage.addListener(player, 'teshuChuKuang', function (data) {
                                 if (data.chukuang) {
                                     this._onchangeDynamicWindow(player, r)
@@ -1185,7 +1326,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     // 播放十周年的出场动画
                     actionChuChang: function(player) {
                         let r = this.action(player, 'chuchang')
-                        player.GongJi = false
+                        player.GongJi = true
                         if (r) {
                             this._onchangeDynamicWindow(player, r)
                         }
@@ -1193,6 +1334,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     actionGongJi: function(player) {
                         let r = this.action(player, 'GongJi')
                         if (r) {
+                            player.lastPlayTime = new Date().getTime()
                             this._onchangeDynamicWindow(player, r)
                         }
                     },
@@ -2657,7 +2799,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 }
             }
 
-
             lib.arenaReady.push(function() { //游戏加载完成执行的内容
                 //顶部菜单
                 if (lib.config[skinSwitch.configKey.showEditMenu]) {
@@ -2808,4 +2949,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
 /** 1.04版本更新:
  spine预览现在可以直接放进去文件夹进行预览
+ 原来的player.logSkill技能我是copy的游戏本体比较老的版本, 所以这个会出现一些问题, 现在补充为最新的了.
+ 现在支持在十周年真动皮的角色在回合开始播放出场动画, 以及十周年动皮默认原地出框和不位移(需要在dynamicSkin配置参数)
+
+ 十周年动皮细节: 出框攻击速度会提高为1.2, 出场动作会默认提高
+
  */

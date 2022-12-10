@@ -35,14 +35,22 @@ dynamics.getById = function (id) {
 
 function preLoadChuKuangSkel(dynamic, apnode) {
 	completeParams(apnode)
-	let actionParams = apnode.player.gongjiAction
-	if (actionParams) {
-		if (!dynamic.hasSpine(actionParams.name)) {
-			dynamic.loadSpine(actionParams.name, 'skel', function () {
-				console.log('预加载成功')
-			}, function (data) {
-				console.log('播放骨骼失败, 参数: ', data)
-			})
+	let pLoad = function (actionParams) {
+		if (actionParams) {
+			if (!dynamic.hasSpine(actionParams.name)) {
+				dynamic.loadSpine(actionParams.name, 'skel', function () {
+					console.log('预加载出场骨骼成功')
+				}, function (data) {
+					console.log('播放骨骼失败, 参数: ', data)
+				})
+			}
+		}
+	}
+	let arr = [apnode.name]
+	for (let act of [apnode.player.gongjiAction, apnode.player.gongjiAction, apnode.player.chuchangAction]) {
+		if (act && !arr.includes(act.name)) {
+			arr.push(act.name)
+			pLoad(act)
 		}
 	}
 }
@@ -64,10 +72,16 @@ function playSkin(dynamic, data) {
 					sprite.player.gongji = {}
 				}
 				sprite.player.gongji = Object.assign(sprite.player.gongji, sprite.player.qhlx.gongji)
+			} else {
+				// 使用雷修默认的出框参数
+				sprite.player.gongji.x = [sprite.player.x[0] * 0.58, sprite.player.x[1] * 0.58];
+				sprite.player.gongji.y = [sprite.player.y[0] * 1.4, sprite.player.y[1] * 1.4];
 			}
 			if (sprite.player.qhlx.daiji) {
 				sprite = Object.assign(sprite, sprite.player.qhlx.daiji)
 				sprite.player = Object.assign(sprite.player, sprite.player.qhlx.daiji)
+			} else {
+				sprite.player.scale = sprite.scale
 			}
 		} else {
 			sprite.player.scale = sprite.scale
@@ -103,7 +117,6 @@ function playSkin(dynamic, data) {
 		// 将node保存一下, 表示是千幻大屏预览的node
 		t.qhlxBigAvatar = sprite.qhlxBigAvatar
 	}
-	console.log('play...', sprite)
 
 	if (dynamic.hasSpine(sprite.name)) {
 		run();
@@ -170,8 +183,10 @@ function msgUpdate(data) {
 
 function action(data) {
 	let dynamic = dynamics.getById(data.id);
+
 	if (!dynamic) return
 	let apnode = getDynamic(dynamic, data.skinID);
+
 	if (!apnode) return
 	let animation
 	// 这里只是单纯的和雷修原来自带的手杀大页播放的功能兼容,保留.
@@ -294,18 +309,31 @@ function action(data) {
 			apnode.renderClip = undefined;
 		}
 		// window.postMessage(true)
-		apnode.opacity = 0
 		let actualPlayNode = playNode ? playNode : apnode
 		setPos(actualPlayNode, data);
 		actualPlayNode.angle = undefined
 		// 直接将待机动作置空防止闪烁
+		setTimeout(() => {
+			// 继续清屏一次
+			dynamic.gl.clearColor(0, 0, 0, 0)
+			dynamic.gl.clear(dynamic.gl.COLOR_BUFFER_BIT);
+			setTimeout(() => {
+				dynamic.gl.clearColor(0, 0, 0, 0)
+				dynamic.gl.clear(dynamic.gl.COLOR_BUFFER_BIT);
+			}, 25)
+		}, 25)
+		apnode.opacity = 0
+		apnode.skeleton.state.setEmptyAnimation(0, 0)
+		dynamic.gl.clearColor(0, 0, 0, 0)
+		dynamic.gl.clear(dynamic.gl.COLOR_BUFFER_BIT);
+
 		postMessage({id: data.id, type: 'chukuangFirst'})
+
 		setTimeout(() => {
 			actualPlayNode.opacity = 1
-
 			// 播放完动画从播放的位置移动到待机的位置
 			let recoverDaiji = () => {
-				setTimeout(() => {
+				// setTimeout(() => {
 					actualPlayNode.opacity = 0
 					actualPlayNode.x = apnode.player.x;
 					actualPlayNode.y = apnode.player.y;
@@ -334,8 +362,11 @@ function action(data) {
 						apnode.angle = apnode.player.angle
 					}
 					if (apnode.player.scale) {
+						console.log(apnode.player.scale, 'xxxx', apnode)
 						apnode.scale = apnode.player.scale
 					}
+					actualPlayNode.speed = apnode.player.gongjiAction.speed || 1
+
 					// window.postMessage(true)
 					postMessage({id: data.id, type: 'canvasRecover'})
 					setTimeout(() => {
@@ -349,24 +380,35 @@ function action(data) {
 						} else {
 							apnode.skeleton.state.setAnimation(0, apnode.action || apnode.skeleton.defaultAction, true)
 						}
-					}, 200);
-				}, 450);
+					}, 100);
+				// }, 350);
+			}
+
+			let showTime = (animation.showTime || animation.duration) * 1000
+
+			if (actualPlayNode.player.shizhounian && data.action === 'GongJi') {
+				showTime /= 1.2
+				actualPlayNode.speed = 1.2
 			}
 
 			setTimeout(() => {
 				// 如果是手杀大屏预览的页面则不位移到原处
-				if (apnode.qhlxBigAvatar) {
+				if (apnode.qhlxBigAvatar || apnode.player.shizhounian || apnode.player.chuchang) {
 					recoverDaiji()
 				}
 				else {
 					actualPlayNode.moveTo(data.player.x, data.player.y, 500);
-					recoverDaiji()
+					setTimeout(() => {
+						recoverDaiji()
+					}, 350)
 				}
-
-			}, (animation.showTime || animation.duration) * 1000 - 500)
+			}, showTime - 500)
 			if (playNode) {
 				// 重新恢复攻击pose
 				// playNode.skeleton.setToSetupPose()
+				if (data.action === 'chuchang') {
+					actualPlayNode.scaleTo(actualPlayNode.scale * 1.2, 500)
+				}
 			} else {
 				playAction(apnode, animation);
 			}
@@ -384,6 +426,7 @@ function action(data) {
 			// 防止第二次进来就不随机了
 			actionParams.action = randomChoice(actionParams._oldAction)
 		}
+		console.log('chukuangactionParams--->', actionParams)
 		let playedSprite = dynamic.playSpine(actionParams)
 		// 播放当前节点的动画, 隐藏原来的节点动画
 		playedSprite.opacity = 0
@@ -508,6 +551,7 @@ function action(data) {
 
 	} else if (data.action === 'chuchang') {
 		// 暂时只让不同皮肤出框.
+
 		let actionParams = player.chuchangAction
 		if (!actionParams) return
 		// 如果是同一个节点
@@ -530,6 +574,7 @@ function action(data) {
 
 	} else {
 		animation = apnode.skeleton.data.findAnimation(data.action)
+		if (!animation) return
 		apnode.skeleton.state.setAnimationWith(0, animation, false)
 		apnode.skeleton.state.addAnimation(0, apnode.player.action || apnode.skeleton.defaultAction, true, 0)
 	}
@@ -543,7 +588,7 @@ function position(data) {
 	completeParams(apnode)
 
 	if (data.mode === 'daiji') {
-		window.postMessage({id: data.id, type: 'position', x: apnode.x, y: apnode.y, scale: apnode.scale, angle: apnode.angle})
+		window.postMessage({id: data.id, type: 'position', x: apnode.player.x, y: apnode.player.y, scale: apnode.player.scale, angle: apnode.player.angle})
 	} else {
 		if (apnode.chukuangNode) {
 			window.postMessage({id: data.id, type: 'position', x: apnode.chukuangNode.x, y: apnode.chukuangNode.y, scale: apnode.chukuangNode.scale})
@@ -702,10 +747,10 @@ function adjust(data) {
 
 	if (data.mode === 'daiji') {
 		if (data.x !== undefined && data.y !== undefined) {
-			apnode.x[1] = data.x
-			apnode.y[1] = data.y
-			apnode.player.x = [apnode.x[0], data.x]
-			apnode.player.y = [apnode.y[0], data.y]
+			apnode.x = data.x
+			apnode.y = data.y
+			apnode.player.x = data.x
+			apnode.player.y = data.y
 		} else if (data.xyPos !== undefined){
 			if (data.xyPos.x !== undefined) {
 				apnode.x[0] = data.xyPos.x
@@ -728,16 +773,16 @@ function adjust(data) {
 
 		if (data.x !== undefined && data.y !== undefined) {
 			if (apnode.chukuangNode) {
-				apnode.chukuangNode.x[1] = data.x
-				apnode.chukuangNode.y[1] = data.y
+				apnode.chukuangNode.x = data.x
+				apnode.chukuangNode.y = data.y
 			} else {
 				// 说明是同一节点
-				apnode.x[1] = data.x
-				apnode.y[1] = data.y
+				apnode.x = data.x
+				apnode.y = data.y
 			}
 			// 修改参数
-			actionParams.x[1] = data.x
-			actionParams.y[1] = data.y
+			actionParams.x = data.x
+			actionParams.y = data.y
 		} else if (data.xyPos){
 			if (data.xyPos.x !== undefined) {
 				if (apnode.chukuangNode) {
@@ -930,9 +975,7 @@ function completeParams(node) {
 	if (chuchang) {
 		if (chuchangType === 'object') {
 			if (!chuchang.name) {chuchang.name = node.name}
-			if (!chuchang.action) {chuchang.action = 'chuchang'}
-			if (!chuchang.x) {chuchang.x = [0, 0.8]}
-			if (!chuchang.y) {chuchang.y = [0, 0.1]}
+			if (!chuchang.action) {chuchang.action = 'play'}
 			if (!chuchang.scale) {chuchang.scale = player.scale}
 			player.chuchangAction = chuchang
 		}
@@ -991,8 +1034,14 @@ function completeParams(node) {
 			} else {
 				gongjiAction.name = getFullName(player.localePath, gongjiAction.name)
 			}
-			if (!gongjiAction.x) {gongjiAction.x = [0, 0.5]}
-			if (!gongjiAction.y) {gongjiAction.y = [0, 0.5]}
+			if (!gongjiAction.x) {
+				gongjiAction.x = [0, 0.5]
+				gongjiAction.posAuto = true  // 自动设置的位置, 如果是十周年的动皮的话, 原地出框
+			}
+			if (!gongjiAction.y) {
+				gongjiAction.y = [0, 0.5]
+				gongjiAction.posAuto = true
+			}
 			if (!gongjiAction.scale) {gongjiAction.scale = player.scale}
 		} else {
 			// 默认从当前皮肤的GongJi标签来播放动作
@@ -1085,14 +1134,85 @@ function playAction(apnode, animation) {
 	apnode.skeleton.state.setAnimationWith(0, animation, true);
 }
 
+function setShiZhouNianGongJiPos(apnode, data) {
+	if (data.me) {
+		apnode.x = data.player.x - data.player.width / 3
+		apnode.y = data.player.y + data.player.height * 1.1
+		// apnode.scale *= 1.2
+	} else {
+		// 根据每个人当时的位置偏移
+		let xRate = data.player.x / data.player.bodyWidth
+		let yRate = data.player.y / data.player.bodyHeight
+		apnode.x = data.player.x + data.player.width / 2
+		apnode.y = data.player.y + data.player.height / 2
+		// apnode.scale *= 1.2
+		console.log('x,y', xRate, yRate)
+		if (xRate < 0.3) {
+			apnode.x += data.player.width * 0.25
+		}
+
+		if (xRate > 0.6) {
+			apnode.x -= data.player.width * 0.4
+		}
+
+		if (yRate > 0.6) {
+			apnode.y -= data.player.height * 0.25
+		}
+
+		if (yRate < 0.3) {
+			apnode.y += data.player.height * 0.25
+		}
+		// else if (xRate > 0.85) {
+		// 	apnode.x = data.player.x - 40
+		// }else {
+		// 	apnode.x = data.player.x
+		// }
+		// if (yRate < 0.15) {
+		// 	apnode.y = data.player.y + 40
+		// } else if (yRate > 0.85) {
+		// 	apnode.y = data.player.y - 40
+		// } else {
+		// 	apnode.y = data.player.y
+		// }
+
+	}
+}
+
 function setPos(apnode, data) {
 	if (data.me) {
 		// 获取
-		let actionParams = apnode.player.gongjiAction
+		let actionParams
+		if (data.action === 'GongJi') {
+			actionParams = apnode.player.gongjiAction
+			// 十周年默认的
+			if (actionParams.posAuto && apnode.player.shizhounian) {
+				return setShiZhouNianGongJiPos(apnode, data)
+			}
+		}
+		else if (data.action === 'TeShu') {
+			actionParams = apnode.player.teshuAction
+		} else if (data.action === 'chuchang') {
+			apnode.x = data.player.x + data.player.width / 2
+			apnode.y = data.player.y + data.player.height / 2
+			return
+			// 出场是原地出场
+		} else {
+			return
+		}
 		apnode.x = actionParams.x
 		apnode.y = actionParams.y
 		data.player.y += 150;
 	} else {
+		if (data.action === 'chuchang') {
+			// apnode.x = data.player.x + data.player.width / 2
+			// apnode.y = data.player.y + data.player.height / 2
+			return setShiZhouNianGongJiPos(apnode, data)
+		}
+		else if (data.action === 'GongJi') {
+			if (apnode.player.shizhounian) {
+				return setShiZhouNianGongJiPos(apnode, data)
+			}
+		}
 		apnode.x = data.direction.x;
 		apnode.y = data.direction.y;
 		if (data.direction.isLeft) data.player.x += 85; else data.player.x += 40;

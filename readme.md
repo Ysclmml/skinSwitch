@@ -110,6 +110,33 @@ caoying:{
 }
 ```
 
+12-10添加
+
+十周年真动皮典型参数示例
+
+```js
+			'评世雕龙': {
+				name: '许邵/评世雕龙/daiji',
+				x: [0, 0.5],
+				y: [0, 0.5],
+				teshu: 'play2',  // 触发非攻击技能时播放
+				gongji: {
+                    // 攻击位置参数可以不填写, 默认原地出框
+					name: '许邵/评世雕龙/chuchang2',
+					action: ['gongji', 'jineng']  // 出杀或攻击时随机播放一个动画
+				},
+				shizhounian: true,  // 标明这是十周年的骨骼, 出场位置和出框默认会在原地, 并且返回也不是位移
+				chuchang: {  // 第一回合出场
+                    // 攻击参数不用填写
+					name: '许邵/评世雕龙/chuchang',
+					action: 'play',
+					scale: 0.45
+				},
+				shan: 'play2', // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
+				background: '许邵/评世雕龙/skin_Decennial_XuShao_PingShiDiaoLong_bg.png'
+			}
+```
+
 
 
 ```js

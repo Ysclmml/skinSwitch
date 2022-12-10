@@ -10,8 +10,8 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
             "y": [
                 0,
                 0.41
-            ],
-            },
+            ]
+        },
         "蛇蝎为心": {
             "qhlx": {
                 "daiji": {
@@ -175,7 +175,20 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
             "y": [
                 0,
                 0.32
-            ]
+            ],
+            "qhlx": {
+                "gongji": {
+                    "scale": 1.4,
+                    "x": [
+                        0,
+                        0.34
+                    ],
+                    "y": [
+                        0,
+                        0.45
+                    ]
+                }
+            }
         }
     }
 }
