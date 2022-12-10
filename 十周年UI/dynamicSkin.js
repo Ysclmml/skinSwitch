@@ -659,7 +659,12 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				name: '许邵/评世雕龙/daiji',
 				x: [0, 0.5],
 				y: [0, 0.5],
-				teshu: 'play2',  // 触发非攻击技能时播放
+				// teshu: 'play2',  // 触发非攻击技能时播放
+				teshu: {  // 第一回合出场
+					name: '许邵/评世雕龙/chuchang2',
+					action: 'gongji',
+					scale: 0.45
+				},
 				gongji: {
 					name: '许邵/评世雕龙/chuchang2',
 					action: ['gongji', 'jineng']  // 出杀或攻击时随机播放一个动画
@@ -670,10 +675,25 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					action: 'play',
 					scale: 0.45
 				},
-				shan: 'play2', // 不填默认是play3
+				shan: 'play2', // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
 				background: '许邵/评世雕龙/skin_Decennial_XuShao_PingShiDiaoLong_bg.png'
 			}
-		}
+		},
+		shen_luxun: {
+			绽焰摧枯: {
+				name: 'skin_shenluxun_ZhanYanCuiKu',
+				x: [0, 0.53],
+				y: [5, 0.45],
+				scale: 0.5,
+				action: 'DaiJi',
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				background: 'skin_shenluxun_ZhanYanCuiKu_bg.png',
+				skinName: "绽焰摧枯"
+			},
+		},
 	};
 	
 	var extend = {

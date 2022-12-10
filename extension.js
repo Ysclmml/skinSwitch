@@ -293,7 +293,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             },
                             forced: true,
                             filter: function (event, player) {
-                                return game.players.length > 1 && player.phaseNumber===0 && player === event.player && !player.doubleAvatar && player.dynamic
+                                return game.players.length > 1 && player.phaseNumber===0 && player === event.player && !player.doubleAvatar && player.dynamic && player.dynamic.primary && player.dynamic.primary.player.chuchang
                             },
                             content: function () {
                                 skinSwitch.postMsgApi.actionChuChang(player)
@@ -1199,7 +1199,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (player.isQhlx) {
                             dynamicWrap = player.getElementsByClassName("qhdynamic-big-wrap")[0];
                         } else {
-                            dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                            if (lib.config['extension_十周年UI_newDecadeStyle'] === "on") {
+                                dynamicWrap = player.getElementsByClassName("dynamicPlayerCanvas")[0]
+
+                            } else {
+                                dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                            }
                         }
                         skinSwitch.rendererOnMessage.addListener(player, 'chukuangFirst', function (data) {
                             // 直接设置属性, 第一优先生效, 这里播放攻击动画, 调整播放canvas的位置, 不再跟随皮肤框,也就是动皮出框
@@ -1214,14 +1219,18 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                             // canvas.style.opacity = 0
                             // 防止闪烁,
-                            // canvas.classList.add('pfqhFadeInEffect')
+                            canvas.classList.add('pfqhFadeInEffect')
                             // setTimeout(() => {
                             //     canvas.classList.remove('hidden')
                             // }, 250)
                         })
 
                         skinSwitch.rendererOnMessage.addListener(player, 'canvasRecover', function (data) {
-                            dynamicWrap.style.zIndex = "60";
+                            if (lib.config['extension_十周年UI_newDecadeStyle'] === "on") {
+                                dynamicWrap.style.zIndex = "62";
+                            } else {
+                                dynamicWrap.style.zIndex = "60";
+                            }
                             canvas.style.height = null;
                             canvas.style.width = null;
                             canvas.style.position = null;
@@ -1235,9 +1244,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         skinSwitch.rendererOnMessage.addListener(player, 'chukuangSecond', function (data) {
                             // 这里表示动画已经准备好了, 可以显示
-                            // setTimeout(()=>{
-                            //     canvas.classList.remove('pfqhFadeIn')
-                            // }, 50)
+                            setTimeout(()=>{
+                                canvas.classList.remove('pfqhFadeIn')
+                            }, 50)
 
                             let playName
                             if (res.dynamic.gongji && res.dynamic.gongji.name) {
@@ -1326,8 +1335,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     // 播放十周年的出场动画
                     actionChuChang: function(player) {
                         let r = this.action(player, 'chuchang')
-                        player.GongJi = true
                         if (r) {
+                            player.GongJi = true
                             this._onchangeDynamicWindow(player, r)
                         }
                     },
@@ -2068,14 +2077,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (!Array.isArray(pos.x)) {
                             // 转化为百分比
                             pos.x = [0, Number((pos.x / bodyW).toFixed(2))]
-                            pos.y = [0, Number((1 - pos.y / bodyH).toFixed(2))]
+                            pos.y = [0, Number((pos.y / bodyH).toFixed(2))]
                         }
                         daijiXYPos.x = pos.x
                         daijiXYPos.y = pos.y
                     } else {
                         if (!Array.isArray(pos.x)) {
                             pos.x = [0, Number((pos.x / bodyW).toFixed(2))]
-                            pos.y = [0, Number((1 - pos.y / bodyH).toFixed(2))]
+                            pos.y = [0, Number((pos.y / bodyH).toFixed(2))]
                         }
                         chukuangXYPos.x = pos.x
                         chukuangXYPos.y = pos.y
@@ -2262,7 +2271,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     if (player.isQhlx) {
                         dynamicWrap = player.getElementsByClassName("qhdynamic-big-wrap")[0];
                     } else {
-                        dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                        if (lib.config['extension_十周年UI_newDecadeStyle'] === "on") {
+                            dynamicWrap = player.getElementsByClassName("dynamicPlayerCanvas")[0]
+
+                        } else {
+                            dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
+                        }
                     }
                     if (player.isQhlx) {
                         if (document.getElementsByClassName('qhdynamic-big-wrap').length === 0) {
@@ -2291,7 +2305,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }, 250)
                     })
                     skinSwitch.rendererOnMessage.addListener(player, 'canvasRecover', function (e) {
-                        dynamicWrap.style.zIndex = "60";
+                        if (lib.config['extension_十周年UI_newDecadeStyle'] === "on") {
+                            dynamicWrap.style.zIndex = "62";
+                        } else {
+                            dynamicWrap.style.zIndex = "60";
+                        }
                         canvas.style.height = null;
                         canvas.style.width = null;
                         canvas.style.position = null;

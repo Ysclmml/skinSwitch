@@ -313,23 +313,24 @@ function action(data) {
 		setPos(actualPlayNode, data);
 		actualPlayNode.angle = undefined
 		// 直接将待机动作置空防止闪烁
-		setTimeout(() => {
-			// 继续清屏一次
-			dynamic.gl.clearColor(0, 0, 0, 0)
-			dynamic.gl.clear(dynamic.gl.COLOR_BUFFER_BIT);
-			setTimeout(() => {
-				dynamic.gl.clearColor(0, 0, 0, 0)
-				dynamic.gl.clear(dynamic.gl.COLOR_BUFFER_BIT);
-			}, 25)
-		}, 25)
+
+		// setInterval(() => {
+		// 	// 继续清屏一次
+		// 	dynamic.gl.clearColor(0, 0, 0, 0)
+		// 	dynamic.gl.clear(dynamic.gl.COLOR_BUFFER_BIT);
+		// }, 25)
 		apnode.opacity = 0
 		apnode.skeleton.state.setEmptyAnimation(0, 0)
 		dynamic.gl.clearColor(0, 0, 0, 0)
 		dynamic.gl.clear(dynamic.gl.COLOR_BUFFER_BIT);
+		// 尝试下直接取消当前绚烂
+		cancelAnimationFrame(dynamic.requestId);
 
 		postMessage({id: data.id, type: 'chukuangFirst'})
 
 		setTimeout(() => {
+			// 重新绑定开始渲染
+			dynamic.requestId = requestAnimationFrame(dynamic.render.bind(dynamic));
 			actualPlayNode.opacity = 1
 			// 播放完动画从播放的位置移动到待机的位置
 			let recoverDaiji = () => {
@@ -1193,7 +1194,7 @@ function setPos(apnode, data) {
 			actionParams = apnode.player.teshuAction
 		} else if (data.action === 'chuchang') {
 			apnode.x = data.player.x + data.player.width / 2
-			apnode.y = data.player.y + data.player.height / 2
+			apnode.y = data.player.y + data.player.height * 0.8
 			return
 			// 出场是原地出场
 		} else {
