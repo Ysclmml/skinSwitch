@@ -247,3 +247,20 @@
 #arena:not(.observe)>.player[data-position='0'].unseen2.d-skin2>.dynamicPlayerCanvas>.deputy-bg {
     opacity: 0.3;
 }
+
+
+.player>.chukuang-canvas-wraper {
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 100 !important;
+}
+
+.chukuang-canvas-wraper>.chukuang-canvas {
+    z-index: 100 !important;
+    pointer-events: none;
+}
