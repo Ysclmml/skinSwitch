@@ -4086,6 +4086,15 @@ content:function(config, pack){
 								dynamic.dprAdaptive = true;
 								this.dynamic = dynamic;
 								this.$dynamicWrap.appendChild(dynamic.canvas);
+								// 再添加一个div层, 让canvas挂载到这个div中, 和背景图层分离
+								// if (get.itemtype(this) === 'player' && lib.config['extension_十周年UI_newDecadeStyle'] === "on") {
+								// 	// 再添加一个div层, 让canvas挂载到这个div中, 和背景图层分离
+								// 	let newDynamicWrap = ui.create.div('.dynamicPlayerCanvas', this.$dynamicWrap.parentNode)
+								// 	newDynamicWrap.appendChild(dynamic.canvas);
+								// 	this.$newDynamicWrap = newDynamicWrap
+								// } else {
+								// 	this.$dynamicWrap.appendChild(dynamic.canvas);
+								// }
 							}
 							// else {
 							// 	if (deputy && dynamic.deputy) {
@@ -4120,9 +4129,10 @@ content:function(config, pack){
 							}
 							
 							if (this.$dynamicWrap.parentNode != this) this.appendChild(this.$dynamicWrap);
-							
+							if (this.$newDynamicWrap && this.$newDynamicWrap.parentNode !== this) this.appendChild(this.$newDynamicWrap);
 							dynamic.outcropMask = duicfg.dynamicSkinOutcrop;
 							var avatar = dynamic.play(animation);
+
 							if (deputy === true) {
 								dynamic.deputy = avatar;
 							} else {

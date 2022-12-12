@@ -92,6 +92,39 @@ class PlayerAnimation {
         }
     }
 
+    playLoopAction(data, player, actionParams) {
+        // 获取存储的action对应的动画状态
+        if (!completePlayerParams(player, data.action)) return
+
+        let actionState = player.actionState
+        if (!actionState || !actionState[data.action]) return
+
+        actionParams.id = chukuangId++
+
+        let actionInfo = actionState[data.action]
+
+        if (Array.isArray(actionInfo)) {
+            let selectAction = randomChoice(actionInfo)
+            actionParams.action = selectAction.action
+        } else {
+            actionParams.action = actionInfo.action
+        }
+        this.anni.playSpine(actionParams)
+    }
+
+    stopLoopSpine(data) {
+        let playerParams = this.findPlayerParams(data.id, data.skinId)
+        for (let node of this.anni.nodes) {
+            if (node.name === playerParams.gongjiAction.name) {
+                playerParams.gongjiAction.loop = false
+                node.opacity = 0
+                this.anni.nodes.remove(node)
+                node.skeleton.completed = true
+                return
+            }
+        }
+    }
+
     playChuKuangSpine(playNode, animation, data) {
         this.playerState[data.id]['action'] = true
         playNode.angle = undefined
@@ -99,10 +132,12 @@ class PlayerAnimation {
         if (!(playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar)) {
             showTime -= 500
         }
-        if (playNode.player.shizhounian && data.action === 'GongJi') {
-            showTime /= 1.2
-            if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.3
-        }
+        // if (playNode.player.shizhounian && data.action === 'GongJi') {
+        //     showTime /= 1.3
+        //     if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.3
+        // }
+        if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2
+        showTime /= 1.2
         setTimeout(() => {
             // 如x果是手杀大屏预览的页面则不位移到原处
             if (playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar) {
@@ -182,8 +217,6 @@ class PlayerAnimation {
                     player.gongji = Object.assign(player.gongji, player.qhlx.gongji)
                 } else {
                     // 使用雷修默认的出框参数
-                    // player.gongji.x = [player.x[0] * 0.58, player.x[1] * 0.58];
-                    // player.gongji.y = [player.y[0] * 1.4, player.y[1] * 1.4];
                     player.gongji.x = player.divPos.x + player.divPos.width / 2;
                     player.gongji.y = player.divPos.y + player.divPos.height / 2;
                     player.gongji.scale = player.scale * 0.6
@@ -358,20 +391,20 @@ function setShiZhouNianGongJiPos(apnode, data) {
         apnode.x = data.player.x + data.player.width / 2
         apnode.y = data.player.y + data.player.height / 2
         console.log('x,y', xRate, yRate)
-        if (xRate < 0.4) {
+        if (xRate < 0.35) {
             apnode.x += data.player.width * 0.5
         }
 
-        if (xRate > 0.6) {
-            apnode.x -= data.player.width * 0.5
+        if (xRate > 0.7) {
+            apnode.x -= data.player.width * 0.3
         }
 
-        if (yRate > 0.6) {
-            apnode.y -= data.player.height * 0.5
+        if (yRate > 0.7) {
+            apnode.y -= data.player.height * 0.3
         }
 
-        if (yRate < 0.4) {
-            apnode.y += data.player.height * 0.5
+        if (yRate < 0.35) {
+            apnode.y += data.player.height * 0.25
         }
 
     }
@@ -396,6 +429,7 @@ function setPos(apnode, data) {
         else if (data.action === 'TeShu') {
             actionParams = apnode.player.teshuAction
             if (actionParams.posAuto && apnode.player.shizhounian) {
+                console.log('teshu:  ', actionParams)
                 return setShiZhouNianGongJiPos(apnode, data)
             }
         } else if (data.action === 'chuchang') {
@@ -416,6 +450,10 @@ function setPos(apnode, data) {
             return setShiZhouNianGongJiPos(apnode, data)
         }
         else if (data.action === 'GongJi') {
+            if (apnode.player.shizhounian) {
+                return setShiZhouNianGongJiPos(apnode, data)
+            }
+        } else if (data.action === 'TeShu') {
             if (apnode.player.shizhounian) {
                 return setShiZhouNianGongJiPos(apnode, data)
             }
@@ -480,6 +518,128 @@ function preLoad(data) {
     console.log('playerAnimation --> ', playerAnimation)
 }
 
+function completePlayerParams(avatarPlayer, action) {
+    if (avatarPlayer) {
+        if (!avatarPlayer.actionState) {avatarPlayer.actionState = {}}
+        else {
+            if (avatarPlayer.actionState[action] === false) {
+                return false
+            }
+            if (avatarPlayer.actionState[action] != null) {
+                return true
+            }
+        }
+        // 查找是否有该骨骼, 并且可否出框
+        let daijiName = avatarPlayer.name
+        let actionParams
+        if (action === 'GongJi') actionParams = avatarPlayer.gongjiAction
+        else if (action === 'TeShu') actionParams = avatarPlayer.teshuAction
+        else if (action === 'chuchang') actionParams = avatarPlayer.chuchangAction
+        else actionParams = avatarPlayer[action + 'Action']  // 这个写法是可以扩展随意任意想要出框的action, 默认可以出框的只有gongji,teshu,chuchang
+
+        if (actionParams && actionParams.name === daijiName) {
+            // 只支持假动皮攻击出框, 其他动作和待机相同, 不允许出框
+            if (action === 'GongJi') {
+                // 查找待机动作的默认动作标签, 并缓存
+                let results = playerAnimation.anni.getSpineActions(daijiName)
+                if (results && results.length > 0) {
+                    // 检查是否有GongJi标签, 如果有那是真动皮
+                    if (actionParams.fakeDynamic) {
+                        for (let r of results) {
+                            if (r.name === 'GongJi') {
+                                avatarPlayer.actionState[action] = {
+                                    action: r.name,
+                                    duration: r.duration,
+                                    showTime: actionParams.showTime || r.duration
+                                }
+                                actionParams.fakeDynamic = false
+                                return true
+                            }
+                        }
+                        avatarPlayer.actionState[action] = {
+                            action: results[0].name,
+                            duration: results[0].duration,
+                            showTime: actionParams.showTime || Math.min(results[0].duration, 2)
+                        }
+                        return true
+
+                    }
+                    let isArray = Array.isArray(actionParams.action)
+                    let states = []
+                    for (let r of results) {
+                        // 如果攻击填写的出多个标签, 那么顺便校验
+                        if (isArray) {
+                            if (actionParams.action.includes(r.name)) {
+                                states.push({
+                                    action: r.name,
+                                    duration: r.duration,
+                                    showTime: actionParams.showTime || r.duration
+                                })
+                            }
+                        } else {
+                            if (r.name === actionParams.action) {
+                                avatarPlayer.actionState[action] = {
+                                    action: r.name,
+                                    duration: r.duration,
+                                    showTime: actionParams.showTime || r.duration
+                                }
+                                return true
+                            }
+                        }
+                    }
+                    if (states.length > 0) {
+                        avatarPlayer.actionState[action] = states
+                        return true
+                    }
+                }
+                avatarPlayer.actionState[action] = false
+            } else {
+                avatarPlayer.actionState[action] = false
+            }
+            avatarPlayer.actionState[action] = false
+        } else {
+            // 查找骨骼与正确的标签
+            let results = playerAnimation.anni.getSpineActions(actionParams.name)
+            let isArray = Array.isArray(actionParams.action)
+            let states = []
+            if (results && results.length > 0) {
+                if (!actionParams.action) {
+                    avatarPlayer.actionState[action] = {
+                        action: results[0].name,
+                        duration: results[0].duration,
+                        showTime: actionParams.showTime || results[0].duration
+                    }
+                    return true
+                }
+                for (let r of results) {
+                    if (isArray) {
+                        if (actionParams.action.includes(r.name)) {
+                            states.push({
+                                action: r.name,
+                                duration: r.duration,
+                                showTime: actionParams.showTime || r.duration
+                            })
+                        }
+                    } else {
+                        if (r.name === actionParams.action) {
+                            avatarPlayer.actionState[action] = {
+                                action: r.name,
+                                duration: r.duration,
+                                showTime: actionParams.showTime || r.duration
+                            }
+                            return true
+                        }
+                    }
+                }
+                if (states.length > 0) {
+                    avatarPlayer.actionState[action] = states
+                    return true
+                }
+            }
+            avatarPlayer.actionState[action] = false
+        }
+    }
+}
 
 function isChuKuang(data) {
     // 如果已经是出框状态, 直接返回, 不能在短时间内连续请求
@@ -496,131 +656,8 @@ function isChuKuang(data) {
     // 查找是否可以出框
     let primaryPlayer = playerAnimation.findPlayerParams(data.id, primarySkinId)
     console.log('primaryPlayer data', primaryPlayer)
-    
-    let completePlayerParams = (avatarPlayer) => {
-        if (avatarPlayer) {
-            if (!avatarPlayer.actionState) {avatarPlayer.actionState = {}}
-            else {
-                if (avatarPlayer.actionState[data.action] === false) {
-                    return false
-                }
-                if (avatarPlayer.actionState[data.action] !== undefined) {
-                    return true
-                }
-            }
-            // 查找是否有该骨骼, 并且可否出框
-            let daijiName = avatarPlayer.name
-            let actionParams
-            if (data.action === 'GongJi') actionParams = avatarPlayer.gongjiAction
-            else if (data.action === 'TeShu') actionParams = avatarPlayer.teshuAction
-            else if (data.action === 'chuchang') actionParams = avatarPlayer.chuchangAction
-            else actionParams = avatarPlayer[data.action + 'Action']  // 这个写法是可以扩展随意任意想要出框的action, 默认可以出框的只有gongji,teshu,chuchang
 
-            if (actionParams && actionParams.name === daijiName) {
-                // 只支持假动皮攻击出框, 其他动作和待机相同, 不允许出框
-                if (data.action === 'GongJi') {
-                    // 查找待机动作的默认动作标签, 并缓存
-                    let results = playerAnimation.anni.getSpineActions(daijiName)
-                    if (results && results.length > 0) {
-                        // 检查是否有GongJi标签, 如果有那是真动皮
-                        if (actionParams.fakeDynamic) {
-                            for (let r of results) {
-                                if (r.name === 'GongJi') {
-                                    avatarPlayer.actionState[data.action] = {
-                                        action: r.name,
-                                        duration: r.duration,
-                                        showTime: actionParams.showTime || r.duration
-                                    }
-                                    actionParams.fakeDynamic = false
-                                    return true
-                                }
-                            }
-                            avatarPlayer.actionState[data.action] = {
-                                action: results[0].name,
-                                duration: results[0].duration,
-                                showTime: actionParams.showTime || Math.min(results[0].duration, 2)
-                            }
-                            return true
-
-                        }
-                        let isArray = Array.isArray(actionParams.action)
-                        let states = []
-                        for (let r of results) {
-                            // 如果攻击填写的出多个标签, 那么顺便校验
-                            if (isArray) {
-                                if (actionParams.action.includes(r.name)) {
-                                    states.push({
-                                        action: r.name,
-                                        duration: r.duration,
-                                        showTime: actionParams.showTime || r.duration
-                                    })
-                                }
-                            } else {
-                                if (r.name === actionParams.action) {
-                                    avatarPlayer.actionState[data.action] = {
-                                        action: r.name,
-                                        duration: r.duration,
-                                        showTime: actionParams.showTime || r.duration
-                                    }
-                                    return true
-                                }
-                            }
-                        }
-                        if (states.length > 0) {
-                            avatarPlayer.actionState[data.action] = states
-                            return true
-                        }
-                    }
-                    avatarPlayer.actionState[data.action] = false
-                } else {
-                    avatarPlayer.actionState[data.action] = false
-                }
-                avatarPlayer.actionState[data.action] = false
-            } else {
-                // 查找骨骼与正确的标签
-                let results = playerAnimation.anni.getSpineActions(actionParams.name)
-                let isArray = Array.isArray(actionParams.action)
-                let states = []
-                if (results && results.length > 0) {
-                    if (!actionParams.action) {
-                        avatarPlayer.actionState[data.action] = {
-                            action: results[0].name,
-                            duration: results[0].duration,
-                            showTime: actionParams.showTime || results[0].duration
-                        }
-                        return true
-                    }
-                    for (let r of results) {
-                        if (isArray) {
-                            if (actionParams.action.includes(r.name)) {
-                                states.push({
-                                    action: r.name,
-                                    duration: r.duration,
-                                    showTime: actionParams.showTime || r.duration
-                                })
-                            }
-                        } else {
-                            if (r.name === actionParams.action) {
-                                avatarPlayer.actionState[data.action] = {
-                                    action: r.name,
-                                    duration: r.duration,
-                                    showTime: actionParams.showTime || r.duration
-                                }
-                                return true
-                            }
-                        }
-                    }
-                    if (states.length > 0) {
-                        avatarPlayer.actionState[data.action] = states
-                        return true
-                    }
-                }
-                avatarPlayer.actionState[data.action] = false
-            }
-        }
-    }
-
-    if (completePlayerParams(primaryPlayer)) {
+    if (completePlayerParams(primaryPlayer, data.action)) {
         return postMessage({
             id: data.id,
             skinId: primarySkinId,
@@ -632,7 +669,7 @@ function isChuKuang(data) {
     }
   
     let deputyPlayer = playerAnimation.findPlayerParams(data.id, deputySkinId)
-    if (completePlayerParams(deputyPlayer)) {
+    if (completePlayerParams(deputyPlayer, data.action)) {
         return postMessage({
             id: data.id,
             skinId: deputySkinId,
@@ -665,6 +702,63 @@ function update(data) {
     if (data.height != null) dynamic.height = data.height;
 }
 
+function adjust(data) {
+    let player = playerAnimation.findPlayerParams(data.id, data.skinId)
+    if (!player) return;
+
+    let actionParams = player.gongjiAction
+    if (!actionParams) return
+
+    if (data.x != null && data.y != null) {
+        // 修改参数
+        actionParams.x = data.x
+        actionParams.y = data.y
+    } else if (data.xyPos){
+        if (data.xyPos.x != null) {
+            actionParams.x[0] = data.xyPos.x
+        } else if (data.xyPos.y != null){
+            actionParams.y[0] = data.xyPos.y
+        }
+    } else if (data.scale != null) {
+        // 同一个动皮出框通过调整静态大小即可.
+        if (actionParams.scale) {
+            actionParams.scale = data.scale
+        }
+    }
+    actionParams.posAuto = false
+}
+
+
+function position(data) {
+    let player = playerAnimation.findPlayerParams(data.id, data.skinId)
+    if (!player) return;
+
+    let actionParams = player.gongjiAction
+    if (!actionParams) return
+    // 只有千幻聆音需要如此调整.
+    postMessage({id: data.id, skinId: data.skinId, message: 'position', x: actionParams.x, y: actionParams.y, scale: actionParams.scale, })
+}
+
+function debug(data) {
+    // 循环播放动画
+    let player = playerAnimation.findPlayerParams(data.id, data.skinId)
+    if (!player) return;
+    let actionParams = player.gongjiAction
+    if (!actionParams) return
+    actionParams.loop = true
+
+    playerAnimation.playLoopAction(data, player, actionParams)
+    postMessage({
+        id: data.id,
+        skinId: data.skinId,
+        message: 'debugChuKuang',
+        action: data.action,
+        isPrimary: true,
+        qhlxBigAvatar: true
+    })
+}
+
+
 onmessage = function (e) {
     let data = e.data
     switch (data.message) {
@@ -686,6 +780,19 @@ onmessage = function (e) {
         case "chukuangStart":
             chukuangStart(data)
             break
+        case 'ADJUST':
+            adjust(data)
+            break
+        case 'DEBUG':
+            debug(data)
+            break
+        case 'POSITION':
+            position(data)
+            break
+        case 'stopLoopSpine':
+            playerAnimation.stopLoopSpine(data)
+            break
+
     }
 
 }
