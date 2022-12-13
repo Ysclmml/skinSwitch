@@ -29,6 +29,7 @@ class PlayerAnimation {
         this.playerAni = {}  // 这个用来管理每个角色的Id及其skinId的配置数据
 
         this.playerState = {}  // 管理每个角色出框状态, 同时保证一个角色只能有一个出框状态.
+        this.isPhone = data.isPhone
     }
 
     // 提前把当前角色动皮需要用到的骨骼加载, 可能有默认的骨骼, 出场骨骼, 攻击骨骼, 特殊骨骼
@@ -89,39 +90,6 @@ class PlayerAnimation {
             }, this.errPlaySpine)
         } else {
             this.playChuKuang(player, actionParams, data)
-        }
-    }
-
-    playLoopAction(data, player, actionParams) {
-        // 获取存储的action对应的动画状态
-        if (!completePlayerParams(player, data.action)) return
-
-        let actionState = player.actionState
-        if (!actionState || !actionState[data.action]) return
-
-        actionParams.id = chukuangId++
-
-        let actionInfo = actionState[data.action]
-
-        if (Array.isArray(actionInfo)) {
-            let selectAction = randomChoice(actionInfo)
-            actionParams.action = selectAction.action
-        } else {
-            actionParams.action = actionInfo.action
-        }
-        this.anni.playSpine(actionParams)
-    }
-
-    stopLoopSpine(data) {
-        let playerParams = this.findPlayerParams(data.id, data.skinId)
-        for (let node of this.anni.nodes) {
-            if (node.name === playerParams.gongjiAction.name) {
-                playerParams.gongjiAction.loop = false
-                node.opacity = 0
-                this.anni.nodes.remove(node)
-                node.skeleton.completed = true
-                return
-            }
         }
     }
 
@@ -217,9 +185,15 @@ class PlayerAnimation {
                     player.gongji = Object.assign(player.gongji, player.qhlx.gongji)
                 } else {
                     // 使用雷修默认的出框参数
-                    player.gongji.x = player.divPos.x + player.divPos.width / 2;
-                    player.gongji.y = player.divPos.y + player.divPos.height / 2;
-                    player.gongji.scale = player.scale * 0.6
+                    if (playerAnimation.isPhone) {
+                        player.gongji.x = player.divPos.x + player.divPos.width / 2;
+                        player.gongji.y = player.divPos.y + player.divPos.height / 2;
+                        player.gongji.scale = player.scale * 0.40
+                    } else {
+                        player.gongji.x = player.divPos.x + player.divPos.width / 2;
+                        player.gongji.y = player.divPos.y + player.divPos.height / 2;
+                        player.gongji.scale = player.scale * 0.6
+                    }
                 }
             } else {
                 if (!player.gongji) {
@@ -227,9 +201,15 @@ class PlayerAnimation {
                 }
                 console.log('player.divPos --> ', player.divPos)
                 // fix 大屏预览参数使用雷修默认的出框偏移
-                player.gongji.x = player.divPos.x + player.divPos.width / 2;
-                player.gongji.y = player.divPos.y + player.divPos.height / 2;
-                player.gongji.scale = player.scale * 0.6
+                if (playerAnimation.isPhone) {
+                    player.gongji.x = player.divPos.x + player.divPos.width / 2;
+                    player.gongji.y = player.divPos.y + player.divPos.height / 2;
+                    player.gongji.scale = player.scale * 0.40
+                } else {
+                    player.gongji.x = player.divPos.x + player.divPos.width / 2;
+                    player.gongji.y = player.divPos.y + player.divPos.height / 2;
+                    player.gongji.scale = player.scale * 0.6
+                }
             }
 
         }
@@ -728,37 +708,6 @@ function adjust(data) {
     actionParams.posAuto = false
 }
 
-
-function position(data) {
-    let player = playerAnimation.findPlayerParams(data.id, data.skinId)
-    if (!player) return;
-
-    let actionParams = player.gongjiAction
-    if (!actionParams) return
-    // 只有千幻聆音需要如此调整.
-    postMessage({id: data.id, skinId: data.skinId, message: 'position', x: actionParams.x, y: actionParams.y, scale: actionParams.scale, })
-}
-
-function debug(data) {
-    // 循环播放动画
-    let player = playerAnimation.findPlayerParams(data.id, data.skinId)
-    if (!player) return;
-    let actionParams = player.gongjiAction
-    if (!actionParams) return
-    actionParams.loop = true
-
-    playerAnimation.playLoopAction(data, player, actionParams)
-    postMessage({
-        id: data.id,
-        skinId: data.skinId,
-        message: 'debugChuKuang',
-        action: data.action,
-        isPrimary: true,
-        qhlxBigAvatar: true
-    })
-}
-
-
 onmessage = function (e) {
     let data = e.data
     switch (data.message) {
@@ -783,16 +732,6 @@ onmessage = function (e) {
         case 'ADJUST':
             adjust(data)
             break
-        case 'DEBUG':
-            debug(data)
-            break
-        case 'POSITION':
-            position(data)
-            break
-        case 'stopLoopSpine':
-            playerAnimation.stopLoopSpine(data)
-            break
-
     }
 
 }

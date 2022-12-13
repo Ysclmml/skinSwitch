@@ -269,7 +269,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				y: [0, 0.5],
 				scale: 0.8,
 				background: 'skin_hetaihou_YaoZiMiHuan_bg.png',
-				gongji: true,  // 在中间攻击
+				// gongji: true,  // 在中间攻击
 				// gongji: {
 				// 	name: 'skin_hetaihou_YaoZiMiHuan',  // name可以是其他骨骼皮肤, 不填则默认是当前皮肤
 				// 	x: [0, 0.5],
@@ -303,9 +303,16 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				y: [0, 0.3],
 				scale: 0.45,
 				background: '何太后战场骨骼/skin_hetaihou_zhanchangjueban_bg.png',
-				backgroundSkel: {},
 				skinName: "战场绝版",
-				teshu: 'play2',  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
+				// teshu: 'play2',  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
+				teshu: {
+					name:"何太后战场骨骼/chuchang2",
+					action: ['gongji', 'jineng'] ,  // action不写是默认播放第一个动作
+					scale: 0.7,
+					// x: [0, 0.5],
+					// y: [0, 0.5],
+				},  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
+				play2: 'play2',
 				chuchang: {
 					name:"何太后战场骨骼/chuchang",
 					scale: 0.6,
@@ -662,8 +669,8 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				// teshu: 'play2',  // 触发非攻击技能时播放
 				teshu: {  // 第一回合出场
 					name: '许邵/评世雕龙/chuchang2',
-					action: 'gongji',
-					scale: 0.45
+					action: ['gongji', 'jineng'],
+					// scale: 0.45
 				},
 				gongji: {
 					name: '许邵/评世雕龙/chuchang2',
@@ -692,6 +699,21 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				},
 				background: 'skin_shenluxun_ZhanYanCuiKu_bg.png',
 				skinName: "绽焰摧枯"
+			},
+		},
+		liuyan: {
+			雄踞益州: {
+				name: 'skin_liuyan_XiongJuYiZhou',
+				x: [0, 0.55],
+				y: [0, 0.1],
+				speed: 1,
+				pos: {
+					x: [0,0.7],
+					y: [0,0.45]
+				},
+				scale: 0.55,
+				background: 'skin_liuyan_XiongJuYiZhou_bg.png',
+				skinName: "雄踞益州"
 			},
 		},
 	};

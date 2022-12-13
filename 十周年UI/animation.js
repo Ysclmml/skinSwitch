@@ -659,6 +659,7 @@ var duilib;
 		};
 		
 		AnimationPlayer.prototype.prepSpine = function (filename, autoLoad) {
+			console.log('preSpine=======', filename)
 			var _this = this;
 			var spineAssets = _this.spine.assets;
 			if (!spineAssets[filename]) {

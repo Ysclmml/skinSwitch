@@ -131,6 +131,23 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 ]
             }
         }
+    },
+    "caoying": {
+        "锋芒毕露": {
+            "qhlx": {
+                "gongji": {
+                    "scale": 1.2,
+                    "x": [
+                        0,
+                        0.28
+                    ],
+                    "y": [
+                        0,
+                        0.5
+                    ]
+                }
+            }
+        }
     }
 }
 }

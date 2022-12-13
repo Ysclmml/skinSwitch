@@ -1040,7 +1040,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     if (confirm("会覆盖十周年原文件,请确认是否已经备份过原文件方便出错还原, 是否确认?")) {
                         let progressBG = ui.create.div(".progressBG", ui.window)
                         let progressBar = ui.create.div(progressBG)
-                        let files = ['animation.js', 'dynamicWorker.js', 'extension.js']
+                        let files = ['animation.js', 'dynamicWorker.js']
                         let tasks = files.length
                         let current = 0
 
@@ -1057,7 +1057,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         // 修改十周年文件.
                         // 将本地的worker文件copy,
-                        let cpWorkerFiles = ['dynamicWorker.js', 'extension.js', 'animation.js']
+                        let cpWorkerFiles = ['dynamicWorker.js', 'animation.js']
                         cpWorkerFiles.forEach(cpWorkerFile => {
                             game.readFile(skinSwitch.path + '/十周年UI/' + cpWorkerFile, function (data) {
                                 game.writeFile(data, skinSwitch.dcdPath, cpWorkerFile, function () {
@@ -1758,6 +1758,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             message: 'CREATE',
                             canvas: offsetCanvas,
                             pathPrefix: '../十周年UI/assets/dynamic/',
+                            isPhone: (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|OperaMini/i.test(navigator.userAgent)),
                         }, [offsetCanvas]);
 
                     },
@@ -1830,61 +1831,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             angle: posData.angle
                         })
                     },
-                    debug: function (player) {
-                        if (!(player.dynamic && player.dynamic.primary)) {
-                            skinSwitchMessage.show({
-                                type: 'error',
-                                text: '只有当前角色是动皮时才可以编辑动皮参数',
-                                duration: 1500,    // 显示时间
-                                closeable: false, // 可手动关闭
-                            })
-                        }
-                        if (!player.dynamic.renderer.postMessage) {
-                            skinSwitchMessage.show({
-                                type: 'warning',
-                                text: '当前动皮过多',
-                                duration: 1500,    // 显示时间
-                                closeable: false, // 可手动关闭
-                            })
-                        }
-                        // 当前角色位置
-                        let pp = skinSwitch.getCoordinate(player, true)
-                        skinSwitch.chukuangWorker.postMessage({
-                            message: "DEBUG",
-                            id: player.dynamic.id,
-                            action: "GongJi",
-                            skinId: player.dynamic.primary.id,
-                            player: pp,
-                        })
-                    },
-                    position: function (player) {
-                        if (!(player.dynamic && player.dynamic.primary)) {
-                            skinSwitchMessage.show({
-                                type: 'error',
-                                text: '只有当前角色是动皮时才可以编辑动皮参数',
-                                duration: 1500,    // 显示时间
-                                closeable: false, // 可手动关闭
-                            })
-                            return
-                        }
-                        skinSwitch.chukuangWorker.postMessage({
-                            message: "POSITION",
-                            id: player.dynamic.id,
-                            skinId: player.dynamic.primary.id,
-                        })
-                    },
-                    stopLoopChukuang: function (player) {
-                        if (player.dynamic && player.dynamic.primary){
-                            skinSwitch.chukuangWorker.postMessage({
-                                message: "stopLoopSpine",
-                                id: player.dynamic.id,
-                                skinId: player.dynamic.primary.id,
-                            })
-                        }
-                    }
                 },
                 chukuangWorkerOnMessage: {
-                    messageCallbacks: {},
                     init: function () {
                         skinSwitch.chukuangWorker.onmessage = e => {
                             let data = e.data
@@ -1897,12 +1845,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     break
                                 case 'noActionChuKuang':
                                     this.noActionChuKuang(data)
-                                    break
-                                case 'debugChuKuang':
-                                    this.debugChuKuang(data)
-                                    break
-                                case 'position':
-                                    this.position(data)
                                     break
                             }
                         }
@@ -2001,22 +1943,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         // 将原来的置空
                         skinSwitch.rendererOnMessage.addListener(player, 'hideAllNodeEnd', function (){})
 
-                    },
-                    position: function (data) {
-                        let player = this.getPlayerById(data.id, true)
-                        if (!player || !player.dynamic) return
-                        let avatar = player.dynamic.primary
-                        if (!avatar) {
-                            return
-                        }
-                        // 找到
-                        if (this.messageCallbacks['position']) {
-                            this.messageCallbacks.position(player, data)
-                        }
-
-                    },
-                    addCallBack: function (msg, callback) {
-                        this.messageCallbacks[msg] = callback
                     }
 
                 },
@@ -2818,18 +2744,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 // }
 
                 let getDynamicPos = function (mode, func) {
-                    if (player.isQhlx && mode === 'chukuang') {
-                        skinSwitch.chukuangWorkerApi.position(player)
-                        skinSwitch.chukuangWorkerOnMessage.addCallBack('position', function(p, data) {
-                            if (p=== player) {
-                                func(data)
-                            }
-                        })
-                    } else {
-                        skinSwitch.postMsgApi.position(player, mode)
-                        skinSwitch.rendererOnMessage.addListener(player, 'position', func)
-                    }
-
+                    skinSwitch.postMsgApi.position(player, mode)
+                    skinSwitch.rendererOnMessage.addListener(player, 'position', func)
                 }
 
                 let getCurPosition = function (mode) {
@@ -2884,48 +2800,53 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         }
                     }
-                    if (mode === 'chukuang' && player.isQhlx) {
-                        skinSwitch.chukuangWorkerApi.debug(player)
-                    } else {
-                        skinSwitch.postMsgApi.debug(player, mode)
-                        skinSwitch.rendererOnMessage.addListener(player, 'debugChuKuang', function (e) {
-                            dynamicWrap.style.zIndex = "100";
-                            canvas.style.position = "fixed";
+                    skinSwitch.postMsgApi.debug(player, mode)
+                    skinSwitch.rendererOnMessage.addListener(player, 'debugChuKuang', function (e) {
+                        dynamicWrap.style.zIndex = "100";
+                        canvas.style.position = "fixed";
+                        canvas.style.width = "100%";
+
+                        if (player.isQhlx) {
+                            let bodyHeight = decadeUI.get.bodySize().height
+                            let qhDivHeight = dynamicWrap.parentNode.parentNode.getBoundingClientRect().height
+                            let top = (bodyHeight - qhDivHeight) / 2
+                            console.log('bodyHeight', bodyHeight, qhDivHeight, top)
+                            canvas.style.top = -top + 'px'
+                            canvas.style.height = Math.round((decadeUI.get.bodySize().height /  dynamicWrap.parentNode.parentNode.getBoundingClientRect().height * 100)) + '%'
+                            player.style.zIndex = 100
+                        } else {
                             canvas.style.height = "100%";
-                            canvas.style.width = "100%";
                             player.style.zIndex = 10;
-                            canvas.classList.add('hidden')
-                            setTimeout(() => {
-                                canvas.classList.remove('hidden')
-                            }, 250)
+                        }
+
+                        canvas.classList.add('hidden')
+                        setTimeout(() => {
+                            canvas.classList.remove('hidden')
+                        }, 250)
+                    })
+
+                    skinSwitch.rendererOnMessage.addListener(player, 'canvasRecover', function (e) {
+                        dynamicWrap.style.zIndex = "60";
+                        canvas.style.height = null;
+                        canvas.style.width = null;
+                        canvas.style.position = null;
+                        player.style.zIndex = 4;
+                        canvas.style.top = null
+                    })
+                    skinSwitch.rendererOnMessage.addListener(player, 'debugNoChuKuang', function (e) {
+                        // 没有出框动画无法调整
+                        currentPlay = 'daiji'
+                        chuKuangAdjust.classList.remove('adjust-select')
+                        daijiAdjust.classList.add('adjust-select')
+
+                        skinSwitchMessage.show({
+                            type: 'warning',
+                            text: '当前动皮暂无出框参数',
+                            duration: 1500,    // 显示时间
+                            closeable: false, // 可手动关闭
                         })
 
-                        skinSwitch.rendererOnMessage.addListener(player, 'canvasRecover', function (e) {
-                            if (lib.config['extension_十周年UI_newDecadeStyle'] === "on") {
-                                dynamicWrap.style.zIndex = "62";
-                            } else {
-                                dynamicWrap.style.zIndex = "60";
-                            }
-                            canvas.style.height = null;
-                            canvas.style.width = null;
-                            canvas.style.position = null;
-                            player.style.zIndex = 4;
-                        })
-                        skinSwitch.rendererOnMessage.addListener(player, 'debugNoChuKuang', function (e) {
-                            // 没有出框动画无法调整
-                            currentPlay = 'daiji'
-                            chuKuangAdjust.classList.remove('adjust-select')
-                            daijiAdjust.classList.add('adjust-select')
-
-                            skinSwitchMessage.show({
-                                type: 'warning',
-                                text: '当前动皮暂无出框参数',
-                                duration: 1500,    // 显示时间
-                                closeable: false, // 可手动关闭
-                            })
-
-                        })
-                    }
+                    })
                 }
 
                 let changeXYPos = function(mode, xOrY, num) {
