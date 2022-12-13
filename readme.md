@@ -4,9 +4,7 @@
 
 介绍使用文档之前先说明几个问题.
 
-1.  当前扩展只依赖十周年UI, 并且测试都是依赖于`魔改十周年UI2.15`版本之上的, 
-
-   当前扩展理论上不会和修改UI类的其他扩展发生冲突, 只会和依赖于十周年UI的`dynamicWorker.js`
+1.  当前扩展只依赖十周年UI, 当前扩展理论上不会和修改UI类的其他扩展发生冲突, 只会和依赖于十周年UI的`dynamicWorker.js`
 
    文件这些操作动皮的扩展发生冲突.
 
@@ -20,7 +18,8 @@
 
 的思想, 我就不做这个东西了. 
 
-4. 如果导入本扩展导致崩溃报错想要还原, 只要还原十周年UI备份的3个改动文件, 然后删除本扩展即可. 
+4. 如果导入本扩展导致崩溃报错想要还原, 只要还原十周年UI备份的2个改动文件, 然后删除本扩展即可. 
+4. 真动皮攻击音效问题, 这个放到本扩展下的audio/effect目录下, 名字与待机皮肤相同即可. 这个与eng的音效目录相同.
 
 #### 扩展功能
 
@@ -119,7 +118,7 @@ caoying:{
 				name: '许邵/评世雕龙/daiji',
 				x: [0, 0.5],
 				y: [0, 0.5],
-				teshu: 'play2',  // 触发非攻击技能时播放
+				teshu: 'play2',  // 触发非攻击技能时播放, (可以改成出框, 默认是原地附近出框, 可能会和其他角色的出框重叠.)
 				gongji: {
                     // 攻击位置参数可以不填写, 默认原地出框
 					name: '许邵/评世雕龙/chuchang2',
@@ -133,7 +132,8 @@ caoying:{
 					scale: 0.45
 				},
 				shan: 'play2', // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
-				background: '许邵/评世雕龙/skin_Decennial_XuShao_PingShiDiaoLong_bg.png'
+				background: '许邵/评世雕龙/skin_Decennial_XuShao_PingShiDiaoLong_bg.png',
+                play2: 'play2' // 十周年真动皮会随机播放play2动作, 例如何太后的战场绝版会随机时间播放倒酒动画
 			}
 ```
 
@@ -300,17 +300,7 @@ caoying:{
 
 因为对十周年UI的文件做了一些修改, 所以要使用需要先导入十周年文件. 需要先备份一下原来的3个文件. 扩展设置页面有提供按钮. 会在原十周年UI目录下创建备份文件夹. 只需要备份一次即可. 
 
-主要只改动`extension.js`, `animiation.js` , `dynamicWorker.js`改动如下.
-
-十周年UI `extension.js`
-
-1 注释了下面的部分
-
-![](./doc/十周年改动1.png)
-
-2. 注释了十周年UI的player的初始化方法
-
-![](./doc/十周年改动2.png) 
+主要只改动 `animiation.js` , `dynamicWorker.js`改动如下.
 
 3 `animiation.js`
 

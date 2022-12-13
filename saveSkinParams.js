@@ -12,56 +12,13 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 0.41
             ]
         },
-        "蛇蝎为心": {},
-        "耀紫迷幻": {
-            "qhlx": {
-                "daiji": {
-                    "scale": 1.6,
-                    "x": [
-                        0,
-                        0.57
-                    ],
-                    "y": [
-                        0,
-                        0.57
-                    ]
-                },
-                "gongji": {
-                    "scale": 1.8,
-                    "x": [
-                        0,
-                        0.26
-                    ],
-                    "y": [
-                        0,
-                        0.55
-                    ]
-                }
-            }
-        }
+        "蛇蝎为心": {}
     },
     "ol_xiaoqiao": {
         "战场绝版": {}
     },
     "shen_ganning": {
         "万人辟易": {}
-    },
-    "guozhao": {
-        "雍容尊雅": {
-            "qhlx": {
-                "daiji": {
-                    "scale": 1.2,
-                    "x": [
-                        -80,
-                        0.6
-                    ],
-                    "y": [
-                        8,
-                        0.45
-                    ]
-                }
-            }
-        }
     },
     "lvlingqi": {
         "战场绝版": {
@@ -129,6 +86,19 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     0,
                     0.4
                 ]
+            },
+            "qhlx": {
+                "daiji": {
+                    "scale": 1,
+                    "x": [
+                        5,
+                        0.38
+                    ],
+                    "y": [
+                        2,
+                        0.3
+                    ]
+                }
             }
         }
     },
@@ -144,6 +114,23 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     "y": [
                         0,
                         0.5
+                    ]
+                }
+            }
+        }
+    },
+    "guozhao": {
+        "雍容尊雅": {
+            "qhlx": {
+                "daiji": {
+                    "scale": 1.2,
+                    "x": [
+                        -80,
+                        0.46
+                    ],
+                    "y": [
+                        8,
+                        0.33
                     ]
                 }
             }

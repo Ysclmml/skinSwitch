@@ -272,8 +272,8 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				// gongji: true,  // 在中间攻击
 				// gongji: {
 				// 	name: 'skin_hetaihou_YaoZiMiHuan',  // name可以是其他骨骼皮肤, 不填则默认是当前皮肤
-				// 	x: [0, 0.5],
-				// 	y: [0, 0.5],
+				// 	x: [0, 0.8],
+				// 	y: [0, 0.4],
 				// 	scale: 0.6,
 				// },
 

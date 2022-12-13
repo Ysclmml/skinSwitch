@@ -608,7 +608,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         increased = true;
                                         decadeUI.CUR_DYNAMIC++;
                                     }
-                                    skinSwitch.chukuangPlayerInit(this, i === 0, skin)
 
                                 }
                                 if (this.doubleAvatar) {
@@ -899,8 +898,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                             }
                             if (this.$dynamicWrap.parentNode != this) this.appendChild(this.$dynamicWrap);
-                            if (this.$newDynamicWrap && this.$newDynamicWrap.parentNode !== this) this.appendChild(this.$newDynamicWrap);
+                            // if (this.$newDynamicWrap && this.$newDynamicWrap.parentNode !== this) this.appendChild(this.$newDynamicWrap);
                             dynamic.outcropMask = duicfg.dynamicSkinOutcrop;
+                            animation.player.isMobile = decadeUI.isMobile()
                             var avatar = dynamic.play(animation);
 
                             if (deputy === true) {
@@ -910,6 +910,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
 
                             this.classList.add(deputy ? 'd-skin2' : 'd-skin');
+                            // 播放完动皮自动调用初始化功能
+                            skinSwitch.chukuangPlayerInit(this, !deputy, animation.player)
                         }
                     }
                     let t
@@ -946,7 +948,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
         precontent:function() {
             window.skinSwitch = {
                 name: "皮肤切换",
-                version: 1.02,
+                version: 1.05,
                 url: lib.assetURL + "extension/皮肤切换/",
                 path: 'extension/皮肤切换',
                 dcdPath: 'extension/十周年UI',
@@ -1230,7 +1232,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 // 重新初始化
 
                                 player.playDynamic(skin, false);
-                                skinSwitch.chukuangPlayerInit(player, true, skin)
                                 player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
                                 if (lib.config[skinSwitch.configKey.dynamicSkin]) {
                                     var cg = lib.config[skinSwitch.configKey.dynamicSkin];
@@ -1373,7 +1374,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         skinSwitch.postMsgApi.playAvatar(player, true, action)
                                     }
                                     if (firstLast) {
-                                        console.log('play2 time', (new Date().getTime() - firstLast) / 1000)
+                                        // console.log('play2 time', (new Date().getTime() - firstLast) / 1000)
                                     }
                                     firstLast = new Date().getTime()
                                     player.playPrimaryTimer = setTimeout(() => {
@@ -1758,7 +1759,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             message: 'CREATE',
                             canvas: offsetCanvas,
                             pathPrefix: '../十周年UI/assets/dynamic/',
-                            isPhone: (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|OperaMini/i.test(navigator.userAgent)),
+                            isMobile: decadeUI.isMobile(),
                         }, [offsetCanvas]);
 
                     },
@@ -3398,6 +3399,26 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             })
         },
         config:{
+            //
+            "GXNR": {
+                "name": "更新内容",
+                "init": "xin",
+                "unfrequent": true,
+                "item": {
+                    "xin": "点击查看",
+                },
+                "textMenu": function (node, link) {
+                    lib.setScroll(node.parentNode);
+                    node.parentNode.style.transform = "translateY(-100px)";
+                    node.parentNode.style.height = "200px";
+                    node.parentNode.style.width = "320px";
+                    switch (link) {
+                        case "xin":
+                            node.innerHTML = "<img style=width:100% src=" + lib.assetURL + "extension/皮肤切换/gengxin/1_05更新.png>"
+                            break;
+                    }
+                },
+            },
             "backupFileDui": {
                 name: "<div><button class='engBtn' onclick='skinSwitch.backupFileDui()'>备份十周年文件</button></div>",
                 clear: true
@@ -3454,12 +3475,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 translate:{
                 },
             },
-            intro:"基于EngEX扩展的动态换肤部分魔改.原来使用E佬写的EngEX插件自动出框非常好用,但是非常麻烦的是调整参数不方便, 于是就自己观摩E佬和特效测试扩展大佬的代码编写了调整参数这个简单的扩展\n" +
-                "基于本人是个后端人员,审美有限(汗),所以换肤部分样式素材基本照搬E佬的EngEX扩展. 第一次写插件,应该有挺多bug,希望见谅.",
+            intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;初次使用请先备份并导入十周年UI的animation.js和dynamicWorker.js文件<br>&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有搬自于EngEX扩展的动皮换肤功能,但是并不支持静态皮肤切换, 完整体验需要配合千幻聆音雷修版本,支持动态静态皮肤切换. 本扩展完全兼容千幻雷修并会保持同步更新兼容。<br>&nbsp;&nbsp;注意：由于重新定义了部分函数(logSill)，会和部分扩展的部分内容相互覆盖。<br>&nbsp;&nbsp;<font color=\"red\">每次更新扩展后, 请首先重新覆盖一下原先十周年UI的dynamicWorker文件</font>',
+            // intro:"基于EngEX扩展的动态换肤部分魔改.原来使用E佬写的EngEX插件自动出框非常好用,但是非常麻烦的是调整参数不方便, 于是就自己观摩E佬和特效测试扩展大佬的代码编写了调整参数这个简单的扩展\n" +
+            //     "基于本人是个后端人员,审美有限(汗),所以换肤部分样式素材基本照搬E佬的EngEX扩展. 第一次写插件,应该有挺多bug,希望见谅.",
             author:"yscl",
             diskURL:"",
             forumURL:"",
-            version:"1.02",
+            version:"1.05",
         },
         files:{"character":[],"card":[],"skill":[]}}
 })
@@ -3487,6 +3509,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  原来的player.logSkill技能我是copy的游戏本体比较老的版本, 所以这个会出现一些问题, 现在补充为最新的了.
  现在支持在十周年真动皮的角色在回合开始播放出场动画, 以及十周年动皮默认原地出框和不位移(需要在dynamicSkin配置参数)
 
- 十周年动皮细节: 出框攻击速度会提高为1.2, 出场动作会默认提高
+ 十周年动皮细节: 出框攻击速度会提高为1.2, 出场动作会默认提高放大scale1.2倍
 
+ */
+
+/** 1.05版本更新:
+ 1. 重写了动画出框的逻辑, 现在统一把所有需要出框播放的动画放到单独的worker进行工作, 不再是原来eng的出框原理了, 不会再复现一瞬间闪屏的问题.
+ 2. 十周年UI文件不再需要导入, 现在十周年UI版本随意, 已经测试了最新的showK版本的十周年Ui, 没有出现问题.
+ 3. 十周年样式下出框背景不再会被覆盖.
+ 4. 所有动皮的出框播放速度默认为1.2
+ 5. 千幻聆音雷修版本的手杀大屏预览的播放出框动画做了优化, 默认显示的更加完美, 基本不用进行调整
  */

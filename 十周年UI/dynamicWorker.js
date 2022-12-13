@@ -20,6 +20,8 @@ var dynamics = [];
 
 let chukuangId = 99999   // 自动出框的nodeID起始, 为了不和主线程传过去的skinId重复
 
+let isMobile = false
+
 /**
  * 获取动皮管理对象DynamicPlayer
  * @param id  DynamicPlayer对象的id
@@ -63,22 +65,45 @@ function playSkin(dynamic, data) {
 	let sprite = (typeof data.sprite == 'string') ? {name: data.sprite} : data.sprite;
 	sprite.loop = true;
 
+	let player = sprite.player
+
+	let initPlayerGongJi = function () {
+		if (!player.gongji) {
+			player.gongji = {}
+			player.qhlxAutoSetGongJi = true  // 用来标记是千幻页面没有设置gongji自动添加上的标记. 手杀是真动皮, 带有gongji标签
+		} else if (typeof player.gongji === 'string') {
+			player.gongji = {
+				action: player.gongji
+			}
+		} else if (player.gongji === true) {
+			player.gongji = {}
+			player.fakeDynamic = true
+		}
+	}
+
 	// 兼容雷修千幻
 	// 获取保存的参数, 如果存在保存的参数, 则使用保存的参数进行播放.
 	if (sprite.qhlxBigAvatar) {
 		if (sprite.player.qhlx) {
 			if (sprite.player.qhlx.gongji) {
-				if (!sprite.player.gongji) {
-					sprite.player.gongji = {}
-				}
+				initPlayerGongJi()
 				sprite.player.gongji = Object.assign(sprite.player.gongji, sprite.player.qhlx.gongji)
 			} else {
 				// 使用雷修默认的出框参数
-				// sprite.player.gongji.x = [sprite.player.x[0] * 0.58, sprite.player.x[1] * 0.58];
-				// sprite.player.gongji.y = [sprite.player.y[0] * 1.4, sprite.player.y[1] * 1.4];
-				sprite.player.gongji.x = sprite.player.divPos.x + sprite.player.divPos.width / 2;
-				sprite.player.gongji.y = sprite.player.divPos.y + sprite.player.divPos.height / 2;
-				sprite.player.gongji.scale = player.scale * 0.6
+				initPlayerGongJi()
+				if (player.isMobile) {
+					player.gongji.x = player.divPos.x + player.divPos.width / 2;
+					player.gongji.y = player.divPos.y + player.divPos.height / 2;
+					if (player.gongji.name === player.name) {
+						player.gongji.scale = player.scale * 0.6
+					} else {
+						player.gongji.scale = player.largeFactor * (player.gongji.scale || 1) * 0.55
+					}
+				} else {
+					player.gongji.x = player.divPos.x + player.divPos.width / 2;
+					player.gongji.y = player.divPos.y + player.divPos.height / 2;
+					player.gongji.scale = player.scale * 0.55
+				}
 			}
 			if (sprite.player.qhlx.daiji) {
 				sprite = Object.assign(sprite, sprite.player.qhlx.daiji)
@@ -88,15 +113,21 @@ function playSkin(dynamic, data) {
 			}
 		} else {
 			sprite.player.scale = sprite.scale
-			if (!sprite.player.gongji) {
-				sprite.player.gongji = {}
-			}
+			initPlayerGongJi()
 			// fix 大屏预览参数使用雷修默认的出框偏移
-			// sprite.player.gongji.x = [sprite.player.x[0] * 0.58, sprite.player.x[1] * 0.58];
-			// sprite.player.gongji.y = [sprite.player.y[0] * 1.4, sprite.player.y[1] * 1.4];
-			sprite.player.gongji.x = sprite.player.divPos.x + sprite.player.divPos.width / 2;
-			sprite.player.gongji.y = sprite.player.divPos.y + sprite.player.divPos.height / 2;
-			sprite.player.gongji.scale = sprite.player.scale * 0.6
+			if (player.isMobile) {
+				player.gongji.x = player.divPos.x + player.divPos.width / 2;
+				player.gongji.y = player.divPos.y + player.divPos.height / 2;
+				if (player.gongji.name === player.name) {
+					player.gongji.scale = player.scale * 0.6
+				} else {
+					player.gongji.scale = player.largeFactor * (player.gongji.scale || 1) * 0.55
+				}
+			} else {
+				player.gongji.x = player.divPos.x + player.divPos.width / 2;
+				player.gongji.y = player.divPos.y + player.divPos.height / 2;
+				player.gongji.scale = player.scale * 0.55
+			}
 		}
 
 	}

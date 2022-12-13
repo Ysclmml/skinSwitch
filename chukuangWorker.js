@@ -29,7 +29,7 @@ class PlayerAnimation {
         this.playerAni = {}  // 这个用来管理每个角色的Id及其skinId的配置数据
 
         this.playerState = {}  // 管理每个角色出框状态, 同时保证一个角色只能有一个出框状态.
-        this.isPhone = data.isPhone
+        this.isMobile = data.isMobile
     }
 
     // 提前把当前角色动皮需要用到的骨骼加载, 可能有默认的骨骼, 出场骨骼, 攻击骨骼, 特殊骨骼
@@ -173,42 +173,66 @@ class PlayerAnimation {
     errPlaySpine (data) {
         console.log('播放失败....', data)
     }
+
+
     // 补全配置参数 player: 这个是播放待机动作存取的配置参数
     completeParams(player) {
         if (!player) return
+        // 给一些简化初始化方式的攻击参数补全
+        let initPlayerGongJi = function () {
+            if (!player.gongji) {
+                player.gongji = {}
+                player.qhlxAutoSetGongJi = true  // 用来标记是千幻页面没有设置gongji自动添加上的标记. 手杀是真动皮, 带有gongji标签
+            } else if (typeof player.gongji === 'string') {
+                player.gongji = {
+                    action: player.gongji
+                }
+            } else if (player.gongji === true) {
+                player.gongji = {}
+                player.fakeDynamic = true
+            }
+        }
         if (player.qhlxBigAvatar) {
             if (player.qhlx) {
                 if (player.qhlx.gongji) {
-                    if (!player.gongji) {
-                        player.gongji = {}
-                    }
+                    initPlayerGongJi()
                     player.gongji = Object.assign(player.gongji, player.qhlx.gongji)
                 } else {
                     // 使用雷修默认的出框参数
-                    if (playerAnimation.isPhone) {
+                    initPlayerGongJi()
+                    if (playerAnimation.isMobile) {
                         player.gongji.x = player.divPos.x + player.divPos.width / 2;
                         player.gongji.y = player.divPos.y + player.divPos.height / 2;
-                        player.gongji.scale = player.scale * 0.40
+                        if (player.gongji.name === player.name) {
+                            player.gongji.scale = player.scale * 0.6
+                        } else {
+                            player.gongji.scale = player.largeFactor * (player.gongji.scale || 1) * 0.55
+                        }
                     } else {
                         player.gongji.x = player.divPos.x + player.divPos.width / 2;
                         player.gongji.y = player.divPos.y + player.divPos.height / 2;
-                        player.gongji.scale = player.scale * 0.6
+                        player.gongji.scale = player.scale * 0.55
                     }
                 }
             } else {
-                if (!player.gongji) {
-                    player.gongji = {}
-                }
+                initPlayerGongJi()
                 console.log('player.divPos --> ', player.divPos)
                 // fix 大屏预览参数使用雷修默认的出框偏移
-                if (playerAnimation.isPhone) {
+                if (playerAnimation.isMobile) {
+                    if (!player.gongji) {
+                        player.gongji = {}
+                    }
                     player.gongji.x = player.divPos.x + player.divPos.width / 2;
                     player.gongji.y = player.divPos.y + player.divPos.height / 2;
-                    player.gongji.scale = player.scale * 0.40
+                    if (!player.gongji.name ||  player.gongji.name === player.name) {
+                        player.gongji.scale = player.scale * 0.6
+                    } else {
+                        player.gongji.scale = player.largeFactor * (player.gongji.scale || 1) * 0.55
+                    }
                 } else {
                     player.gongji.x = player.divPos.x + player.divPos.width / 2;
                     player.gongji.y = player.divPos.y + player.divPos.height / 2;
-                    player.gongji.scale = player.scale * 0.6
+                    player.gongji.scale = player.scale * 0.55
                 }
             }
 
@@ -361,32 +385,50 @@ class PlayerAnimation {
 }
 
 function setShiZhouNianGongJiPos(apnode, data) {
+    let xRate = data.player.x / data.player.bodyWidth
+    let yRate = data.player.y / data.player.bodyHeight
+
     if (data.me) {
+        if (xRate < 0.5) {
+            apnode.x = data.player.x + data.player.width / 3
+        } else {
+            apnode.x = data.player.x - data.player.width / 3
+        }
         apnode.x = data.player.x - data.player.width / 3
         apnode.y = data.player.y + data.player.height * 1.1
     } else {
         // 根据每个人当时的位置偏移
-        let xRate = data.player.x / data.player.bodyWidth
-        let yRate = data.player.y / data.player.bodyHeight
         apnode.x = data.player.x + data.player.width / 2
         apnode.y = data.player.y + data.player.height / 2
-        console.log('x,y', xRate, yRate)
-        if (xRate < 0.35) {
-            apnode.x += data.player.width * 0.5
+        if (xRate < 0.15) {
+            apnode.x += data.player.width * 0.7
+        } else if (xRate < 0.25) {
+            apnode.x += data.player.width * 0.6
         }
 
-        if (xRate > 0.7) {
-            apnode.x -= data.player.width * 0.3
+        if (xRate > 0.8) {
+            apnode.x -= data.player.width * 0.7
+        } else if (xRate > 0.7) {
+            apnode.x -= data.player.width * 0.6
         }
 
-        if (yRate > 0.7) {
+        if (yRate < 0.2) {
+            apnode.y += data.player.height * 0.4
+        } else if (yRate < 0.3) {
+            apnode.y += data.player.height * 0.3
+        } else if (yRate < 0.4) {
+            apnode.y += data.player.height * 0.2
+        }
+
+        if (yRate > 0.9) {
+            apnode.y -= data.player.height * 0.7
+        } else if (yRate > 0.8) {
+            apnode.y -= data.player.height * 0.6
+        } else if (yRate > 0.7) {
+            apnode.y -= data.player.height * 0.4
+        } else if (yRate > 0.6) {
             apnode.y -= data.player.height * 0.3
         }
-
-        if (yRate < 0.35) {
-            apnode.y += data.player.height * 0.25
-        }
-
     }
 }
 
@@ -533,8 +575,12 @@ function completePlayerParams(avatarPlayer, action) {
                                     showTime: actionParams.showTime || r.duration
                                 }
                                 actionParams.fakeDynamic = false
+                                avatarPlayer.qhlxAutoSetGongJi = false
                                 return true
                             }
+                        }
+                        if (avatarPlayer.qhlxAutoSetGongJi) {
+                            return false
                         }
                         avatarPlayer.actionState[action] = {
                             action: results[0].name,
