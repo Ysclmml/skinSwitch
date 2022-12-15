@@ -1702,8 +1702,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             this._onchangeDynamicWindow(player, r)
                         }
                     },
-                    actionGongJi: function(player) {
-                        skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi')
+                    actionGongJi: function(player, extraParams) {
+                        skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', extraParams)
                         // let r = this.action(player, 'GongJi')
                         // if (r) {
                         //     player.lastPlayTime = new Date().getTime()
@@ -1898,7 +1898,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                         return res
                     },
-                    chukuangAction: function (player, action) {
+                    chukuangAction: function (player, action, extraParams) {
                         let dynamic = player.dynamic
                         if (!dynamic || (!dynamic.primary && !dynamic.deputy)) {
                             return
@@ -1908,7 +1908,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             id: dynamic.id,
                             primarySkinId: dynamic.primary && dynamic.primary.id,
                             deputySkinId: dynamic.deputy && dynamic.deputy.id,
-                            action: action
+                            action: action,
+                            extraParams: extraParams,  // 表示需要更新出框的播放效果
                         })
                     },
                     adjust: function (player, posData) {
@@ -2532,12 +2533,16 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             lib.init.js(skinSwitch.url, 'saveSkinParams', function() {
                 window.saveFunc(lib, game, ui, get, ai, _status);
             }, function() {
-                skinSwitchMessage.show({
-                    type: 'error',
-                    text: '皮肤切换加载savePos.js失败！',
-                    duration: 1500,    // 显示时间
-                    closeable: false, // 可手动关闭
-                })
+                skinSwitch.saveSkinParams = {}
+                // if (window.skinSwitchMessage) {
+                //     skinSwitchMessage.show({
+                //         type: 'error',
+                //         text: '皮肤切换加载savePos.js失败！',
+                //         duration: 1500,    // 显示时间
+                //         closeable: false, // 可手动关闭
+                //     })
+                // }
+
                 // alert("皮肤切换加载savePos.js失败！");
             });
 
@@ -3504,7 +3509,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     node.parentNode.style.width = "320px";
                     switch (link) {
                         case "xin":
-                            node.innerHTML = "<img style=width:100% src=" + lib.assetURL + "extension/皮肤切换/gengxin/1_05更新.png>"
+                            node.innerHTML = "<img style=width:100% src=" + lib.assetURL + "extension/皮肤切换/gengxin/1.06_更新.png>"
                             break;
                     }
                 },
@@ -3609,4 +3614,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  3. 十周年样式下出框背景不再会被覆盖.
  4. 所有动皮的出框播放速度默认为1.2
  5. 千幻聆音雷修版本的手杀大屏预览的播放出框动画做了优化, 默认显示的更加完美, 基本不用进行调整
+ */
+
+/** 1.06版本更新:
+ 1. 修复了reinit函数没有传player函数导致一些会变身技能的角色初始化报错问题
+ 2. 瓜佬的限定技特效等需要读取动皮的皮肤放到框内, 适配了这一逻辑, 防止读取不到皮肤的问题.
+ 3. 配合千幻雷修1.64版本增加了手杀大屏播放出框允许反转的功能.
+ 4. 增加了出场可以使用待机皮肤进行出场代替.
+
  */

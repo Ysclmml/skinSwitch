@@ -703,9 +703,23 @@ function isChuKuang(data) {
     let deputySkinId = data.deputySkinId
     // 查找是否可以出框
     let primaryPlayer = playerAnimation.findPlayerParams(data.id, primarySkinId)
+
+    let extraParams = data.extraParams
     console.log('primaryPlayer data', primaryPlayer)
 
     if (completePlayerParams(primaryPlayer, data.action)) {
+        if (extraParams) {
+            let actionParams
+            if (data.action === 'GongJi') actionParams = primaryPlayer.gongjiAction
+            else if (data.action === 'chukuang') actionParams = primaryPlayer.chuchangAction
+            else if (data.action === 'TeShu') actionParams = primaryPlayer.teshuAction
+            else actionParams = primaryPlayer[data.action + 'Action']
+            if (actionParams) {
+                for (let k in extraParams) {
+                    actionParams[k] = extraParams[k]
+                }
+            }
+        }
         return postMessage({
             id: data.id,
             skinId: primarySkinId,
@@ -718,6 +732,18 @@ function isChuKuang(data) {
   
     let deputyPlayer = playerAnimation.findPlayerParams(data.id, deputySkinId)
     if (completePlayerParams(deputyPlayer, data.action)) {
+        if (extraParams) {
+            let actionParams
+            if (data.action === 'GongJi') actionParams = deputyPlayer.gongjiAction
+            else if (data.action === 'chukuang') actionParams = deputyPlayer.chuchangAction
+            else if (data.action === 'TeShu') actionParams = deputyPlayer.teshuAction
+            else actionParams = deputyPlayer[data.action + 'Action']
+            if (actionParams) {
+                for (let k in extraParams) {
+                    actionParams[k] = extraParams[k]
+                }
+            }
+        }
         return postMessage({
             id: data.id,
             skinId: deputySkinId,
