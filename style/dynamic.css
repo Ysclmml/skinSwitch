@@ -88,3 +88,32 @@
     z-index:10;
     transform: translateY(-60%);
 }
+
+.pfqhLeftArrow {
+    z-index: 35;
+    left: calc(0.34%);
+    width: calc(21.01%);
+    height: calc(16.2%);
+    top: 42%;
+    display: block;
+    position: relative;
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url(../images/huanfu/newui_arrow_left.png);
+    flex: 1;
+}
+
+.pfqhRightArrow {
+    z-index: 35;
+    right: calc(0.34%);
+    height: calc(16.2%);
+    display: block;
+    position: relative;
+    top: 42%;
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url(../images/huanfu/newui_arrow_right.png);
+    flex: 1;
+}

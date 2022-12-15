@@ -135,6 +135,19 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 }
             }
         }
+    },
+    "re_sunyi": {
+        "腾龙翻江": {
+            "scale": 0.6,
+            "x": [
+                0,
+                0.2
+            ],
+            "y": [
+                0,
+                0.28
+            ]
+        }
     }
 }
 }

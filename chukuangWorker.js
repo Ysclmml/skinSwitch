@@ -619,6 +619,28 @@ function completePlayerParams(avatarPlayer, action) {
                     }
                 }
                 avatarPlayer.actionState[action] = false
+            }  else if (action === 'chuchang') {
+                let results = playerAnimation.anni.getSpineActions(daijiName)
+                if (results && results.length > 0) {
+                    for (let r of results) {
+                        if (r.name === actionParams.action) {
+                            avatarPlayer.actionState[action] = {
+                                action: r.name,
+                                duration: r.duration,
+                                showTime: actionParams.showTime ||  Math.min(results[0].duration, 2)
+                            }
+                            return true
+                        }
+                    }
+                    // 使用第一个当作chuchang
+                    avatarPlayer.actionState[action] = {
+                        action: results[0].name,
+                        duration: results[0].duration,
+                        showTime: actionParams.showTime || Math.min(results[0].duration, 2)
+                    }
+                    return true
+                }
+                avatarPlayer.actionState[action] = false
             } else {
                 avatarPlayer.actionState[action] = false
             }
@@ -759,9 +781,6 @@ onmessage = function (e) {
     switch (data.message) {
         case 'CREATE':
             createChuKuang(data)
-            break
-        case 'ACTION':
-            action(data)
             break
         case 'UPDATE':
             update(data)
