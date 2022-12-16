@@ -49,7 +49,7 @@ class PlayerAnimation {
             }
         }
         let arr = []
-        for (let act of [{name: player.name}, player.gongjiAction, player.gongjiAction, player.chuchangAction]) {
+        for (let act of [{name: player.name}, player.gongjiAction, player.teshuAction, player.chuchangAction]) {
             if (act && !arr.includes(act.name)) {
                 arr.push(act.name)
                 pLoad(act)
@@ -176,7 +176,7 @@ class PlayerAnimation {
 
 
     // 补全配置参数 player: 这个是播放待机动作存取的配置参数
-    completeParams(player) {
+        completeParams(player) {
         if (!player) return
         // 给一些简化初始化方式的攻击参数补全
         let initPlayerGongJi = function () {
@@ -763,6 +763,7 @@ function isChuKuang(data) {
 
 function chukuangStart(data) {
     playerAnimation.playAction(data)
+    console.log('anni...', playerAnimation.anni)
 }
 
 function update(data) {

@@ -2072,6 +2072,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <span>动画标签:</span><select id="animationList"></select>
                         <span>Debug:</span><input type="checkbox" id="debug">
                         <span>α预乘:</span><input type="checkbox" id="premultipliedAlpha">
+                        <span>flipX:</span><input type="checkbox" id="flipX">
+                        <span>flipY:</span><input type="checkbox" id="flipY">
                         <span>大小:<input id="scale" type="number" value="0.5" step="0.05"></span>
                         <span>x: <input id="posX" type="number" value="0.5" step="0.05"></span>
                         <span>y: <input id="posY" type="number" value="0.5" step="0.05"></span>
@@ -2106,6 +2108,56 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let allSkels = {}  // 管理所有骨骼数据. 骨骼名称和骨骼后缀
 
                     let isClosed = false   // 全局信号, 通知关闭, 停止渲染
+
+                    let scaleSlider
+                    if (window.decadeUI) {
+                        scaleSlider = decadeUI.component.slider(0.1, 3, 0.5)
+                        scaleSlider.setAttribute('step', '0.1')
+                        let scaleNode = document.getElementById('scale')
+                        scaleNode.parentNode.insertBefore(scaleSlider, scaleNode)
+                    }
+
+                    let speedSlider
+                    if (window.decadeUI) {
+                        speedSlider = decadeUI.component.slider(0.1, 3, 1)
+                        speedSlider.setAttribute('step', '0.1')
+
+                        let con = document.createElement('span')
+                        let speedText = document.createElement('span')
+                        speedText.innerHTML = '速度: 1'
+                        speedSlider.value = '1'
+                        con.appendChild(speedText)
+                        con.appendChild(speedSlider)
+
+                        let closePreviewWindow = document.getElementById('closePreviewWindow')
+                        closePreviewWindow.parentNode.insertBefore(con, closePreviewWindow)
+
+                        speedSlider.onchange = function(){
+                            speedText.innerHTML = '速度: ' + speedSlider.value
+                        };
+
+                    }
+
+                    let angleSlider
+                    if (window.decadeUI) {
+                        angleSlider = decadeUI.component.slider(0, 360, 0)
+                        angleSlider.setAttribute('step', '1')
+
+                        let con = document.createElement('span')
+                        let text = document.createElement('span')
+                        text.innerHTML = '角度: 0°'
+                        angleSlider.value = '0'
+                        con.appendChild(text)
+                        con.appendChild(angleSlider)
+
+                        let closePreviewWindow = document.getElementById('closePreviewWindow')
+                        closePreviewWindow.parentNode.insertBefore(con, closePreviewWindow)
+
+                        angleSlider.onchange = function(){
+                            text.innerHTML = '角度: ' + angleSlider.value + '°'
+                        };
+
+                    }
 
                     document.getElementById('closePreviewWindow').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                         // 删除自己当前节点即可
@@ -2219,6 +2271,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         document.getElementById('scale').oninput = function (e) {
                             let v = e.srcElement.value
+                            if (scaleSlider) {
+                                scaleSlider.value = v
+                            }
                             allLoadSkels[curDir][activeSkeleton].previewParams.scale = v
                         }
                         document.getElementById('posX').oninput = function (e) {
@@ -2246,6 +2301,15 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 requestAnimationFrame(render)
                             }
                         }
+
+                        if (scaleSlider) {
+                            scaleSlider.onchange = function(){
+                                // let v= s1.value / 8;
+                                document.getElementById('scale').value = scaleSlider.value
+                                allLoadSkels[curDir][activeSkeleton].previewParams.scale = scaleSlider.value
+                            };
+                        }
+
 
                     }
 
@@ -2404,13 +2468,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                         }
 
-                        skeletonList.onchange = function() {
-                            activeSkeleton = skeletonList.options[skeletonList.selectedIndex].value
-                            // 输入框的值也改成存储的值
+                        let initInputVal = () => {
                             document.getElementById('scale').value = skeletons[activeSkeleton].previewParams.scale
+                            if (scaleSlider) {
+                                scaleSlider.value = skeletons[activeSkeleton].previewParams.scale
+                            }
                             document.getElementById('posX').value = skeletons[activeSkeleton].previewParams.posX
                             document.getElementById('posY').value = skeletons[activeSkeleton].previewParams.posY
                             document.getElementById('premultipliedAlpha').checked = Boolean(skeletons[activeSkeleton].previewParams.premultipliedAlpha)
+                        }
+
+                        initInputVal()
+
+                        skeletonList.onchange = function() {
+                            activeSkeleton = skeletonList.options[skeletonList.selectedIndex].value
+                            // 输入框的值也改成存储的值
+                            initInputVal()
                             setupAnimationUI();
                         }
                         setupAnimationUI();
@@ -2436,7 +2509,16 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         var skeleton = skeletons[activeSkeleton].skeleton;
                         var state = skeletons[activeSkeleton].state;
                         var bounds = skeletons[activeSkeleton].bounds;
-                        state.update(delta);
+
+                        let speed = 1
+                        if (speedSlider) {
+                            speed = speedSlider.value
+                        }
+                        if (angleSlider) {
+                            mvp.rotate(Number(angleSlider.value), 0, 0, 1);
+                        }
+
+                        state.update(delta * speed);
                         state.apply(skeleton);
                         skeleton.updateWorldTransform();
 
@@ -2453,6 +2535,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         batcher.begin(shader);
 
                         skeleton.opacity = 1
+
+                        skeleton.flipX = document.getElementById('flipX').checked
+                        skeleton.flipY = document.getElementById('flipY').checked
+
+
                         skeletonRenderer.premultipliedAlpha = Boolean(skeletons[activeSkeleton].previewParams.premultipliedAlpha)
                         // skeletonRenderer.premultipliedAlpha = true;
                         skeletonRenderer.draw(batcher, skeleton);
@@ -3621,5 +3708,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  2. 瓜佬的限定技特效等需要读取动皮的皮肤放到框内, 适配了这一逻辑, 防止读取不到皮肤的问题.
  3. 配合千幻雷修1.64版本增加了手杀大屏播放出框允许反转的功能.
  4. 增加了出场可以使用待机皮肤进行出场代替.
+
+ */
+
+/**
+ fix: teshu出框还是会盖住背景的bug. 其实是自己手误写错了
 
  */

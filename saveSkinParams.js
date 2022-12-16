@@ -159,6 +159,21 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 0.28
             ]
         }
+    },
+    "dufuren": {
+        "战场绝版": {
+            "gongji": {
+                "scale": 0.5,
+                "x": [
+                    0,
+                    0.62
+                ],
+                "y": [
+                    0,
+                    0.5
+                ]
+            }
+        }
     }
 }
 }
