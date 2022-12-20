@@ -18,64 +18,6 @@
     transform: translate(-50%, -50%);
 }
 
-.skinBox {
-    top: 50%;
-    left: 50%;
-    display: flex;
-    position: relative;
-    overflow: scroll;
-    transform: translate(-29.5%, -46%);
-}
-
-.skinBox > div {
-    width: 30%;
-    height: 100%;
-    /*background-image: url("../../images/base/skin_bg.png");*/
-    background-size: 106%;
-    background-position: center;
-    background-repeat: no-repeat;
-    position: relative;
-    flex: none;
-    top: 50%;
-    transform: translateY(-50%);
-    margin-right: 2%;
-}
-
-.skinBox > div > img {
-    width: 89%;
-    border-radius: 10px;
-    position: relative;
-    bottom: 1%;
-    left: 6%;
-}
-
-@media screen and (min-width: 1200px) {
-    #skinDiv2 {
-        height: 455px;
-        width: 828px;
-    }
-    .skinBox {
-        width: 499px;
-        height: 265px;
-    }
-    .skinBox > div > img {
-        width: 90%;
-        bottom: 3%;
-        left: 5%;
-    }
-}
-
-@media screen and (min-width: 700px) and (max-width: 1200px) {
-    #skinDiv2 {
-        height: 390px;
-        width: 690px;
-    }
-    .skinBox {
-        width: 411px;
-        height: 223px;
-    }
-}
-
 .switchSkinButton {
     display: block;
     width: 58px;
@@ -89,11 +31,95 @@
     transform: translateY(-60%);
 }
 
+.skinBox {
+    top: 50%;
+    left: 50%;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    transform: translate(-29.5%, -46%);
+}
+
+@media screen and (min-width: 1200px) {
+    #skinDiv2 {
+        height: 455px;
+        width: 828px;
+    }
+    .skinBox {
+        width: 499px;
+        height: 265px;
+    }
+
+}
+
+@media screen and (min-width: 400px) and (max-width: 1200px) {
+    #skinDiv2 {
+        height: 390px;
+        width: 690px;
+    }
+    .skinBox {
+        width: 411px;
+        height: 223px;
+    }
+
+
+}
+
+#skinDiv2 .skins {
+    display: flex;
+    width: 85%;
+    height: 90%;
+    top: 1%;
+    left: 7.5%;
+    justify-content: flex-start;
+    align-items: center;
+}
+#skinDiv2 .skins .skin-avatar {
+    flex-basis: 30%;
+    height: 100%;
+    position: relative;
+    margin-right: 3%;
+}
+
+#skinDiv2 .skins .pfqh-skin-cover {
+    position: relative;
+    /*height: calc(87.01%);*/
+    height: calc(75.01%);
+    display: block;
+    border-radius: 7px;
+    transition: background-image 0s;
+}
+
+#skinDiv2 .skins .pfqh-skin {
+
+    width: calc(100%);
+    height: calc(115%);
+    left: calc(0%);
+    display: block;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 7px;
+    transition: background-image 0s;
+    border: none;
+    box-shadow: 0px 0px 0px 0px;
+}
+
+.pfqh-text {
+    font-size: 1.2em;
+    color: wheat;
+    text-align: center;
+    position: relative;
+    font-weight: bold;
+    margin-bottom: 10.5%;
+    width: 100%;
+}
+
 .pfqhLeftArrow {
     z-index: 35;
-    left: calc(0.34%);
-    width: calc(21.01%);
-    height: calc(16.2%);
+    left: calc(-1.34%);
+    width: 9%;
+    height: calc(18.2%);
     top: 42%;
     display: block;
     position: relative;
@@ -101,13 +127,13 @@
     background-position: center;
     background-repeat: no-repeat;
     background-image: url(../images/huanfu/newui_arrow_left.png);
-    flex: 1;
 }
 
 .pfqhRightArrow {
     z-index: 35;
-    right: calc(0.34%);
-    height: calc(16.2%);
+    right: calc(-83.66%);
+    height: calc(18.2%);
+    width: 9%;
     display: block;
     position: relative;
     top: 42%;
@@ -115,5 +141,125 @@
     background-position: center;
     background-repeat: no-repeat;
     background-image: url(../images/huanfu/newui_arrow_right.png);
-    flex: 1;
+}
+
+.skin-character {
+    background-image: url("../images/huanfu/white-background.jpg");
+    background-size: 100%;
+    background-repeat: no-repeat;
+    /*width: 500px;*/
+    /*height: 120px;*/
+    width: 345px;
+    height: 100px;
+    left: 63%;
+    top: 6%;
+    transform: translate(-50%, 0);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+#skinDiv .pfqh-selected {
+    box-shadow: rgba(0, 0, 0, 0.2) 0 0 0 1px,rgba(255, 0, 0, 0.4) 0 0 5px, rgba(255, 0, 0, 0.4) 0 0 12px, rgba(255, 0, 0, 0.8) 0 0 15px !important;
+}
+
+/*切换按钮 https://code.juejin.cn/pen/7144159185901453342 */
+
+#skinDiv .hellokitty {
+    width: 60%;
+    height: 100px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+}
+#skinDiv .text {
+    font-family: 'myFont', 'Bitstream Vera Serif', serif;
+    margin: 0 5px;
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-transform: capitalize;
+    position: initial;
+}
+#skinDiv .text.active {
+    /*color: #ffafb8;*/
+    color: #ef2508;
+    font-weight: 600;
+}
+#skinDiv .btn {
+    width: 110px;
+    height: 60px;
+    border-radius: 60px;
+    position: relative;
+    cursor: pointer;
+    background: #f7c9ba;
+    box-shadow: 0 0 2px 5px #bf9c89 inset;
+    overflow: hidden;
+}
+#skinDiv .btn.right {
+    background: #ebc2c0;
+    box-shadow: 0 0 2px 5px #d39290 inset;
+}
+#skinDiv .paw {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 100%;
+    background: #f8a48c;
+    left: 5px;
+    top: 5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    opacity: 1;
+}
+#skinDiv .kitty {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    border-radius: 100%;
+    background: #ecb0b0;
+    right: 5px;
+    top: 5px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    z-index: 999;
+}
+#skinDiv .left .paw {
+    opacity: 1;
+}
+#skinDiv .right .paw {
+    opacity: 0;
+}
+#skinDiv .right .kitty {
+    opacity: 1;
+}
+#skinDiv .left .kitty {
+    opacity: 0;
+}
+
+/*    select框*/
+#skinDiv .selectOut {
+    outline:none;
+    /*border:1px solid #BBBBBB;*/
+    border: none;
+    border-radius:4px;
+    position:relative;
+    margin-left: 5%;
+    margin-right: 5%;
+}
+
+#skinDiv .selectInner {
+    height:40px;
+    -webkit-appearance:none;
+    appearance:none;
+    border:none;
+    font-size:18px;
+    padding:0 10px;
+    display:block;
+    width:100%;
+    -webkit-box-sizing:border-box;
+    box-sizing:border-box;
+    background-color: #FFFFFF;
+    color:#333333;
+    border-radius:4px;
 }

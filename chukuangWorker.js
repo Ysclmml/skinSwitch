@@ -97,15 +97,15 @@ class PlayerAnimation {
         this.playerState[data.id]['action'] = true
         playNode.angle = undefined
         let showTime = animation.showTime * 1000
+        let delayTime = 500
         if (!(playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar)) {
+            if (showTime <= 500) {
+                delayTime = showTime
+            }
             showTime -= 500
         }
-        // if (playNode.player.shizhounian && data.action === 'GongJi') {
-        //     showTime /= 1.3
-        //     if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.3
-        // }
         if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2
-        showTime /= 1.2
+        showTime /= (playNode.speed || 1)
         setTimeout(() => {
             // 如x果是手杀大屏预览的页面则不位移到原处
             if (playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar) {
@@ -119,11 +119,9 @@ class PlayerAnimation {
                 this.playerState[data.id] = false
                 playNode.completed = true
                 playNode.skeleton.completed = true  // 这里一定要标记为true, 不然下次skeleton对象会一直重复实例化
-                console.log('playerAnimation.anni.skeletons---->', playerAnimation.anni.spine.skeletons)
-                console.log('playerAnimation.anni.nodes---->', playerAnimation.anni.nodes)
             }
             else {
-                playNode.moveTo(data.player.x, data.player.y, 500);
+                playNode.moveTo(data.player.x, data.player.y, delayTime);
                 setTimeout(()=> {
                     playNode.opacity = 0
                     playNode.completed = true
@@ -133,7 +131,7 @@ class PlayerAnimation {
                         'id': data.id
                     })
                     this.playerState[data.id] = false
-                }, 500)
+                }, delayTime)
 
             }
 
