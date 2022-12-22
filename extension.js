@@ -254,7 +254,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     startPoint = { x: e.clientX, y: e.clientY }
                                 })
                                 // 鼠标/手指抬起
-                                window.addEventListener('pointerup', function (e) {
+                                ui.arena.addEventListener('pointerup', function (e) {
                                     isTouching = false
                                     setTimeout(() => {
                                         isMove = false
@@ -262,7 +262,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     }, 100);
                                 })
                                 // 鼠标/手指移动
-                                window.addEventListener('pointermove', (e) => {
+                                ui.arena.addEventListener('pointermove', (e) => {
                                     if (isTouching) {
                                         isMove = true
                                         // 单指滑动/鼠标移动
@@ -1421,14 +1421,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             let path = filename + '.jpg'
                                             game.qhly_checkFileExist(path, s => {
                                                 if (s) {
-                                                    skinImgDiv.style.backgroundImage = "url(" + path + ")"
+                                                    skinImgDiv.style.backgroundImage = "url(" + lib.assetURL + path + ")"
                                                 }
                                                 else {
                                                     // 尝试获取png结尾的
                                                     let path = filename + '.png'
                                                     game.qhly_checkFileExist(path, s => {
                                                         if (s) {
-                                                            skinImgDiv.style.backgroundImage = "url(" + path + ")"
+                                                            skinImgDiv.style.backgroundImage = "url(" + lib.assetURL + path + ")"
                                                             // 尝试获取png结尾的
                                                         } else {
                                                             skinImgDiv.style.backgroundImage = "url(" + skinSwitch.url + "/images/character/小杀.png)"

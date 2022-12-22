@@ -115,6 +115,8 @@ class PlayerAnimation {
                 delayTime = 200
             }
             showTime -= delayTime
+            // 暂时还是开启动画播放速度默认调为1.2, 默认为1太慢了
+            if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2
 
         } else {
             if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2

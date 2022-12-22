@@ -146,11 +146,11 @@ function playSkin(dynamic, data) {
 			t.action = 'DaiJi'
 		}
 		// preLoadChuKuangSkel(dynamic, t)
-		if (sprite.deputy) {
-			t.speed = 0;
-		} else {
-			t.opacity = 1;
-		}
+		// if (sprite.deputy) {
+		// 	t.speed = 0;
+		// } else {
+		t.opacity = 1;
+		// }
 		// 将node保存一下, 表示是千幻大屏预览的node
 		t.qhlxBigAvatar = sprite.qhlxBigAvatar
 	}

@@ -69,7 +69,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					y: [0,0.45]
 				},
 				gongji: {
-					action: ['TeShu', 'GongJi']
+					action: ['GongJi']
 				},
 				background: 'skin_caoying_FengMangBiLou_bg.png',
 				skinName: "锋芒毕露"
@@ -89,7 +89,6 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				y: [10, 0.4],
 				scale: 0.38,
 				background: 'skin_baosanniang_ManHuaJianQiao_bg.png',
-				isChuKuang: true,  // 假动皮是否出框, 如果, 如果参数
 			},
 		},
 		sp_caiwenji:{
@@ -281,21 +280,21 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 			蛇蝎为心:{
 				name: 'skin_hetaihou_SheXieWeiXin',
 				// action: 'DaiJi',
-				// x: [-50, 0.5],
-				// y: [10, 0.1],
 				x: [0,-0.33],
 				y: [0,0.27],
 				scale: 0.46,
-
-				// angle: 27,
 				clipSlots: ['wangzuo', 'bu2', 'bu3'],
 				background: 'skin_hetaihou_SheXieWeiXin_bg.png',
 				skinName: '蛇蝎为心',
-				// gongji: {
-				// 	x: [0, 0.5],
-				// 	y: [0, 0.5],
-				// 	scale: 0.8,
-				// }
+			},
+			蛇蝎为心2:{
+				name: 'skin_hetaihou_SheXieWeiXin',
+				// action: 'DaiJi',
+				x: [0,-0.33],
+				y: [0,0.27],
+				scale: 0.46,
+				clipSlots: ['wangzuo', 'bu2', 'bu3'],
+				background: 'skin_hetaihou_SheXieWeiXin_bg.png',
 			},
 			战场绝版: {
 				name: '何太后战场骨骼/daiji2',
@@ -309,8 +308,6 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					name:"何太后战场骨骼/chuchang2",
 					action: ['gongji', 'jineng'] ,  // action不写是默认播放第一个动作
 					scale: 0.7,
-					// x: [0, 0.5],
-					// y: [0, 0.5],
 				},  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
 				play2: 'play2',
 				chuchang: {
@@ -528,7 +525,17 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				scale: 0.42,
 				background: 'skin_xushi_WeiFuShiDi_bg.png',
 				hideSlots: ['xushi_piaodai2', 'xushi_piaodai8'],
-			}
+			},
+			琪花瑶草: {
+				name: 'skin_xushi_QiHuaYaoCao',
+				x: [0, 0.75],
+				y: [0, 0.22],
+				scale: 0.45,
+				//angle:5,
+				action: 'DaiJi',
+				background: 'skin_xushi_QiHuaYaoCao_bg.png',
+				skinName: "琪花瑶草"
+			},
 		},
 		yangwan:{
 			星光淑婉:{
@@ -630,11 +637,13 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				y: [0, 0.25],
 				angle: 23,
 				scale: 0.40,
-				// speed: 3,
 				pos: {
 					x: [0,0.8],
 					y: [0,0.4]
 				},
+				// gongji: {
+				// 	speed: 1.5
+				// },
 				background: '神甘宁/skin_shenganning_WanRenPiYi_bg.png',
 			},
 		},
@@ -678,12 +687,30 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				},
 				shizhounian: true,  // 标明这是十周年的骨骼, 出场位置和出框默认会在原地, 并且返回也不是位移
 				chuchang: {  // 第一回合出场
-					name: '许邵/评世雕龙/chuchang',
+					name: '许邵/评世雕龙/daiji',
+					// name: '许邵/评世雕龙/chuchang',
 					action: 'play',
 					scale: 0.45
 				},
 				shan: 'play2', // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
 				background: '许邵/评世雕龙/skin_Decennial_XuShao_PingShiDiaoLong_bg.png'
+			}
+		},
+		re_sunyi: {
+			'腾龙翻江': {
+				name: '孙翊腾龙翻江/daiji',
+				x: [0, 0.5],
+				y: [0, 0.5],
+				teshu: 'play2',  // 触发非攻击技能时播放
+				shizhounian: true,  // 标明这是十周年的骨骼, 出场位置和出框默认会在原地, 并且返回也不是位移
+				chuchang: {  // 第一回合出场
+					// name: '孙翊腾龙翻江/daiji',
+					name: '孙翊腾龙翻江/chuchang',
+					action: 'play',
+					scale: 0.45
+				},
+				shan: 'play2', // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
+				background: '孙翊腾龙翻江/static_bg.png'
 			}
 		},
 		shen_luxun: {
@@ -716,10 +743,179 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				skinName: "雄踞益州"
 			},
 		},
+		re_liru: {
+			鸩杀少帝: {
+				name: 'skin_liru_ZhenShaShaoDi',
+				x: [0, 0.2],
+				y: [0, 0.13],
+				scale: 0.55,
+				angle: 10,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				background: 'skin_liru_ZhenShaShaoDi_bg.png',
+				action: 'DaiJi',
+				skinName: "鸩杀少帝"
+			},
+		},
+		re_zuoci: {
+			役使鬼神: {
+				name: 'skin_zuoci_YiShiGuiShen',
+				x: [0, 0.55],
+				y: [0, -0.009],
+				scale: 0.7,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				background: 'skin_zuoci_YiShiGuiShen_bg.png',
+				// angle: 10,
+				skinName: "役使鬼神"
+			},
+		},
+		dufuren: {
+			战场绝版: {
+				name: "杜夫人/战场绝版/skin_dufuren_ZhanChang2",
+				x: [0, 0.5],
+				y: [0, 0.45],
+				scale: 0.8,
+				angle: 0,
+				speed: 1,
+				teshu: {
+					// x: [0, 0.75],
+					// y: [0, 0.3],
+					scale: 0.45,
+					name: "杜夫人/战场绝版/skin_Decennial_DuFuRen_ZhanChangJueBan",
+					action:["play2"],
+					showTime: 2,
+				},// 触发非攻击
+				gongji: {
+					x: [0, 0.72],
+					y: [0, 0.4],
+					scale: 0.5,
+					name: "杜夫人/战场绝版/gongji_dufuren",
+					action: ["jineng","gongji"]  // 出杀或攻击时随机播放一个动画
+				},
+				shizhounian: true,  // 标明这是十周年的骨骼, 出场位置和出框默认会在原地, 并且返回也不是位移
+				chuchang: {  // 第一回合出场
+					name: "杜夫人/战场绝版/chuchang",
+					action: "play",
+					scale: 0.45
+				},
+				shan: "play3", // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
+				background: "杜夫人/战场绝版/skin_Decennial_DuFuRen_ZhanChangJueBan_bg.png",
+				skinName: "战场绝版"
+			},
+		},
+		//梁兴
+		liangxing: {
+			骁勇金衔: {
+				name: "梁兴/骁勇金衔/daiji2",
+				x: [0, 0.5],
+				y: [0, 0.4],
+				scale: 1.0,
+				angle: 0,
+				speed: 1,
+				teshu: {
+					x: [0, 0.75],
+					y: [0, 0.3],
+					scale: 0.4,
+					name: "梁兴/骁勇金衔/daiji",
+					action:["play2"]
+				},// 触发非攻击
+				gongji: {
+					x: [0, 0.72],
+					y: [0, 0.4],
+					scale: 0.5,
+					name: "梁兴/骁勇金衔/gongji_liangxing",
+					action: ["jineng","gongji"]  // 出杀或攻击时随机播放一个动画
+				},
+				shizhounian: true,  // 标明这是十周年的骨骼, 出场位置和出框默认会在原地, 并且返回也不是位移
+				chuchang: {  // 第一回合出场
+					name: "梁兴/骁勇金衔/chuchang",
+					action: "play",
+					scale: 0.45,
+					showTime: 5,
+					loop: true,
+				},
+				shan: "play3", // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
+				background: "梁兴/骁勇金衔/static_bg.png",
+				skinName: "骁勇金衔"
+			},
+		},
+
+		guansuo: {
+			鼠年中秋: {
+				name: 'skin_guansuo_ShuNianZhongQiu',
+				x: [0, -0.1],
+				y: [0, 0.1],
+				scale: 0.55,
+				//angle:-9,
+				action: 'DaiJi',
+				background: 'skin_guansuo_ShuNianZhongQiu_bg.png',
+				skinName: "鼠年中秋"
+			},
+		},
+		caochun: {
+			长坂败备: {
+				name: 'skin_caochun_ChangBanBaiBei',
+				x: [0, 0.75],
+				y: [0, 0.1],
+				scale: 0.53,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				background: 'skin_caochun_ChangBanBaiBei_bg.png',
+				action: 'DaiJi',
+				skinName: "长坂败备"
+			},
+			虎年曹纯: {
+				name: 'skin_caochun_HuNianCaoChun',
+				x: [0, 0.5],
+				y: [0, 0.3],
+				scale: 0.4,
+				//angle:10,
+				background: 'skin_caochun_HuNianCaoChun_bg.png',
+				skinName: "虎年曹纯"
+			},
+		},
+		zhongyao: {
+			稳定关右: {
+				name: 'skin_zhongyao_WenDingGuanYou',
+				x: [0, 0.55],
+				y: [0, 0.2],
+				scale: 0.5,
+				angle: -10,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				action: 'DaiJi',
+				background: 'skin_zhongyao_WenDingGuanYou_bg.png',
+				skinName: "稳定关右"
+			},
+		},
+		re_xusheng: {
+			手杀新动皮: {
+				name: '界徐盛/skin_xusheng_xin',
+				x: [0, 0.35],
+				y: [0, 0.15],
+				scale: 0.5,
+				background: '界徐盛/skin_xusheng_xin_bg.png',
+				gongji: {
+					x: [0,0.71],
+					y: [0,0.48],
+					scale: 0.5,
+				}
+			},
+		},
 	};
 	
 	var extend = {
 		re_baosanniang: decadeUI.dynamicSkin.baosanniang,
+		xin_baosanniang: decadeUI.dynamicSkin.baosanniang,
 		re_daqiao: decadeUI.dynamicSkin.daqiao,
 		re_diaochan: decadeUI.dynamicSkin.diaochan,
 		re_huangyueying: decadeUI.dynamicSkin.huangyueying,
@@ -732,6 +928,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 		re_xinxianying: decadeUI.dynamicSkin.xinxianying,
 		ol_zhangchangpu: decadeUI.dynamicSkin.zhangchangpu,
 		re_zhenji: decadeUI.dynamicSkin.zhenji,
+		xin_liru: decadeUI.dynamicSkin.re_liru,     //李儒
 	};decadeUI.get.extend(decadeUI.dynamicSkin, extend);
 	
 });

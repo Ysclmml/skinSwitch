@@ -1320,6 +1320,9 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 			{ name: 'effect_yuanjiaojingong', follow: true },
 			{ name: 'effect_zhijizhibi', follow: true },
 			{ name: 'effect_zhulutianxia', follow: true },
+			{ name: 'huanfu'},//国战亮将
+			{ name: 'SSZBB_PJN_junling'},//军令翻牌特效
+			{ name: 'jiuwo'},//救我
 		];
 		
 		var fileNameList = fileList.concat();
