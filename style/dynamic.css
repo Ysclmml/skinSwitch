@@ -70,15 +70,15 @@
     width: 85%;
     height: 90%;
     top: 1%;
-    left: 7.5%;
-    justify-content: flex-start;
+    left: 8.5%;
+    justify-content: space-between;
     align-items: center;
 }
 #skinDiv2 .skins .skin-avatar {
     flex-basis: 30%;
     height: 100%;
     position: relative;
-    margin-right: 3%;
+    /*margin-right: 5%;*/
 }
 
 #skinDiv2 .skins .pfqh-skin-cover {
@@ -88,12 +88,14 @@
     display: block;
     border-radius: 7px;
     transition: background-image 0s;
+    border: none;
+    box-shadow: 0px 1px 1px 1px;
 }
 
 #skinDiv2 .skins .pfqh-skin {
-
     width: calc(100%);
     height: calc(115%);
+    top: -15%;
     left: calc(0%);
     display: block;
     background-size: cover;
@@ -111,7 +113,7 @@
     text-align: center;
     position: relative;
     font-weight: bold;
-    margin-bottom: 10.5%;
+    margin-bottom: 25.5%;
     width: 100%;
 }
 
@@ -131,7 +133,7 @@
 
 .pfqhRightArrow {
     z-index: 35;
-    right: calc(-83.66%);
+    right: calc(-84.66%);
     height: calc(18.2%);
     width: 9%;
     display: block;

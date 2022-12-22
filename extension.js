@@ -220,8 +220,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 player.storage._hf = 0;
                             },
                             filter: function (event, player) {
-                                // return !(get.mode() == 'guozhan' || player.name2 != undefined) && player == game.me && !player.storage._hf >= 1;
-                                return true
+                                return !lib.config[skinSwitch.configKey.hideHuanFu]
                             },
                             content: function () {
                                 if (skinSwitch.dynamic.skinDiv) return
@@ -240,6 +239,50 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     skinSwitch.dynamic.skinDivShowOrHide(true);
                                     game.playAudio("..", "extension", "皮肤切换/audio/game", "Menu.mp3");
                                 })
+
+                                // 添加拖拽事件, 可以移动位置 参考代码: https://juejin.cn/post/7160894692593401893
+                                let offset = { left: 0, top: 0 }
+                                let startPoint = { x: 0, y: 0 } // 记录初始触摸点位
+                                let isTouching = false // 标记是否正在移动
+                                let isMove = false // 正在移动中，与点击做区别
+                                let origin = 'center'
+
+                                // 鼠标/手指按下
+                                div.addEventListener('pointerdown', function (e) {
+                                    e.preventDefault()
+                                    isTouching = true
+                                    startPoint = { x: e.clientX, y: e.clientY }
+                                })
+                                // 鼠标/手指抬起
+                                window.addEventListener('pointerup', function (e) {
+                                    isTouching = false
+                                    setTimeout(() => {
+                                        isMove = false
+                                        div.style.pointerEvents = null  // 恢复原来的点击事件
+                                    }, 100);
+                                })
+                                // 鼠标/手指移动
+                                window.addEventListener('pointermove', (e) => {
+                                    if (isTouching) {
+                                        isMove = true
+                                        // 单指滑动/鼠标移动
+                                        offset = {
+                                            left: offset.left + (e.clientX - startPoint.x),
+                                            top: offset.top + (e.clientY - startPoint.y),
+                                        }
+                                        changeStyle(div, [`transform: translate(${offset.left + 'px'}, ${offset.top + 'px'})`, `transform-origin: ${origin}`])
+                                        // 注意移动完也要更新初始点位，否则图片会加速逃逸可视区域
+                                        startPoint = { x: e.clientX, y: e.clientY }
+                                        div.style.pointerEvents = 'none'  // 取消原来的点击事件
+                                    }
+                                })
+
+                                function changeStyle(el, arr) {
+                                    const original = el.style.cssText.split(';')
+                                    original.pop()
+                                    el.style.cssText = original.concat(arr).join(';') + ';'
+                                }
+
                                 let hf = skinSwitch.huanfu;
                                 // 播放换肤动画
                                 dcdAnim.loadSpine(hf.name, "skel");
@@ -969,6 +1012,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'showEditMenu': 'extension_皮肤切换_showEditMenu', // 是否加入顶部菜单
                     'showPreviewDynamicMenu': 'extension_皮肤切换_showPreviewDynamicMenu', // 预览是否加入顶部菜单
                     'closeXYPosAdjust': 'extension_皮肤切换_closeXYPosAdjust',  // 是否显示坐标微调
+                    'hideHuanFu': 'extension_皮肤切换_hideHuanFu',  // 关闭隐藏换肤按钮
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -1327,18 +1371,33 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 let skins = document.getElementById('pfqhSkins')
                                 // 删除原来的节点
                                 skins.innerHTML = ''
+
+                                let selectName = null
+                                if (lib.config[skinSwitch.configKey.dynamicSkin]) {
+                                    selectName = lib.config[skinSwitch.configKey.dynamicSkin][characterName]
+                                }
+
                                 if (skinInfos) {
-                                    // 重新初始化动皮信息
-                                    let i = 0
-                                    for (let k in skinInfos){
-                                        i++
+                                    // 获取选择的皮肤的位置
+                                    let keys = Object.keys(skinInfos)
+                                    let curIndex = 0
+                                    for (let j = 0; j < keys.length; j++) {
+                                        if (selectName === keys[j]) {
+                                            curIndex = j
+                                            break
+                                        }
+                                    }
+                                    for (let i = 0; i < keys.length; i++){
+                                        let k = keys[i]
                                         let skinAvatar = ui.create.div(".skin-avatar", skins);
                                         let skinName = ui.create.div('.pfqh-text', skinAvatar)
                                         skinName.innerHTML = k
                                         let skinCover = ui.create.div('.pfqh-skin-cover', skinAvatar)
                                         let skinImgDiv = ui.create.div('.pfqh-skin', skinCover)
-                                        if (i > 3) {
-                                            skinAvatar.style.display = 'none'
+                                        if (curIndex <= 2) {
+                                            if (i > 2) skinAvatar.style.display = 'none'
+                                        } else {
+                                            if (i + 2 < curIndex || i > curIndex) skinAvatar.style.display = 'none'
                                         }
                                         skinImgDiv.setAttribute('skinName', k)
                                         skinImgDiv.addEventListener(addLisName, (e) => {
@@ -1346,29 +1405,64 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             this.selectSkinV2(e.target.getAttribute('skinName'), e.target)
                                         })
 
+                                        if (selectName === k) {
+                                            skinCover.classList.add('pfqh-selected')
+                                            // 并且设置选择的是当前皮肤
+                                            let selInfo = skinSwitch.dynamic.playerTempSkinInfo[player.pfqhId]
+                                            if (isPrimary) {
+                                                selInfo.primary = {temp: skinImgDiv, value: k, curIndex: curIndex - 2 <= 0 ? 0 : curIndex - 2}
+                                            } else {
+                                                selInfo.deputy = {temp: skinImgDiv, value: k, curIndex: i}
+                                            }
+                                        }
+
                                         if (skinSwitch.qhly_hasExtension('千幻聆音')) {
-                                            let path = game.qhly_getSkinFile(characterName, k) + '.jpg'
+                                            let filename = game.qhly_getSkinFile(characterName, k)
+                                            let path = filename + '.jpg'
                                             game.qhly_checkFileExist(path, s => {
                                                 if (s) {
                                                     skinImgDiv.style.backgroundImage = "url(" + path + ")"
                                                 }
                                                 else {
-                                                    skinImgDiv.style.backgroundImage = "url(" + skinSwitch.url + "/images/character/小杀.png)"
+                                                    // 尝试获取png结尾的
+                                                    let path = filename + '.png'
+                                                    game.qhly_checkFileExist(path, s => {
+                                                        if (s) {
+                                                            skinImgDiv.style.backgroundImage = "url(" + path + ")"
+                                                            // 尝试获取png结尾的
+                                                        } else {
+                                                            skinImgDiv.style.backgroundImage = "url(" + skinSwitch.url + "/images/character/小杀.png)"
+                                                        }
+                                                    })
                                                 }
                                             })
                                         } else {
                                             skinImgDiv.style.backgroundImage = "url(" + skinSwitch.url + "/images/character/小杀.png)"
                                         }
                                     }
+                                    if (keys.length < 3) {
+                                        skins.style = 'justify-content: flex-start;'
+                                        skins.children[0].style = 'margin-right:5%;'
+                                    } else {
+                                        skins.style = ''
+                                    }
                                     let left = document.getElementById('dynamicLeftArrow')
                                     let right = document.getElementById('dynamicRightArrow')
                                     if (Object.keys(skinInfos).length <= 3) {
                                         // 隐藏左右按钮
-                                        left.style.display = 'none'
-                                        right.style.display = 'none'
+                                        left.classList.add('hidden')
+                                        right.classList.add('hidden')
                                     } else {
-                                        left.style.display = 'block'
-                                        right.style.display = 'block'
+                                        if (curIndex <= 2) {
+                                            left.classList.add('hidden')
+                                        } else {
+                                            left.classList.remove('hidden')
+                                        }
+                                        if (curIndex + 2 >= Object.keys(skinInfos).length) {
+                                            right.classList.add('hidden')
+                                        } else {
+                                            right.classList.remove('hidden')
+                                        }
                                     }
                                 }
                             }
@@ -1427,7 +1521,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                             });
 
-                            document.getElementById('dynamicRightArrow').addEventListener(addLisName, () => {
+                            document.getElementById('dynamicRightArrow').addEventListener(addLisName, (e) => {
                                 let skins = document.getElementById('pfqhSkins').children
                                 // 获取当前是主将还是副将
                                 let flag = this.dynamicSkinInfo[this.playerTempSkinInfo.currentWatchId].zhuFuFlag
@@ -1438,9 +1532,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 skins[curIdx].style.display = 'none'
                                 skins[curIdx + 3].style.display = 'block'
                                 avatar.curIndex++
+                                if (skins.length <= avatar.curIndex + 3) e.target.classList.add('hidden')
+                                document.getElementById('dynamicLeftArrow').classList.remove('hidden')
                             })
 
-                            document.getElementById('dynamicLeftArrow').addEventListener(addLisName, () => {
+                            document.getElementById('dynamicLeftArrow').addEventListener(addLisName, (e) => {
                                 let skins = document.getElementById('pfqhSkins').children
                                 let flag = this.dynamicSkinInfo[this.playerTempSkinInfo.currentWatchId].zhuFuFlag
                                 let watchId = this.playerTempSkinInfo.currentWatchId
@@ -1450,8 +1546,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 skins[curIdx + 2].style.display = 'none'
                                 skins[curIdx - 1].style.display = 'block'
                                 avatar.curIndex--
+                                if (avatar.curIndex === 0) e.target.classList.add('hidden')
+                                document.getElementById('dynamicRightArrow').classList.remove('hidden')
                             })
-
 
                             skinSwitch.dynamic.skinDiv = skinDiv;
                             // 初始化第一个
@@ -1478,8 +1575,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let avatarSkins = isPrimary ? curSkins.primary : curSkins.deputy
                         let avatarInfo = isPrimary ? tempSkinInfo.primary : tempSkinInfo.deputy
                         if (avatarSkins && avatarInfo && avatarInfo.value !== skinName) {
-                            avatarInfo.temp = target
+                            if (avatarInfo.temp instanceof HTMLElement) {
+                                avatarInfo.temp.parentNode.classList.remove('pfqh-selected')
+                            }
+                            target.parentNode.classList.add('pfqh-selected')
                             avatarInfo.value = skinName
+                            avatarInfo.temp = target
                             let player = curSkins.player
                             if (!player.isAlive()) return
                             let avatarName = isPrimary ? player.name1 : player.name2
@@ -1521,7 +1622,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 cg[avatarName] = skinName;
                                 game.saveConfig(skinSwitch.configKey.dynamicSkin, cg);
                             }
-                            skinSwitch.dynamic.skinDivShowOrHide();
+                            // skinSwitch.dynamic.skinDivShowOrHide();
                             skinSwitch.dynamic.startPlay2Random(player)
 
                             // 皮肤变化了, 修改编辑的全局变量
@@ -1529,9 +1630,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 dynamicEditBox.updateGlobalParams()
                             }
 
-                            setTimeout(() => {
-                                skinSwitch.dynamic.selectSkin.cd = true;
-                            }, 1000);
+                            // setTimeout(() => {
+                            //     skinSwitch.dynamic.selectSkin.cd = true;
+                            // }, 1000);
 
                         }
 
@@ -3949,6 +4050,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 "init": false,
                 "intro": "将预览动态皮肤参数界面加入顶部菜单栏",
             },
+            "hideHuanFu": {
+                name: "关闭更换动皮",
+                "init": false,
+                "intro": "如果安装了千幻雷修,可以关闭更换动皮功能",
+            },
         },
         help:{},
         package:{
@@ -4028,9 +4134,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  */
 
 /** 1.07版本更新
- fix: 1. teshu出框还是会盖住背景的bug. 其实是自己手误写错了
-      2. 修复双将模式下,更换同样动皮皮肤会导致位置偏移的问题
-      3. 基于原来做了一个简陋的更换所有人动皮的功能, 现在可以自由切换所有角色的动皮(千幻雷修简化版本).
-      4. 可以配合原版千幻聆音使用, 现在使用原版千幻聆音切换静皮. 当然使用千幻雷修版本的不受影响.
-      5. 预览界面增加了播放速度等调整功能.
+  1. 修复teshu出框还是会盖住背景的bug. 其实是自己手误写错了
+  2. 修复双将模式下,更换同样动皮皮肤会导致位置偏移的问题
+  3. 基于原来做了一个简陋的更换所有人动皮的功能, 可以自由切换所有角色的动皮(千幻雷修简化版本).
+     静皮位置现在就是读取千幻存放静皮的位置. 名字与动皮一致,png,jpg皆可
+  4. 可以配合原版千幻聆音使用, 现在可以使用原版千幻聆音切换静皮. 当然使用千幻雷修版本的不受影响.
+  5. 预览界面增加了播放速度等调整功能.
+  6. 增加出框的规则, 可以连续攻击, 重置之前的攻击动作而不会回框. 如果本次的出框动作和上次不一样, 那么会等待上次出框完成才会继出框.
  */

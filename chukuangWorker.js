@@ -84,6 +84,13 @@ class PlayerAnimation {
         else actionParams = player[data.action + 'Action']
         if (!actionParams) return
 
+        // 是否触发连续攻击
+        if (actionParams.playNode) {
+            clearTimeout(actionParams.moveToTimeout)
+            clearTimeout(actionParams.showTimeout)
+            return this.lianxuChuKuang(player, actionParams, data)
+        }
+
         if (!this.anni.hasSpine(actionParams.name)) {
             this.anni.loadSpine(actionParams.name, "skel", () => {
                 this.playChuKuang(player, actionParams, data)
@@ -93,24 +100,37 @@ class PlayerAnimation {
         }
     }
 
-    playChuKuangSpine(playNode, animation, data) {
-        this.playerState[data.id]['action'] = true
+    playChuKuangSpine(playNode, animation, data, notSetPos) {
+        // 是否要取消连续出框
+        if (!this.playerState[data.id])  this.playerState[data.id] = {'time': new Date().getTime()}
+        this.playerState[data.id]['action'] = data.action
         playNode.angle = undefined
         let showTime = animation.showTime * 1000
-        let delayTime = 500
+        let delayTime = 300
         if (!(playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar)) {
-            if (showTime <= 500) {
-                delayTime = showTime
+            if (showTime <= 800) {
+                delayTime = 150
             }
-            showTime -= 500
+            if (showTime <= 1200) {
+                delayTime = 200
+            }
+            showTime -= delayTime
+
+        } else {
+            if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2
         }
-        if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2
         showTime /= (playNode.speed || 1)
-        setTimeout(() => {
+        console.log('showTime', showTime, animation.showTime, playNode.speed)
+        // 如果是连续攻击, 延长展示的时间, 回框速度加快
+        if (notSetPos && !(playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar)) {
+            showTime += delayTime - 150
+            delayTime = 150
+        }
+        playNode.actionParams.showTimeout = setTimeout(() => {
             // 如x果是手杀大屏预览的页面则不位移到原处
             if (playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar) {
+                playNode.actionParams.playNode = null
                 playNode.opacity = 0
-
                 postMessage({
                     'message': 'recoverDaiJi',
                     'id': data.id,
@@ -122,7 +142,8 @@ class PlayerAnimation {
             }
             else {
                 playNode.moveTo(data.player.x, data.player.y, delayTime);
-                setTimeout(()=> {
+                playNode.actionParams.moveToTimeout = setTimeout(()=> {
+                    playNode.actionParams.playNode = null
                     playNode.opacity = 0
                     playNode.completed = true
                     playNode.skeleton.completed = true
@@ -130,6 +151,7 @@ class PlayerAnimation {
                         'message': 'recoverDaiJi',
                         'id': data.id
                     })
+
                     this.playerState[data.id] = false
                 }, delayTime)
 
@@ -140,8 +162,40 @@ class PlayerAnimation {
         if (data.action === 'chuchang') {
             playNode.scaleTo(playNode.scale * 1.2, 500)
         }
-        setPos(playNode, data);
+        if (!notSetPos) {
+            setPos(playNode, data);
+        }
         playNode.opacity = 1
+    }
+
+    // 手杀触发连续攻击不会马上回框, 而是会在原地重置攻击动作, 当回到框内, 则重新出框
+    lianxuChuKuang(player, actionParams, data) {
+        // 重置播放动作与回框倒计时.
+        let playNode = actionParams.playNode
+        // 这里说明上一次出框已经完成, 可能会让原来的待机显现, 保险起见, 再发一次隐藏的消息
+
+        if (!this.anni.nodes.includes(playNode)) {
+            let playedSprite = this.anni.playSpine(playNode.actionParams)
+            playedSprite.player = player
+            playedSprite.actionParams = actionParams
+            actionParams.playNode = playedSprite
+            return this.playChuKuangSpine(playedSprite, {showTime: actionParams.showTime}, data)
+        }
+
+        playNode.skeleton.state.setAnimation(0, playNode.action, false)
+        playNode.skeleton.setToSetupPose()
+        playNode.completed = false
+        playNode.skeleton.completed = false
+        let notSetPos = false
+        if (!player.shizhounian) {
+            // 比较当前位置和回框的位置距离, 如果比较小了, 就重新出框
+            console.log('render', playNode.renderX, playNode.renderY, data.player.x, data.player.y)
+
+            if (Math.abs(playNode.renderX - data.player.x) > 200 && playNode.renderY - data.player.y > 280){
+                notSetPos = true
+            }
+        }
+        this.playChuKuangSpine(playNode, {showTime: actionParams.showTime}, data, notSetPos)
     }
 
     playChuKuang(player, actionParams, data) {
@@ -164,6 +218,8 @@ class PlayerAnimation {
         }
         let playedSprite = this.anni.playSpine(actionParams)
         playedSprite.player = player
+        playedSprite.actionParams = actionParams
+        actionParams.playNode = playedSprite
 
         this.playChuKuangSpine(playedSprite, {showTime: actionParams.showTime}, data)
     }
@@ -172,9 +228,8 @@ class PlayerAnimation {
         console.log('播放失败....', data)
     }
 
-
     // 补全配置参数 player: 这个是播放待机动作存取的配置参数
-        completeParams(player) {
+    completeParams(player) {
         if (!player) return
         // 给一些简化初始化方式的攻击参数补全
         let initPlayerGongJi = function () {
@@ -689,8 +744,11 @@ function completePlayerParams(avatarPlayer, action) {
 
 function isChuKuang(data) {
     // 如果已经是出框状态, 直接返回, 不能在短时间内连续请求
-    if (playerAnimation.playerState[data.id] && (new Date().getTime() - playerAnimation.playerState[data.id].time < 300 || playerAnimation.playerState[data.id].action)) return
-    if (playerAnimation.playerState[data.id]) {
+    let playerState = playerAnimation.playerState[data.id]
+    if (playerState) {
+        if (playerState.action != null && playerState.action !== data.action || new Date().getTime() - playerAnimation.playerState[data.id].time < 100){
+            return
+        }
         playerAnimation.playerState[data.id]['time'] = new Date().getTime()
     } else {
         playerAnimation.playerState[data.id] = {'time': new Date().getTime()}
@@ -703,21 +761,23 @@ function isChuKuang(data) {
     let primaryPlayer = playerAnimation.findPlayerParams(data.id, primarySkinId)
 
     let extraParams = data.extraParams
-    console.log('primaryPlayer data', primaryPlayer)
 
     if (completePlayerParams(primaryPlayer, data.action)) {
+        let actionParams
+        if (data.action === 'GongJi') actionParams = primaryPlayer.gongjiAction
+        else if (data.action === 'chukuang') actionParams = primaryPlayer.chuchangAction
+        else if (data.action === 'TeShu') actionParams = primaryPlayer.teshuAction
+        else actionParams = primaryPlayer[data.action + 'Action']
         if (extraParams) {
-            let actionParams
-            if (data.action === 'GongJi') actionParams = primaryPlayer.gongjiAction
-            else if (data.action === 'chukuang') actionParams = primaryPlayer.chuchangAction
-            else if (data.action === 'TeShu') actionParams = primaryPlayer.teshuAction
-            else actionParams = primaryPlayer[data.action + 'Action']
             if (actionParams) {
                 for (let k in extraParams) {
                     actionParams[k] = extraParams[k]
                 }
             }
         }
+        clearTimeout(actionParams.moveToTimeout)
+        clearTimeout(actionParams.showTimeout)
+
         return postMessage({
             id: data.id,
             skinId: primarySkinId,
@@ -730,18 +790,21 @@ function isChuKuang(data) {
   
     let deputyPlayer = playerAnimation.findPlayerParams(data.id, deputySkinId)
     if (completePlayerParams(deputyPlayer, data.action)) {
+        let actionParams
+        if (data.action === 'GongJi') actionParams = deputyPlayer.gongjiAction
+        else if (data.action === 'chukuang') actionParams = deputyPlayer.chuchangAction
+        else if (data.action === 'TeShu') actionParams = deputyPlayer.teshuAction
+        else actionParams = deputyPlayer[data.action + 'Action']
         if (extraParams) {
-            let actionParams
-            if (data.action === 'GongJi') actionParams = deputyPlayer.gongjiAction
-            else if (data.action === 'chukuang') actionParams = deputyPlayer.chuchangAction
-            else if (data.action === 'TeShu') actionParams = deputyPlayer.teshuAction
-            else actionParams = deputyPlayer[data.action + 'Action']
             if (actionParams) {
                 for (let k in extraParams) {
                     actionParams[k] = extraParams[k]
                 }
             }
         }
+        // 需要重新出框了, 清除原来的出框消息
+        clearTimeout(actionParams.moveToTimeout)
+        clearTimeout(actionParams.showTimeout)
         return postMessage({
             id: data.id,
             skinId: deputySkinId,

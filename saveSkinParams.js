@@ -174,6 +174,21 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 ]
             }
         }
+    },
+    "re_xusheng": {
+        "手杀新动皮": {
+            "gongji": {
+                "scale": 0.5,
+                "x": [
+                    0,
+                    0.71
+                ],
+                "y": [
+                    0,
+                    0.48
+                ]
+            }
+        }
     }
 }
 }
