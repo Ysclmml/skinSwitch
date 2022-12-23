@@ -265,3 +265,11 @@
     color:#333333;
     border-radius:4px;
 }
+
+/*防止 十周年ui 换肤一直被遮盖*/
+.player.unseen>.primary-avatar,
+.player.unseen2>.deputy-avatar,
+.player.d-skin>.primary-avatar,
+.player.d-skin2>.deputy-avatar {
+    opacity: 0 !important;
+}

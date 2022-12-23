@@ -240,49 +240,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     game.playAudio("..", "extension", "皮肤切换/audio/game", "Menu.mp3");
                                 })
 
-                                // 添加拖拽事件, 可以移动位置 参考代码: https://juejin.cn/post/7160894692593401893
-                                let offset = { left: 0, top: 0 }
-                                let startPoint = { x: 0, y: 0 } // 记录初始触摸点位
-                                let isTouching = false // 标记是否正在移动
-                                let isMove = false // 正在移动中，与点击做区别
-                                let origin = 'center'
-
-                                // 鼠标/手指按下
-                                div.addEventListener('pointerdown', function (e) {
-                                    e.preventDefault()
-                                    isTouching = true
-                                    startPoint = { x: e.clientX, y: e.clientY }
-                                })
-                                // 鼠标/手指抬起
-                                ui.arena.addEventListener('pointerup', function (e) {
-                                    isTouching = false
-                                    setTimeout(() => {
-                                        isMove = false
-                                        div.style.pointerEvents = null  // 恢复原来的点击事件
-                                    }, 100);
-                                })
-                                // 鼠标/手指移动
-                                ui.arena.addEventListener('pointermove', (e) => {
-                                    if (isTouching) {
-                                        isMove = true
-                                        // 单指滑动/鼠标移动
-                                        offset = {
-                                            left: offset.left + (e.clientX - startPoint.x),
-                                            top: offset.top + (e.clientY - startPoint.y),
-                                        }
-                                        changeStyle(div, [`transform: translate(${offset.left + 'px'}, ${offset.top + 'px'})`, `transform-origin: ${origin}`])
-                                        // 注意移动完也要更新初始点位，否则图片会加速逃逸可视区域
-                                        startPoint = { x: e.clientX, y: e.clientY }
-                                        div.style.pointerEvents = 'none'  // 取消原来的点击事件
-                                    }
-                                })
-
-                                function changeStyle(el, arr) {
-                                    const original = el.style.cssText.split(';')
-                                    original.pop()
-                                    el.style.cssText = original.concat(arr).join(';') + ';'
-                                }
-
                                 let hf = skinSwitch.huanfu;
                                 // 播放换肤动画
                                 dcdAnim.loadSpine(hf.name, "skel");
@@ -716,6 +673,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 for (let i = 0; i < avatars.length; i++) {
 
                                     skins = dskins[avatars[i]];
+                                    console.log(skins, 'skins.........')
                                     if (skins === undefined)
                                         continue;
 
@@ -792,12 +750,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     }
 
                                 }
-                                var forces = lib.character[character][1];
-                                if (!this.doubleAvatar && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && this.getElementsByClassName("skinYh").length < 1 && y && forces != "shen") {
-                                    var yh = skinSwitch.createYH(forces);
-                                    this.appendChild(yh);
-                                }
+                                if (lib.character[character]) {
+                                    var forces = lib.character[character][1];
+                                    if (!this.doubleAvatar && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && this.getElementsByClassName("skinYh").length < 1 && y && forces != "shen") {
+                                        var yh = skinSwitch.createYH(forces);
+                                        this.appendChild(yh);
+                                    }
 
+                                }
                                 skinSwitch.dynamic.startPlay2Random(this)
                             }
                             var jie;
@@ -952,7 +912,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             if (this.$dynamicWrap.parentNode != this) this.appendChild(this.$dynamicWrap);
                             // if (this.$newDynamicWrap && this.$newDynamicWrap.parentNode !== this) this.appendChild(this.$newDynamicWrap);
                             dynamic.outcropMask = duicfg.dynamicSkinOutcrop;
-                            animation.player.isMobile = skinSwitch.isMobile()
+                            if (animation.player) {
+                                animation.player.isMobile = skinSwitch.isMobile()
+                            }
+
                             var avatar = dynamic.play(animation);
 
                             if (deputy === true) {
@@ -1000,7 +963,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
         precontent:function() {
             window.skinSwitch = {
                 name: "皮肤切换",
-                version: 1.05,
+                version: 1.07,
                 url: lib.assetURL + "extension/皮肤切换/",
                 path: 'extension/皮肤切换',
                 dcdPath: 'extension/十周年UI',
@@ -1274,6 +1237,113 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     playerTempSkinInfo: {
                         currentWatchId: null,  // 保存当前选择查看的角色动皮信息
                     },
+                    initPlayerAvatarDynamic: (player, isPrimary) => {
+                        if (player.pfqhId == null) return
+                        let dInfo = skinSwitch.dynamic.dynamicSkinInfo[player.pfqhId]
+                        if (!dInfo) return
+                        let skinInfos = isPrimary ? dInfo.primary : dInfo.deputy
+                        let characterName = isPrimary ? player.name1 : player.name2
+                        // 初始化当前皮肤信息到dom中
+                        let skins = document.getElementById('pfqhSkins')
+                        // 删除原来的节点
+                        skins.innerHTML = ''
+
+                        let addLisName = lib.config.touchscreen ? 'touchend' : 'click'
+
+                        let selectName = null
+                        if (lib.config[skinSwitch.configKey.dynamicSkin]) {
+                            selectName = lib.config[skinSwitch.configKey.dynamicSkin][characterName]
+                        }
+
+                        if (skinInfos) {
+                            // 获取选择的皮肤的位置
+                            let keys = Object.keys(skinInfos)
+                            let curIndex = 0
+                            for (let j = 0; j < keys.length; j++) {
+                                if (selectName === keys[j]) {
+                                    curIndex = j
+                                    break
+                                }
+                            }
+                            for (let i = 0; i < keys.length; i++){
+                                let k = keys[i]
+                                let skinAvatar = ui.create.div(".skin-avatar", skins);
+                                let skinName = ui.create.div('.pfqh-text', skinAvatar)
+                                skinName.innerHTML = k
+                                let skinCover = ui.create.div('.pfqh-skin-cover', skinAvatar)
+                                let skinImgDiv = ui.create.div('.pfqh-skin', skinCover)
+                                if (curIndex <= 2) {
+                                    if (i > 2) skinAvatar.style.display = 'none'
+                                } else {
+                                    if (i + 2 < curIndex || i > curIndex) skinAvatar.style.display = 'none'
+                                }
+                                skinImgDiv.setAttribute('skinName', k)
+                                skinImgDiv.addEventListener(addLisName, (e) => {
+                                    e.stopPropagation()
+                                    skinSwitch.dynamic.selectSkinV2(e.target.getAttribute('skinName'), e.target)
+                                })
+
+                                if (selectName === k) {
+                                    skinCover.classList.add('pfqh-selected')
+                                    // 并且设置选择的是当前皮肤
+                                    let selInfo = skinSwitch.dynamic.playerTempSkinInfo[player.pfqhId]
+                                    if (isPrimary) {
+                                        selInfo.primary = {temp: skinImgDiv, value: k, curIndex: curIndex - 2 <= 0 ? 0 : curIndex - 2}
+                                    } else {
+                                        selInfo.deputy = {temp: skinImgDiv, value: k, curIndex: i}
+                                    }
+                                }
+
+                                if (skinSwitch.qhly_hasExtension('千幻聆音')) {
+                                    let filename = game.qhly_getSkinFile(characterName, k)
+                                    let path = filename + '.jpg'
+                                    game.qhly_checkFileExist(path, s => {
+                                        if (s) {
+                                            skinImgDiv.style.backgroundImage = "url(" + lib.assetURL + path + ")"
+                                        }
+                                        else {
+                                            // 尝试获取png结尾的
+                                            let path = filename + '.png'
+                                            game.qhly_checkFileExist(path, s => {
+                                                if (s) {
+                                                    skinImgDiv.style.backgroundImage = "url(" + lib.assetURL + path + ")"
+                                                    // 尝试获取png结尾的
+                                                } else {
+                                                    skinImgDiv.style.backgroundImage = "url(" + skinSwitch.url + "/images/character/小杀.png)"
+                                                }
+                                            })
+                                        }
+                                    })
+                                } else {
+                                    skinImgDiv.style.backgroundImage = "url(" + skinSwitch.url + "/images/character/小杀.png)"
+                                }
+                            }
+                            if (keys.length < 3) {
+                                skins.style = 'justify-content: flex-start;'
+                                skins.children[0].style = 'margin-right:5%;'
+                            } else {
+                                skins.style = ''
+                            }
+                            let left = document.getElementById('dynamicLeftArrow')
+                            let right = document.getElementById('dynamicRightArrow')
+                            if (Object.keys(skinInfos).length <= 3) {
+                                // 隐藏左右按钮
+                                left.classList.add('hidden')
+                                right.classList.add('hidden')
+                            } else {
+                                if (curIndex <= 2) {
+                                    left.classList.add('hidden')
+                                } else {
+                                    left.classList.remove('hidden')
+                                }
+                                if (curIndex + 2 >= Object.keys(skinInfos).length) {
+                                    right.classList.add('hidden')
+                                } else {
+                                    right.classList.remove('hidden')
+                                }
+                            }
+                        }
+                    },
                     initSwitchV2: function () {
                         // 初始化当前对局中, 所有拥有动皮角色的动皮
                         for (let i = 0; i < game.players.length; i++) {
@@ -1360,113 +1430,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 playerSkinSelect.options.add(option)
                             }
 
-                            // 默认初始化第一个拥有动皮的角色
-                            let initPlayerAvatarDynamic = (player, isPrimary) => {
-                                if (player.pfqhId == null) return
-                                let dInfo = this.dynamicSkinInfo[player.pfqhId]
-                                if (!dInfo) return
-                                let skinInfos = isPrimary ? dInfo.primary : dInfo.deputy
-                                let characterName = isPrimary ? player.name1 : player.name2
-                                // 初始化当前皮肤信息到dom中
-                                let skins = document.getElementById('pfqhSkins')
-                                // 删除原来的节点
-                                skins.innerHTML = ''
-
-                                let selectName = null
-                                if (lib.config[skinSwitch.configKey.dynamicSkin]) {
-                                    selectName = lib.config[skinSwitch.configKey.dynamicSkin][characterName]
-                                }
-
-                                if (skinInfos) {
-                                    // 获取选择的皮肤的位置
-                                    let keys = Object.keys(skinInfos)
-                                    let curIndex = 0
-                                    for (let j = 0; j < keys.length; j++) {
-                                        if (selectName === keys[j]) {
-                                            curIndex = j
-                                            break
-                                        }
-                                    }
-                                    for (let i = 0; i < keys.length; i++){
-                                        let k = keys[i]
-                                        let skinAvatar = ui.create.div(".skin-avatar", skins);
-                                        let skinName = ui.create.div('.pfqh-text', skinAvatar)
-                                        skinName.innerHTML = k
-                                        let skinCover = ui.create.div('.pfqh-skin-cover', skinAvatar)
-                                        let skinImgDiv = ui.create.div('.pfqh-skin', skinCover)
-                                        if (curIndex <= 2) {
-                                            if (i > 2) skinAvatar.style.display = 'none'
-                                        } else {
-                                            if (i + 2 < curIndex || i > curIndex) skinAvatar.style.display = 'none'
-                                        }
-                                        skinImgDiv.setAttribute('skinName', k)
-                                        skinImgDiv.addEventListener(addLisName, (e) => {
-                                            e.stopPropagation()
-                                            this.selectSkinV2(e.target.getAttribute('skinName'), e.target)
-                                        })
-
-                                        if (selectName === k) {
-                                            skinCover.classList.add('pfqh-selected')
-                                            // 并且设置选择的是当前皮肤
-                                            let selInfo = skinSwitch.dynamic.playerTempSkinInfo[player.pfqhId]
-                                            if (isPrimary) {
-                                                selInfo.primary = {temp: skinImgDiv, value: k, curIndex: curIndex - 2 <= 0 ? 0 : curIndex - 2}
-                                            } else {
-                                                selInfo.deputy = {temp: skinImgDiv, value: k, curIndex: i}
-                                            }
-                                        }
-
-                                        if (skinSwitch.qhly_hasExtension('千幻聆音')) {
-                                            let filename = game.qhly_getSkinFile(characterName, k)
-                                            let path = filename + '.jpg'
-                                            game.qhly_checkFileExist(path, s => {
-                                                if (s) {
-                                                    skinImgDiv.style.backgroundImage = "url(" + lib.assetURL + path + ")"
-                                                }
-                                                else {
-                                                    // 尝试获取png结尾的
-                                                    let path = filename + '.png'
-                                                    game.qhly_checkFileExist(path, s => {
-                                                        if (s) {
-                                                            skinImgDiv.style.backgroundImage = "url(" + lib.assetURL + path + ")"
-                                                            // 尝试获取png结尾的
-                                                        } else {
-                                                            skinImgDiv.style.backgroundImage = "url(" + skinSwitch.url + "/images/character/小杀.png)"
-                                                        }
-                                                    })
-                                                }
-                                            })
-                                        } else {
-                                            skinImgDiv.style.backgroundImage = "url(" + skinSwitch.url + "/images/character/小杀.png)"
-                                        }
-                                    }
-                                    if (keys.length < 3) {
-                                        skins.style = 'justify-content: flex-start;'
-                                        skins.children[0].style = 'margin-right:5%;'
-                                    } else {
-                                        skins.style = ''
-                                    }
-                                    let left = document.getElementById('dynamicLeftArrow')
-                                    let right = document.getElementById('dynamicRightArrow')
-                                    if (Object.keys(skinInfos).length <= 3) {
-                                        // 隐藏左右按钮
-                                        left.classList.add('hidden')
-                                        right.classList.add('hidden')
-                                    } else {
-                                        if (curIndex <= 2) {
-                                            left.classList.add('hidden')
-                                        } else {
-                                            left.classList.remove('hidden')
-                                        }
-                                        if (curIndex + 2 >= Object.keys(skinInfos).length) {
-                                            right.classList.add('hidden')
-                                        } else {
-                                            right.classList.remove('hidden')
-                                        }
-                                    }
-                                }
-                            }
-
+                            let initPlayerAvatarDynamic = skinSwitch.dynamic.initPlayerAvatarDynamic
                             skinDiv.addEventListener(addLisName, function () {
                                 skinSwitch.dynamic.skinDivShowOrHide()
                             })
@@ -1605,7 +1569,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             // }
                             player.playDynamic(skin, !isPrimary);
                             player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
-
+                            player.classList.add(!isPrimary ? 'd-skin2' : 'd-skin');
                             // 设置当前皮肤的背景和语音, 调用千幻聆音
                             if (skinSwitch.qhly_hasExtension('千幻聆音')) {
                                 skinSwitch.dynamic.qhly_callback.setDynamic = true
@@ -1906,18 +1870,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 temp: "",
                                 value: "",
                             }
+                            let dynamicSkinKey = skinSwitch.configKey.dynamicSkin
+                            if (!lib.config[dynamicSkinKey]) lib.config[dynamicSkinKey] = {}
+                            lib.config[dynamicSkinKey][name] = 'none'
+                            game.saveConfig(dynamicSkinKey, lib.config[dynamicSkinKey]);
+                            // 去除静皮的class
+                            playerP.classList.remove(!bool1 ? 'd-skin2' : 'd-skin');
                             for (let k in skinSwitch.dynamic.dynamicSkinInfo) {
                                 if (skinSwitch.dynamic.dynamicSkinInfo[k].player === playerP) {
                                     let avatar = bool1 ? skinSwitch.dynamic.playerTempSkinInfo[k].primary: skinSwitch.dynamic.playerTempSkinInfo[k].deputy
                                     avatar.temp = ''
                                     avatar.value = ''
                                     avatar.curIndex = 0
+                                    // 清空选择
+                                    skinSwitch.dynamic.initPlayerAvatarDynamic(playerP, bool1)
                                 }
                             }
-                            let dynamicSkinKey = skinSwitch.configKey.dynamicSkin
-                            if (!lib.config[dynamicSkinKey]) lib.config[dynamicSkinKey] = {}
-                            lib.config[dynamicSkinKey][name] = 'none'
-                            game.saveConfig(dynamicSkinKey, lib.config[dynamicSkinKey]);
                         }
                     }
                 },
@@ -3096,8 +3064,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     chuKuangYPosNum.classList.add('hidden-adjust')
                 }
 
-                daijiEdit.innerHTML = '播放待机'
-                daijiAdjust.innerHTML = '调整待机'
+                daijiEdit.innerHTML = '<div>播放待机</div><div>动态背景</div>'
+                daijiAdjust.innerHTML = '<div>调整待机</div><div>调整背景</div>'
                 daijiScale.innerHTML = `大小: <input type="text" value="" style="width:32px;border-radius: 4px;">`
                 daijiAngle.innerHTML = `角度: <input type="text" value="" style="width:32px;border-radius: 4px;">`
                 daijiXPosNum.innerHTML = `<span>x</span><i class="minus">-</i><input value="0"><i class="plus">+</i>`
@@ -3241,101 +3209,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }, 100)
                     }
                 })
-
-                // 点击计算屏幕百分比计算不准确, 放弃使用这种方式调整.
-                // let updateAdjustPos = function (pos, mode) {
-                //     let arena = document.getElementById('arena')
-                //     let w = arena.clientWidth
-                //     let h = arena.clientHeight
-                //     adjustPos.style.left = w * pos.x[1] + pos.x[0] + 'px'
-                //     adjustPos.style.top = (h - (h * pos.y[1] + pos.y[0])) + 'px'
-                //
-                //     adjustPos.onmouseup = function() {
-                //         adjustPos.classList.add('adjust-position-select')
-                //         let t = setTimeout(() => {
-                //             arena.removeEventListener('click', windowClick)
-                //             adjustPos.classList.remove('adjust-position-select')
-                //             show(editBox)
-                //         }, 5000)
-                //
-                //         function windowClick(e) {
-                //             let dpr = Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1)
-                //             arena.removeEventListener('click', windowClick)
-                //             show(editBox)
-                //             clearTimeout(t)
-                //             // 调整位置
-                //             adjustPos.style.left = e.pageX * dpr - 16 * dpr + 'px'
-                //             adjustPos.style.top =  e.pageY * dpr - 16 * dpr + 'px'
-                //             // 同时计算百分比
-                //             let xRate = (e.pageX * dpr / w).toFixed(2)
-                //             let yRate = (1 - e.pageY * dpr / h).toFixed(2)
-                //
-                //             if (xRate <= 0.03) {
-                //                 xRate = 0.03
-                //             } else if (xRate >= 0.97) {
-                //                 xRate = 0.97
-                //             }
-                //             if (yRate <= 0.03) {
-                //                 yRate = 0.03
-                //             } else if (yRate >= 0.97) {
-                //                 yRate = 0.97
-                //             }
-                //
-                //             // 调整球的位置后, 即相当于调整骨骼的位置
-                //             skinSwitch.postMsgApi.adjust(player, mode, {x: xRate, y: yRate})
-                //             adjustPos.classList.remove('adjust-position-select')
-                //             // 更新一下
-                //             setTimeout(() => {
-                //                 getCurPosition(mode)
-                //             }, 100)
-                //         }
-                //
-                //         setTimeout(()=>{
-                //             hide(editBox)
-                //             arena.addEventListener('click', windowClick)
-                //         }, 100)
-                //     }
-                //
-                //     // 不知道为啥滑不动, 而在单纯html页面可以流畅的滑动
-                //     // https://zh.javascript.info/mouse-drag-and-drop
-                //     //     let shiftX = event.clientX - adjustPos.getBoundingClientRect().left;
-                //     //     let shiftY = event.clientY - adjustPos.getBoundingClientRect().top;
-                //     //     console.log('down: ', event, shiftX, shiftY, adjustPos.style)
-                //     //
-                //     //     adjustPos.style.position = 'absolute';
-                //     //     adjustPos.style.zIndex = '4000'
-                //     //     // document.body.append(adjustPos);
-                //     //
-                //     //     // moveAt(event.pageX, event.pageY);
-                //     //
-                //     //     // 移动现在位于坐标 (pageX, pageY) 上的球
-                //     //     // 将初始的偏移考虑在内
-                //     //     function moveAt(pageX, pageY) {
-                //     //         adjustPos.style.left = pageX - shiftX + 'px';
-                //     //         adjustPos.style.top = pageY - shiftY + 'px';
-                //     //     }
-                //     //
-                //     //     function onMouseMove(event) {
-                //     //         console.log('onMouseMove: ', event)
-                //     //         moveAt(event.pageX, event.pageY);
-                //     //     }
-                //     //
-                //     //     // 在 mousemove 事件上移动球
-                //     //     document.addEventListener('mousemove', onMouseMove);
-                //     //
-                //     //     // 放下球，并移除不需要的处理程序
-                //     //     adjustPos.onmouseup = function(event) {
-                //     //         console.log('onmouseup: ', event)
-                //     //         document.removeEventListener('mousemove', onMouseMove);
-                //     //         adjustPos.onmouseup = null;
-                //     //     };
-                //     //
-                //     // };
-                //     //
-                //     // adjustPos.ondragstart = function() {
-                //     //     return false;
-                //     // };
-                // }
 
                 let getDynamicPos = function (mode, func) {
                     skinSwitch.postMsgApi.position(player, mode)
@@ -4085,7 +3958,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             author:"yscl",
             diskURL:"",
             forumURL:"",
-            version:"1.05",
+            version:"1.07",
         },
         files:{"character":[],"card":[],"skill":[]}}
 })

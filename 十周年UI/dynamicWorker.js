@@ -132,9 +132,10 @@ function playSkin(dynamic, data) {
 
 	}
 
-	let run = function () {
+	let run = function (beijingNode) {
 		let t = dynamic.playSpine(sprite);
 		t.opacity = 0
+		t.beijingNode = beijingNode
 		let animation = t.skeleton.data.findAnimation("ChuChang");
 		if (animation) {
 			// 清空原来的state状态, 添加出场
@@ -145,20 +146,44 @@ function playSkin(dynamic, data) {
 			t.player.action = 'DaiJi'
 			t.action = 'DaiJi'
 		}
-		// preLoadChuKuangSkel(dynamic, t)
-		// if (sprite.deputy) {
-		// 	t.speed = 0;
-		// } else {
+
 		t.opacity = 1;
-		// }
 		// 将node保存一下, 表示是千幻大屏预览的node
 		t.qhlxBigAvatar = sprite.qhlxBigAvatar
 	}
 
-	if (dynamic.hasSpine(sprite.name)) {
-		run();
+	let runBeijing = () => {
+		sprite.player.beijing.loop = true
+		sprite.player.beijing.id = chukuangId++
+		let node = dynamic.playSpine(sprite.player.beijing)
+		node.isbeijing = true
+		// 检查当前节点是否存在位于背景层下的node, 提上来
+		dynamic.nodes.sort((a, b) => {
+			return b.id - a.id
+		})
+
+		if (dynamic.hasSpine(sprite.name)) {
+			run(node);
+		} else {
+			dynamic.loadSpine(sprite.name, 'skel', () => {
+				run(node)
+			})
+		}
+	}
+
+	// 是否播放背景spine
+	if (sprite.player && sprite.player.beijing != null && !sprite.qhlxBigAvatar) {
+		if (dynamic.hasSpine(sprite.player.beijing.name)) {
+			runBeijing()
+		} else {
+			dynamic.loadSpine(sprite.player.beijing.name, 'skel', runBeijing);
+		}
 	} else {
-		dynamic.loadSpine(sprite.name, 'skel', run);
+		if (dynamic.hasSpine(sprite.name)) {
+			run();
+		} else {
+			dynamic.loadSpine(sprite.name, 'skel', run);
+		}
 	}
 }
 
@@ -199,11 +224,15 @@ function stop(data) {
 		if (!sprite) {
 			setTimeout(() => {
 				retryStop(times-1)
-			}, 300)
+			}, 100)
+		} else {
+			if (sprite.beijingNode) {
+				dynamic.stopSpine(sprite.beijingNode)
+			}
 		}
 	}
 	// 重试3次
-	retryStop(3)
+	retryStop(10)
 }
 
 function stopAll(data) {
@@ -221,7 +250,7 @@ function msgUpdate(data) {
 
 function action(data) {
 	let dynamic = dynamics.getById(data.id);
-
+	console.log('=======', dynamic.nodes)
 	if (!dynamic) return
 	let apnode = getDynamic(dynamic, data.skinID);
 
@@ -662,6 +691,9 @@ function debug(data) {
 		}
 		playDaiJi(apnode)
 		apnode.opacity = 1
+		if (apnode.beijingNode) {
+			apnode.beijingNode.opacity = 1
+		}
 		window.postMessage({id: data.id, type: 'canvasRecover'})
 
 	} else if (data.mode === 'chukuang') {
@@ -669,6 +701,9 @@ function debug(data) {
 		if (apnode.chukuangNode) {
 			// 先停止原来的动画
 			apnode.opacity = 0
+			if (apnode.beijingNode) {
+				apnode.beijingNode.opacity = 0
+			}
 			setTimeout(() => {
 				apnode.chukuangNode.opacity = 1
 				// 获取出框node的action
@@ -686,6 +721,9 @@ function debug(data) {
 		if (actionParams) {
 			let playSpine = function (apnode, animation, playNode) {
 				apnode.opacity = 0
+				if (apnode.beijingNode) {
+					apnode.beijingNode.opacity = 0
+				}
 
 				let actualPlayNode = playNode ? playNode : apnode
 				setPos(actualPlayNode, data);
@@ -898,7 +936,11 @@ function hideAllNode(data) {
 	let dynamic = dynamics.getById(data.id)
 	if (!dynamic) return
 	for (let node of dynamic.nodes) {
+		if (node.isbeijing) {
+			continue
+		}
 		node.opacity = 0
+
 	}
 	postMessage({
 		type: 'hideAllNodeEnd',
@@ -909,7 +951,10 @@ function hideAllNode(data) {
 function recoverDaiJi(data) {
 	let dynamic = dynamics.getById(data.id)
 	if (!dynamic) return
+	let chukuangNode
 	for (let node of dynamic.nodes) {
+		if (node.chukuangNode) chukuangNode = node.chukuangNode
+		if (node === chukuangNode) continue
 		node.opacity = 1
 	}
 }

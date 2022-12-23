@@ -302,6 +302,12 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				y: [0, 0.3],
 				scale: 0.45,
 				background: '何太后战场骨骼/skin_hetaihou_zhanchangjueban_bg.png',
+				beijing: {
+					name: '何太后战场骨骼/beijing',
+					scale: 0.4,
+					x: [0, 1.2],
+					y: [0, 0.5]
+				},
 				skinName: "战场绝版",
 				// teshu: 'play2',  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
 				teshu: {
@@ -662,6 +668,12 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					// x: [0, 0.5],
 					// y: [0, 0.5],
 				},
+				beijing: {
+					name: '吕玲绮/战场绝版/beijing',
+					scale: 0.4,
+					x: [0, 1.2],
+					y: [0, 0.5]
+				},
 				chuchang: {
 					name: '吕玲绮/战场绝版/chuchang',
 					scale: 0.8,
@@ -910,6 +922,36 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					scale: 0.5,
 				}
 			},
+		},
+		liuzan: {
+			抗音而歌: {
+				name: 'skin_liuzan_KangYinErGe',
+				x: [0, 0.53],
+				y: [0, -0.1],
+				scale: 0.6,
+				angle: -5,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				background: 'skin_liuzan_KangYinErGe_bg.png',
+				action: 'DaiJi',
+				skinName: "抗音而歌"
+			},
+			灵魂歌王: {
+				name: 'skin_liuzan_LingHunGeWang',
+				x: [0, -0.3],
+				y: [0, 0.11],
+				scale: 0.45,
+				angle: 10,
+				pos: {
+					x: [0,0.7],
+					y: [0,0.5]
+				},
+				background: 'skin_liuzan_LingHunGeWang_bg.png',
+				action: 'DaiJi',
+				skinName: "灵魂歌王"
+			}
 		},
 	};
 	

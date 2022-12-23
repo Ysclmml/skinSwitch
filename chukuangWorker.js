@@ -106,13 +106,13 @@ class PlayerAnimation {
         this.playerState[data.id]['action'] = data.action
         playNode.angle = undefined
         let showTime = animation.showTime * 1000
-        let delayTime = 300
+        let delayTime = 400
         if (!(playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar)) {
             if (showTime <= 800) {
-                delayTime = 150
+                delayTime = 200
             }
             if (showTime <= 1200) {
-                delayTime = 200
+                delayTime = 300
             }
             showTime -= delayTime
             // 暂时还是开启动画播放速度默认调为1.2, 默认为1太慢了
@@ -124,10 +124,10 @@ class PlayerAnimation {
         showTime /= (playNode.speed || 1)
         console.log('showTime', showTime, animation.showTime, playNode.speed)
         // 如果是连续攻击, 延长展示的时间, 回框速度加快
-        if (notSetPos && !(playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar)) {
-            showTime += delayTime - 150
-            delayTime = 150
-        }
+        // if (notSetPos && !(playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar)) {
+        //     showTime += delayTime - 150
+        //     delayTime = 150
+        // }
         playNode.actionParams.showTimeout = setTimeout(() => {
             // 如x果是手杀大屏预览的页面则不位移到原处
             if (playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar) {
@@ -177,6 +177,7 @@ class PlayerAnimation {
         // 这里说明上一次出框已经完成, 可能会让原来的待机显现, 保险起见, 再发一次隐藏的消息
 
         if (!this.anni.nodes.includes(playNode)) {
+            playNode.skeleton.completed = true
             let playedSprite = this.anni.playSpine(playNode.actionParams)
             playedSprite.player = player
             playedSprite.actionParams = actionParams
@@ -187,13 +188,13 @@ class PlayerAnimation {
         playNode.skeleton.state.setAnimation(0, playNode.action, false)
         playNode.skeleton.setToSetupPose()
         playNode.completed = false
-        playNode.skeleton.completed = false
+        playNode.skeleton.completed = true
         let notSetPos = false
         if (!player.shizhounian) {
             // 比较当前位置和回框的位置距离, 如果比较小了, 就重新出框
-            console.log('render', playNode.renderX, playNode.renderY, data.player.x, data.player.y)
+            console.log('render', playNode.renderX, playNode.renderY, data.player.x, data.player.y, data.player)
 
-            if (Math.abs(playNode.renderX - data.player.x) > 200 && playNode.renderY - data.player.y > 280){
+            if ((Math.abs(playNode.renderY - data.player.y)) > data.player.height / 2 || Math.abs(playNode.renderX - data.player.x) > data.player.width / 2){
                 notSetPos = true
             }
         }
@@ -519,7 +520,7 @@ function setPos(apnode, data) {
         }
         apnode.x = actionParams.x
         apnode.y = actionParams.y
-        data.player.y += 180
+        data.player.y += 100
     } else {
         if (data.action === 'chuchang') {
             // apnode.x = data.player.x + data.player.width / 2
