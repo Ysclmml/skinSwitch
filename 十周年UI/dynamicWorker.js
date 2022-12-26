@@ -57,7 +57,7 @@ function preLoadChuKuangSkel(dynamic, apnode) {
 	}
 }
 
-
+let t = 0
 
 // 播放, 稍微修改以下, 如果包含不一样的皮肤出框, 提前加载好对应的骨骼,减少下次的加载时间
 function playSkin(dynamic, data) {
@@ -129,9 +129,11 @@ function playSkin(dynamic, data) {
 				player.gongji.scale = player.scale * 0.55
 			}
 		}
+		if (sprite.player.beijing) {
+			sprite.player.beijing.scale = (sprite.player.beijing.scale || 1) * sprite.player.largeFactor
+		}
 
 	}
-
 	let run = function (beijingNode) {
 		let t = dynamic.playSpine(sprite);
 		t.opacity = 0
@@ -172,7 +174,8 @@ function playSkin(dynamic, data) {
 	}
 
 	// 是否播放背景spine
-	if (sprite.player && sprite.player.beijing != null && !sprite.qhlxBigAvatar) {
+	// if (sprite.player && sprite.player.beijing != null && !sprite.qhlxBigAvatar) {
+	if (sprite.player && sprite.player.beijing != null) {
 		if (dynamic.hasSpine(sprite.player.beijing.name)) {
 			runBeijing()
 		} else {
@@ -653,7 +656,11 @@ function position(data) {
 
 	if (data.mode === 'daiji') {
 		window.postMessage({id: data.id, type: 'position', x: apnode.player.x, y: apnode.player.y, scale: apnode.player.scale, angle: apnode.player.angle})
-	} else {
+	} else if (data.mode === 'beijing') {
+		if (apnode.beijingNode) {
+			window.postMessage({id: data.id, type: 'position', x: apnode.beijingNode.x, y: apnode.beijingNode.y, scale: apnode.beijingNode.scale, angle: apnode.beijingNode.angle})
+		}
+	}else {
 		if (apnode.chukuangNode) {
 			window.postMessage({id: data.id, type: 'position', x: apnode.chukuangNode.x, y: apnode.chukuangNode.y, scale: apnode.chukuangNode.scale})
 		} else {
@@ -807,6 +814,17 @@ function debug(data) {
 				}
 			}
 		}
+	} else if (data.mode === 'beijing') {
+		if (apnode.chukuangNode) {
+			// 停止当前播放的动画
+			apnode.chukuangNode.opacity = 0
+
+		}
+		apnode.opacity = 0
+		if (apnode.beijingNode) {
+			apnode.beijingNode.opacity = 1
+		}
+		window.postMessage({id: data.id, type: 'canvasRecover'})
 	}
 }
 
@@ -891,6 +909,25 @@ function adjust(data) {
 		} else {
 			console.log('当前出框位置参数x', apnode.x, '当前出框位置参数y', apnode.y, 'scale', apnode.scale)
 		}
+	} else if (data.mode === 'beijing') {
+		if (apnode.beijingNode == null) {
+			return
+		}
+		if (data.x != null && data.y != null) {
+			apnode.beijingNode.x = data.x
+			apnode.beijingNode.y = data.y
+		} else if (data.xyPos != null){
+			if (data.xyPos.x != null) {
+				apnode.beijingNode.x[0] = data.xyPos.x
+			} else if (data.xyPos.y != null){
+				apnode.beijingNode.y[0] = data.xyPos.y
+			}
+		} else if (data.scale != null) {
+			apnode.beijingNode.scale = data.scale
+		} else if (data.angle != null) {
+			apnode.beijingNode.angle = data.angle
+		}
+		console.log('当前待机位置参数x', apnode.beijingNode.x, '当前待机位置参数y', apnode.beijingNode.y, 'scale', apnode.beijingNode.scale, 'angle', apnode.beijingNode.angle)
 	}
 }
 

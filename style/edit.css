@@ -91,6 +91,12 @@
     cursor: pointer;
 }
 
+.editDynamic .flexItems {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
 .editDynamic .posNum i{
     width: 20px;
     height: 20px;

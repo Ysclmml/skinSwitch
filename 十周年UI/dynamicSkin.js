@@ -915,11 +915,17 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				x: [0, 0.35],
 				y: [0, 0.15],
 				scale: 0.5,
-				background: '界徐盛/skin_xusheng_xin_bg.png',
+				// background: '界徐盛/skin_xusheng_xin_bg.png',
 				gongji: {
 					x: [0,0.71],
 					y: [0,0.48],
 					scale: 0.5,
+				},
+				beijing: {
+					name: '界徐盛/BeiJing',
+					scale: 0.5,
+					x: [0, 0.6],
+					y: [0, 0.6],
 				}
 			},
 		},

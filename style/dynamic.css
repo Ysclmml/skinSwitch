@@ -273,3 +273,7 @@
 .player.d-skin2>.deputy-avatar {
     opacity: 0 !important;
 }
+
+#arena[data-dynamic-skin-outcrop='on']#arena[data-new-decade-style="off"]>.player>.dynamic-wrap>.animation-player {
+    clip-path: polygon(0% 99%, 0% 6%, 11% 1%, 52% 0%, 86% 0%, 99% 6%, 100% 100%);
+}

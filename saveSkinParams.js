@@ -2,15 +2,26 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
 {
     "hetaihou": {
         "战场绝版": {
-            "scale": 1,
+            "scale": 0.9,
             "x": [
                 0,
-                0.72
+                0.54
             ],
             "y": [
                 0,
-                0.41
-            ]
+                0.42
+            ],
+            "beijing": {
+                "scale": 0.31,
+                "x": [
+                    0,
+                    0.96
+                ],
+                "y": [
+                    0,
+                    0.5
+                ]
+            }
         },
         "蛇蝎为心": {}
     },
@@ -18,7 +29,19 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
         "战场绝版": {}
     },
     "shen_ganning": {
-        "万人辟易": {}
+        "万人辟易": {
+            "beijing": {
+                "scale": 0.3,
+                "x": [
+                    0,
+                    -0.77
+                ],
+                "y": [
+                    0,
+                    0.4
+                ]
+            }
+        }
     },
     "lvlingqi": {
         "战场绝版": {
@@ -43,6 +66,17 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                         0.49
                     ]
                 }
+            },
+            "beijing": {
+                "scale": 0.4,
+                "x": [
+                    0,
+                    1.59
+                ],
+                "y": [
+                    0,
+                    0.54
+                ]
             }
         }
     },
