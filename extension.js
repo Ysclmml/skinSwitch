@@ -71,8 +71,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             // 播放角色使用非攻击技能的特殊动画
                             if (game.phaseNumber > 0) {
                                 // if (name.indexOf("_") !== 0 && skinSwitch.filterSkills.indexOf(name) === -1 || this.skills.indexOf(name) !== -1) {
-                                if (name.indexOf("_") !== 0 && skinSwitch.filterSkills.indexOf(name) === -1 || this.getStockSkills().indexOf(name) !== -1) {
+                                if (name.indexOf("_") !== 0 && skinSwitch.filterSkills.indexOf(name) === -1 && this.getStockSkills().indexOf(name) !== -1) {
                                     if (this.isAlive() && this.dynamic && !this.GongJi) {
+                                        console.log('skills', name, this.skills, this.getStockSkills())
                                         skinSwitch.chukuangWorkerApi.chukuangAction(this, 'TeShu')
                                     }
                                 }
@@ -268,6 +269,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             },
                             forced: true,
                             filter: function (event, player) {
+                                console.log('tsevent', player.getStockSkills(), event)
                                 return player.isAlive() && player.dynamic && !player.GongJi;
                             },
                             content: function () {
@@ -348,6 +350,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             var info1 = lib.character[from];
                             var info2 = lib.character[to];
                             var smooth = true;
+                            let originName2 = this.name2
                             if (maxHp == 'nosmooth') {
                                 smooth = false;
                                 maxHp = null;
@@ -436,7 +439,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             if (this.doubleAvatar) {
                                 let primary = true;
                                 let deputy = true;
-                                if (this.name2 == from) primary = false;
+                                // 上面会重新赋值, 所以这里需要修改变身bug
+                                if (originName2 === from) primary = false;
                                 else deputy = false;
                                 if (this.dynamic) {
                                     this.stopDynamic(primary, deputy);
@@ -763,7 +767,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                                 if (lib.character[character]) {
                                     var forces = lib.character[character][1];
-                                    if (!this.doubleAvatar && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && this.getElementsByClassName("skinYh").length < 1 && y && forces != "shen") {
+                                    if (/*!this.doubleAvatar*/get.mode() !== 'guozhan' && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && this.getElementsByClassName("skinYh").length < 1 && y /*&& forces != "shen"*/) {
                                         var yh = skinSwitch.createYH(forces);
                                         this.appendChild(yh);
                                     }
@@ -830,8 +834,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                             let that = this;
 
+                            let addYh = () => {
+                                let isYh = that.getElementsByClassName("skinYh");
+                                if (Object.keys(isYh).length <= 0) {
+                                    let yh = skinSwitch.createYH(that.group);
+                                    that.appendChild(yh);
+                                }
+                            }
+
                             function showDynamicSkin(e)
                             {
+
                                 if (that.dynamic) {
                                     function post(id) {
                                         let e = that.getElementsByClassName("dynamic-wrap");
@@ -843,11 +856,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         if (that.dynamic.primary) {
                                             skinSwitch.dynamic.setBackground("primary", that);
                                             post(that.dynamic.primary.id);
+                                            addYh()
                                         }
                                     } else if (e === "unseen2") {
                                         if (that.dynamic.deputy) {
                                             skinSwitch.dynamic.setBackground("deputy", that);
                                             post(that.dynamic.deputy.id);
+                                            addYh()
                                         }
                                     }
                                 }
@@ -2202,7 +2217,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                     },
                     show: function (player, skinId) {
-                        if (!(player.dynamic && player.dynamic.primary)) {
+                        if (!(player.dynamic && (player.dynamic.primary || player.dynamic.deputy))) {
                             skinSwitchMessage.show({
                                 type: 'error',
                                 text: '只有当前角色是动皮时才可以编辑动皮参数',
@@ -2313,11 +2328,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (!dynamic || (!dynamic.primary && !dynamic.deputy)) {
                             return
                         }
+                        // 添加如果当前是国战模式隐藏状态下, 不允许出框
                         skinSwitch.chukuangWorker.postMessage({
                             message: 'isChuKuang',
                             id: dynamic.id,
-                            primarySkinId: dynamic.primary && dynamic.primary.id,
-                            deputySkinId: dynamic.deputy && dynamic.deputy.id,
+                            primarySkinId: (!player.isUnseen || !player.isUnseen(0)) && dynamic.primary && dynamic.primary.id,
+                            deputySkinId: (!player.isUnseen || !player.isUnseen(1)) && dynamic.deputy && dynamic.deputy.id,
                             action: action,
                             extraParams: extraParams,  // 表示需要更新出框的播放效果
                         })
@@ -2381,6 +2397,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         player.dynamic.renderer.postMessage({
                             message: 'hideAllNode',
                             id: dynamic.id,
+                            isPrimary: data.isPrimary,
+                            skinId: data.skinId
                         })
                         skinSwitch.rendererOnMessage.addListener(player, 'hideAllNodeEnd', function (){
                             let pp = skinSwitch.getCoordinate(player, true)
@@ -3691,10 +3709,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let isWrite = false
                     // 如果当前是调整千幻雷修的情况下, 那么保存千幻雷修的相关参数
                     if (saveKey) {
-                        if (player.isQhlx && mode === 'beijing') {
-                            skinSwitchMessage.show({
-                                text: '暂不支持保存千幻背景参数'
-                            })
+                        // if (player.isQhlx && mode === 'beijing') {
+                        //     skinSwitchMessage.show({
+                        //         text: '暂不支持保存千幻背景参数'
+                        //     })
+                        //     return
+                        // }
+
+                        let modeToKey = {
+                            daiji: 'daiji',
+                            chukuang: 'gongji',
+                            beijing: 'beijing'
                         }
                         // 比对两者的数据, 如果不一样,才进行保存
                         if (skinSwitch.saveSkinParams[player.name]) {
@@ -3702,7 +3727,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 let saveData = skinSwitch.saveSkinParams[player.name][saveKey]
                                 // 千幻雷修就不检查重复key了, 每次都进行更新
                                 if (player.isQhlx) {
-                                    let k = mode === 'daiji' ? 'daiji' : 'gongji'
+                                    let k = modeToKey[mode]
+                                    // let k = mode === 'daiji' ? 'daiji' : 'gongji'
+                                    k = currentPlay
                                     if (saveData['qhlx']) {
                                         saveData['qhlx'][k] = data
                                     } else {
@@ -3719,6 +3746,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                     if (saveData[k] === undefined || (saveData[k].toString() !== data[k].toString())) {
                                                         saveData[k] = data[k]
                                                         isWrite = true
+                                                    }
+                                                } else if (mode === 'beijing') {
+                                                    if (!saveData.beijing) {
+                                                        saveData.beijing = {}
+                                                        saveData.beijing[k] = data[k]
+                                                        isWrite = true
+                                                    } else {
+                                                        if (saveData.beijing[k] === undefined || (saveData.beijing[k].toString() !== data[k].toString())) {
+                                                            saveData.beijing[k] = data[k]
+                                                            isWrite = true
+                                                        }
                                                     }
                                                 } else {
                                                     if (!saveData.gongji) {
@@ -3766,7 +3804,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                             } else {
                                 if (player.isQhlx) {
-                                    let k = mode === 'daiji' ? 'daiji' : 'gongji'
+                                    let k = modeToKey[mode]
                                     skinSwitch.saveSkinParams[player.name][saveKey] = {}
                                     skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'] = {}
                                     skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'][k] = data
@@ -3789,7 +3827,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             skinSwitch.saveSkinParams[player.name] = {}
 
                             if (player.isQhlx) {
-                                let k = mode === 'daiji' ? 'daiji' : 'gongji'
+                                let k = modeToKey[mode]
                                 skinSwitch.saveSkinParams[player.name][saveKey] = {}
                                 skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'] = {}
                                 skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'][k] = data
@@ -4125,4 +4163,15 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
   4. 可以配合原版千幻聆音使用, 现在可以使用原版千幻聆音切换静皮. 当然使用千幻雷修版本的不受影响.
   5. 预览界面增加了播放速度等调整功能.
   6. 增加出框的规则, 可以连续攻击, 重置之前的攻击动作而不会回框. 如果本次的出框动作和上次不一样, 那么会等待上次出框完成才会继出框.
+ */
+
+/** 1.07.1版本更新
+ 1. 手杀背景标签也有多个标签, 可以由出场自动切换到待机(背景)
+ 2. 可以调整手杀背景位置大小参数了.
+ */
+
+/** 1.08版本更新
+ 1. 修复双将模式下的背景问题. 现在双将模式下如果都有动态背景的话, 会使用各自的背景, 而不会互相覆盖.  当然静态背景还是只会使用一个
+ 2. 千幻大屏预览下, 可以进行调整背景.
+ 3. 国战双将模式下, 显示武将问题修复, 层级问题修复. (千幻雷修的手杀和十周年套装下, 动皮即使是暗将也会直接显示(千幻bug))
  */

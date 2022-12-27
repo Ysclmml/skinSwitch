@@ -274,6 +274,12 @@
     opacity: 0 !important;
 }
 
+/* 当模式是国战时, 显示自己的样式为透明隐藏 */
+#arena:not(.observe)>.player[data-position='0'].unseen>.primary-avatar, #arena:not(.observe)>.player[data-position='0'].unseen2>.deputy-avatar {
+    opacity: 0.3 !important;
+}
+
 #arena[data-dynamic-skin-outcrop='on']#arena[data-new-decade-style="off"]>.player>.dynamic-wrap>.animation-player {
     clip-path: polygon(0% 99%, 0% 6%, 11% 1%, 52% 0%, 86% 0%, 99% 6%, 100% 100%);
 }
+

@@ -304,11 +304,10 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				background: '何太后战场骨骼/skin_hetaihou_zhanchangjueban_bg.png',
 				beijing: {
 					name: '何太后战场骨骼/beijing',
-					scale: 0.4,
-					x: [0, 1.2],
-					y: [0, 0.5]
+					scale: 0.3,
+					x: [0, 0.98],
+					y: [0, 0.47]
 				},
-				skinName: "战场绝版",
 				// teshu: 'play2',  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
 				teshu: {
 					name:"何太后战场骨骼/chuchang2",
@@ -647,10 +646,13 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					x: [0,0.8],
 					y: [0,0.4]
 				},
-				// gongji: {
-				// 	speed: 1.5
-				// },
-				background: '神甘宁/skin_shenganning_WanRenPiYi_bg.png',
+				// background: '神甘宁/skin_shenganning_WanRenPiYi_bg.png',
+				beijing: {
+					name: '神甘宁/skin_shen_ganning_Wan Ren Pi Yi_BeiJing',
+					x: [0,-0.77],
+					y: [0,0.4],
+					scale: 0.3,
+				},
 			},
 		},
 		lvlingqi: {
@@ -926,7 +928,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					scale: 0.5,
 					x: [0, 0.6],
 					y: [0, 0.6],
-				}
+				},
 			},
 		},
 		liuzan: {
@@ -959,6 +961,27 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				skinName: "灵魂歌王"
 			}
 		},
+		sb_huangzhong: {
+			//黄忠
+			明良千古:{
+				name: '黄忠/skin_huangzhong_mlqg',
+				x: [0,0.41],
+				y: [0,0.35],
+				scale: 0.5,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				action: 'DaiJi',
+				beijing: {
+					name: '黄忠/skin_huangzhong_mlqg_bg',
+					scale: 0.4,
+					x: [0, 1.2],
+					y: [0, 0.5]
+				},
+				skinName: "明良千古"
+			},
+		}
 	};
 	
 	var extend = {

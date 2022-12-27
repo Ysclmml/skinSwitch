@@ -1,5 +1,5 @@
 'use strict';
-importScripts('spine.js', 'animation.js');
+importScripts('spine.js', 'animation.js', '../皮肤切换/settings.js');
 
 Array.prototype.remove = function (item) {
 	var index = this.indexOf(item);
@@ -21,6 +21,7 @@ var dynamics = [];
 let chukuangId = 99999   // 自动出框的nodeID起始, 为了不和主线程传过去的skinId重复
 
 let isMobile = false
+
 
 /**
  * 获取动皮管理对象DynamicPlayer
@@ -131,6 +132,9 @@ function playSkin(dynamic, data) {
 		}
 		if (sprite.player.beijing) {
 			sprite.player.beijing.scale = (sprite.player.beijing.scale || 1) * sprite.player.largeFactor
+			if (sprite.player.qhlx && sprite.player.qhlx.beijing) {
+				sprite.player.beijing = Object.assign(sprite.player.beijing, sprite.player.qhlx.beijing)
+			}
 		}
 
 	}
@@ -157,8 +161,30 @@ function playSkin(dynamic, data) {
 	let runBeijing = () => {
 		sprite.player.beijing.loop = true
 		sprite.player.beijing.id = chukuangId++
+
+		// 如果是双将的话, 复制裁剪.
+		if (sprite.clip) {
+			sprite.player.beijing.clip = sprite.clip
+		}
+
 		let node = dynamic.playSpine(sprite.player.beijing)
 		node.isbeijing = true
+
+		// 查找背景是否也有出场标签
+		let animation = node.skeleton.data.findAnimation("ChuChang");
+		if (animation) {
+			node.skeleton.state.setAnimation(0,"ChuChang",false, 0);
+
+			let hasDaiJi = node.skeleton.data.findAnimation("DaiJi")
+			if (hasDaiJi) {
+				node.skeleton.state.addAnimation(0,"DaiJi",true,-0.01);
+			} else {
+				node.skeleton.state.addAnimation(0,"BeiJing",true,-0.01);
+			}
+			// 默认当前就是手杀动皮, 设置默认动作是待机
+			node.action = hasDaiJi ? 'DaiJi' : 'BeiJing'
+		}
+
 		// 检查当前节点是否存在位于背景层下的node, 提上来
 		dynamic.nodes.sort((a, b) => {
 			return b.id - a.id
@@ -235,7 +261,7 @@ function stop(data) {
 		}
 	}
 	// 重试3次
-	retryStop(10)
+	retryStop(dwStopTimes)
 }
 
 function stopAll(data) {
@@ -253,7 +279,6 @@ function msgUpdate(data) {
 
 function action(data) {
 	let dynamic = dynamics.getById(data.id);
-	console.log('=======', dynamic.nodes)
 	if (!dynamic) return
 	let apnode = getDynamic(dynamic, data.skinID);
 
@@ -336,7 +361,8 @@ function action(data) {
 				let animation = apnode.skeleton.data.findAnimation(tempParams.action)
 				return Boolean(animation)
 			}
-			return true
+			// 骨骼不同不再这里worker里出框了
+			return false
 		}
 		let changeNode = function () {
 			let hideNode = getHideDynamic(dynamic, data.needHide)
@@ -600,21 +626,22 @@ function action(data) {
 				apnode.skeleton.state.addAnimation(0, apnode.player.action || apnode.skeleton.defaultAction, true, 0);
 				postMessage({id: data.id, type: 'teshuChuKuang', 'chukuang': false})
 			}
-		} else {
-			// 当特殊动作需要出框的时候, 只有在自己回合才可以出框
-			if (!data.selfPhase) {
-				return
-			}
-			if (!dynamic.hasSpine(actionParams.name)) {
-				dynamic.loadSpine(actionParams.name, "skel", function () {
-					postMessage({id: data.id, type: 'teshuChuKuang', 'chukuang': true})
-					playChukuang(actionParams)
-				}, errPlaySpine)
-			} else {
-				postMessage({id: data.id, type: 'teshuChuKuang', 'chukuang': true})
-				playChukuang(actionParams)
-			}
 		}
+		// else {
+		// 	// 当特殊动作需要出框的时候, 只有在自己回合才可以出框
+		// 	if (!data.selfPhase) {
+		// 		return
+		// 	}
+		// 	if (!dynamic.hasSpine(actionParams.name)) {
+		// 		dynamic.loadSpine(actionParams.name, "skel", function () {
+		// 			postMessage({id: data.id, type: 'teshuChuKuang', 'chukuang': true})
+		// 			playChukuang(actionParams)
+		// 		}, errPlaySpine)
+		// 	} else {
+		// 		postMessage({id: data.id, type: 'teshuChuKuang', 'chukuang': true})
+		// 		playChukuang(actionParams)
+		// 	}
+		// }
 
 	} else if (data.action === 'chuchang') {
 		// 暂时只让不同皮肤出框.
@@ -973,10 +1000,13 @@ function hideAllNode(data) {
 	let dynamic = dynamics.getById(data.id)
 	if (!dynamic) return
 	for (let node of dynamic.nodes) {
-		if (node.isbeijing) {
-			continue
+		// if (node.isbeijing) {
+		// 	continue
+		// }
+		if (data.skinId != null && node.id === data.skinId) {
+			node.opacity = 0
+			break
 		}
-		node.opacity = 0
 
 	}
 	postMessage({

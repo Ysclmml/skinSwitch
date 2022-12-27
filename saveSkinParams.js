@@ -223,6 +223,34 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 ]
             }
         }
+    },
+    "sb_huangzhong": {
+        "明良千古": {
+            "beijing": {
+                "scale": 0.3,
+                "x": [
+                    0,
+                    1.56
+                ],
+                "y": [
+                    0,
+                    0.37
+                ]
+            },
+            "qhlx": {
+                "beijing": {
+                    "scale": 0.56,
+                    "x": [
+                        0,
+                        -0.09
+                    ],
+                    "y": [
+                        0,
+                        0.49
+                    ]
+                }
+            }
+        }
     }
 }
 }
