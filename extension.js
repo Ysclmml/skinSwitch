@@ -70,8 +70,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         lib.element.player.logSkill = function (name, targets, nature, logv) {
                             // 播放角色使用非攻击技能的特殊动画
                             if (game.phaseNumber > 0) {
-                                // if (name.indexOf("_") !== 0 && skinSwitch.filterSkills.indexOf(name) === -1 || this.skills.indexOf(name) !== -1) {
-                                if (name.indexOf("_") !== 0 && skinSwitch.filterSkills.indexOf(name) === -1 && this.getStockSkills().indexOf(name) !== -1) {
+                                if (name.indexOf("_") !== 0 && skinSwitch.filterSkills.indexOf(name) === -1 || this.skills.indexOf(name) !== -1) {
+                                // if (name.indexOf("_") !== 0 && skinSwitch.filterSkills.indexOf(name) === -1 && this.getStockSkills().indexOf(name) !== -1) {
                                     if (this.isAlive() && this.dynamic && !this.GongJi) {
                                         console.log('skills', name, this.skills, this.getStockSkills())
                                         skinSwitch.chukuangWorkerApi.chukuangAction(this, 'TeShu')
@@ -890,7 +890,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             return next;
                         };
 
-                        Player.playDynamic = function (animation, deputy) {
+                        Player.playDynamicplayDynamic = function (animation, deputy) {
                             deputy = deputy === true;
                             if (animation == undefined) return console.error('playDynamic: 参数1不能为空');
                             var dynamic = this.dynamic;
