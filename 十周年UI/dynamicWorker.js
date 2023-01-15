@@ -60,6 +60,9 @@ function preLoadChuKuangSkel(dynamic, apnode) {
 
 let t = 0
 
+let loadTasks = []  // 存储所有加载spine骨骼的任务. 保证背景骨骼优先加载.
+loadTasks.isRunning = false
+
 // 播放, 稍微修改以下, 如果包含不一样的皮肤出框, 提前加载好对应的骨骼,减少下次的加载时间
 function playSkin(dynamic, data) {
 	update(dynamic, data);
@@ -138,24 +141,55 @@ function playSkin(dynamic, data) {
 		}
 
 	}
+
+	let runTask = function () {
+		if (loadTasks.isRunning) {
+			return
+		}
+		// 找出背景的task优先执行
+		let firstTask
+		for (let task of loadTasks) {
+			if (!task.finish) {
+				if (task.isBeiJing) {
+					firstTask = task
+					break
+				} else {
+					if (!firstTask) {
+						firstTask = task
+					}
+				}
+			}
+		}
+		if (firstTask) {
+			loadTasks.isRunning = true
+			console.log('task=======', t++, firstTask.isBeiJing)
+			firstTask()
+		}
+	}
+
 	let run = function (beijingNode) {
 		let t = dynamic.playSpine(sprite);
 		t.opacity = 0
 		t.beijingNode = beijingNode
-		let animation = t.skeleton.data.findAnimation("ChuChang");
-		if (animation) {
+		let labels = getAllActionLabels(t)
+		if (labels.includes('ChuChang')) {
 			// 清空原来的state状态, 添加出场
 			t.skeleton.state.setEmptyAnimation(0,0);
 			t.skeleton.state.setAnimation(0,"ChuChang",false,0);
-			t.skeleton.state.addAnimation(0,"DaiJi",true,-0.01);
-			// 默认当前就是手杀动皮, 设置默认动作是待机
-			t.player.action = 'DaiJi'
-			t.action = 'DaiJi'
+			for (let defaultDaiJi of dwDefaultDaiJiAction) {
+				let da = getLabelIgnoreCase(t, defaultDaiJi)
+				if (da) {
+					t.skeleton.state.addAnimation(0, da,true,-0.01);
+					t.player.action = da
+					t.action = da
+				}
+			}
 		}
 
 		t.opacity = 1;
 		// 将node保存一下, 表示是千幻大屏预览的node
 		t.qhlxBigAvatar = sprite.qhlxBigAvatar
+		runTask()
 	}
 
 	let runBeijing = () => {
@@ -175,14 +209,19 @@ function playSkin(dynamic, data) {
 		if (animation) {
 			node.skeleton.state.setAnimation(0,"ChuChang",false, 0);
 
-			let hasDaiJi = node.skeleton.data.findAnimation("DaiJi")
-			if (hasDaiJi) {
-				node.skeleton.state.addAnimation(0,"DaiJi",true,-0.01);
-			} else {
-				node.skeleton.state.addAnimation(0,"BeiJing",true,-0.01);
+			// 获取所有actions
+			let labels = getAllActionLabels(node)
+
+			for (let label of labels) {
+				let lowerLabel = label.toLowerCase()
+				for (let daijiName of dwBeiJingDaiJiActions) {
+					if (daijiName.toLowerCase() === lowerLabel) {
+						node.skeleton.state.addAnimation(0, label,true,-0.01);
+						node.action = label
+						break
+					}
+				}
 			}
-			// 默认当前就是手杀动皮, 设置默认动作是待机
-			node.action = hasDaiJi ? 'DaiJi' : 'BeiJing'
 		}
 
 		// 检查当前节点是否存在位于背景层下的node, 提上来
@@ -193,25 +232,60 @@ function playSkin(dynamic, data) {
 		if (dynamic.hasSpine(sprite.name)) {
 			run(node);
 		} else {
-			dynamic.loadSpine(sprite.name, 'skel', () => {
-				run(node)
-			})
+			let task = function () {
+				dynamic.loadSpine(sprite.name, 'skel', () => {
+					task.finish = true
+					// loadTasks.remove(task)
+					loadTasks.isRunning = false
+					run(node)
+				})
+			}
+			task.isBeiJing = false
+			loadTasks.push(task)
+			runTask()
+			// dynamic.loadSpine(sprite.name, 'skel', () => {
+			// 	run(node)
+			// })
 		}
 	}
 
 	// 是否播放背景spine
-	// if (sprite.player && sprite.player.beijing != null && !sprite.qhlxBigAvatar) {
 	if (sprite.player && sprite.player.beijing != null) {
 		if (dynamic.hasSpine(sprite.player.beijing.name)) {
 			runBeijing()
 		} else {
-			dynamic.loadSpine(sprite.player.beijing.name, 'skel', runBeijing);
+			let task = function () {
+				dynamic.loadSpine(sprite.player.beijing.name, 'skel', function () {
+					task.finish = true
+					// loadTasks.remove(task)
+					loadTasks.isRunning = false
+					runBeijing()
+				})
+			}
+			task.isBeiJing = true
+			loadTasks.push(task)
+			runTask()
+			// dynamic.loadSpine(sprite.player.beijing.name, 'skel', function () {
+			// 	runBeijing()
+			// });
 		}
 	} else {
 		if (dynamic.hasSpine(sprite.name)) {
 			run();
 		} else {
-			dynamic.loadSpine(sprite.name, 'skel', run);
+			let task = function () {
+				dynamic.loadSpine(sprite.name, 'skel', () => {
+					task.finish = true
+					// loadTasks.remove(task)
+					loadTasks.isRunning = false
+					run()
+				})
+			}
+			task.isBeiJing = false
+			loadTasks.push(task)
+			runTask()
+
+			// dynamic.loadSpine(sprite.name, 'skel', run);
 		}
 	}
 }
@@ -227,6 +301,29 @@ function randomChoice(arr) {
 	return arr[randomInt(arr.length)]
 }
 
+// 获取骨骼的所有action标签
+function getAllActionLabels(node) {
+	// 获取所有actions
+	let animations = node.skeleton.data.animations;
+	let res = []
+	for (let ani of animations) {
+		res.push(ani.name)
+	}
+	return res
+}
+
+// 获取标签, 忽略大小写
+function getLabelIgnoreCase(node, label) {
+	if (!label) return ''
+	let animations = node.skeleton.data.animations;
+	let lowerCaseLabel = label.toLowerCase()
+	for (let ani of animations) {
+		if (ani.name.toLowerCase() === lowerCaseLabel) {
+			return ani.name
+		}
+	}
+	return ''
+}
 
 /*************** 每个函数处理worker消息 start ***************/
 

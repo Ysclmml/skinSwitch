@@ -298,6 +298,21 @@ caoying:{
 
 #### 十周年文件的修改
 
+**1.9.117.2后十周年UI与本体兼容问题**
+
+本体添加了新的文字按钮, 需要在十周年UI extension.js添加下面几行代码
+
+![](./doc/十周年UI添加内容.png)
+
+```js
+else if (item[1] == 'textbutton') {
+								// 1.9.117.2版本添加了文字按钮, 这里需要添加一个分支单独处理文字按钮, 参考本体game.js 26559行
+								ui.create.textbuttons(item[0], this, noclick);
+							} 
+```
+
+
+
 因为对十周年UI的文件做了一些修改, 所以要使用需要先导入十周年文件. 需要先备份一下原来的3个文件. 扩展设置页面有提供按钮. 会在原十周年UI目录下创建备份文件夹. 只需要备份一次即可. 
 
 主要只改动 `animiation.js` , `dynamicWorker.js`改动如下.
@@ -316,7 +331,7 @@ caoying:{
 
 5. `dynamicWorker.js`完全重写
 
-
+ 
 
 #### 扩展兼容问题
 

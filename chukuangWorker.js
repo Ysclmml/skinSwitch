@@ -446,11 +446,11 @@ function setShiZhouNianGongJiPos(apnode, data) {
 
     if (data.me) {
         if (xRate < 0.5) {
-            apnode.x = data.player.x + data.player.width / 3
+            apnode.x = data.player.x + data.player.width
         } else {
             apnode.x = data.player.x - data.player.width / 3
         }
-        apnode.x = data.player.x - data.player.width / 3
+        // apnode.x = data.player.x - data.player.width / 3
         apnode.y = data.player.y + data.player.height * 1.1
     } else {
         // 根据每个人当时的位置偏移
@@ -593,7 +593,6 @@ function createChuKuang(data) {
 // 预加载用到的骨骼
 function preLoad(data) {
     playerAnimation.preLoadPlayerSkel(data)
-    console.log('playerAnimation --> ', playerAnimation)
 }
 
 function completePlayerParams(avatarPlayer, action) {

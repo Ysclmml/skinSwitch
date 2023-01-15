@@ -298,10 +298,16 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 			},
 			战场绝版: {
 				name: '何太后战场骨骼/daiji2',
-				x: [0, 1.55],
-				y: [0, 0.3],
-				scale: 0.45,
-				background: '何太后战场骨骼/skin_hetaihou_zhanchangjueban_bg.png',
+				"scale": 0.9,
+				"x": [
+					0,
+					0.54
+				],
+				"y": [
+					0,
+					0.42
+				],
+				// background: '何太后战场骨骼/skin_hetaihou_zhanchangjueban_bg.png',
 				beijing: {
 					name: '何太后战场骨骼/beijing',
 					scale: 0.3,
@@ -727,6 +733,22 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				background: '孙翊腾龙翻江/static_bg.png'
 			}
 		},
+		xurong: {
+			烬灭神骇: {
+				name: 'skin_xurong_JinMieShenHai',
+				x: [0, 0.60],
+				y: [0, 0.25],
+				scale: 0.45,
+				action: 'DaiJi',
+				pos: {
+					x: [0,0.75],
+					y: [0,0.4]
+				},
+				angle: -25,
+				background: 'skin_xurong_JinMieShenHai_bg.png',
+				skinName: "烬灭神骇"
+			},
+		},
 		shen_luxun: {
 			绽焰摧枯: {
 				name: 'skin_shenluxun_ZhanYanCuiKu',
@@ -917,7 +939,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				x: [0, 0.35],
 				y: [0, 0.15],
 				scale: 0.5,
-				// background: '界徐盛/skin_xusheng_xin_bg.png',
+				background: '界徐盛/skin_xusheng_xin_bg.png',
 				gongji: {
 					x: [0,0.71],
 					y: [0,0.48],
