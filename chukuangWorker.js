@@ -8,7 +8,7 @@ let HTMLCanvasElement = function () {
 };
 let HTMLElement = function () {
     return 'HTMLElement';
-};
+}
 
 Array.prototype.remove = function (item) {
     var index = this.indexOf(item);
@@ -37,13 +37,17 @@ class PlayerAnimation {
         let player = data.player
         let _this = this
         this.completeParams(player)
-        let pLoad = function (actionParams) {
+        let pLoad = function (actionParams, times) {
             if (actionParams) {
                 if (!_this.anni.hasSpine(actionParams.name)) {
+
                     _this.anni.loadSpine(actionParams.name, 'skel', function () {
-                        console.log('预加载骨骼成功')
-                    }, function (r) {
-                        console.log('播放骨骼失败, 参数: ', r, data)
+                        console.log('预加载骨骼成功', actionParams.name)
+                    }, function () {
+                        console.log('播放骨骼失败, 参数: ', actionParams, '次数: ', times)
+                        if (times < 0) {
+                            pLoad(actionParams, times + 1)
+                        }
                     })
                 }
             }
@@ -52,7 +56,7 @@ class PlayerAnimation {
         for (let act of [{name: player.name}, player.gongjiAction, player.teshuAction, player.chuchangAction]) {
             if (act && !arr.includes(act.name)) {
                 arr.push(act.name)
-                pLoad(act)
+                pLoad(act, 0)
             }
         }
         if (!(data.id in this.playerAni)) {
@@ -101,8 +105,11 @@ class PlayerAnimation {
     }
 
     playChuKuangSpine(playNode, animation, data, notSetPos) {
+
+        console.log(' playNode.actionParams ====> ', playNode.actionParams)
+
         // 是否要取消连续出框
-        if (!this.playerState[data.id])  this.playerState[data.id] = {'time': new Date().getTime()}
+        if (!this.playerState[data.id])  {}this.playerState[data.id] = {'time': new Date().getTime()};
         this.playerState[data.id]['action'] = data.action
         playNode.angle = undefined
         let showTime = animation.showTime * 1000
@@ -168,6 +175,101 @@ class PlayerAnimation {
             setPos(playNode, data);
         }
         playNode.opacity = 1
+        // 攻击动作播放指示线动画
+        if (data.action === 'GongJi') {
+            if (playNode.actionParams.attackArgs) {
+                let attackArgs = playNode.actionParams.attackArgs
+                let dy = playNode.player.zhishixian
+                if (dy != null) {
+
+                    setTimeout(() => {
+                        let playBaoZha = () => {
+                            for (let p of attackArgs.targets) {
+                                let sprite = Object.assign({}, dy.effect)
+                                sprite.x = p.x
+                                sprite.y = attackArgs.bodySize.bodyHeight - p.y
+                                this.anni.playSpine(sprite)
+                            }
+                        }
+
+                        let playZhishixian = () => {
+
+                            let zhishixianTime = 0
+
+                            // 计算当前角色和其他角色的角度. 参考十周年ui的指示线
+                            for (let p of attackArgs.targets) {
+                                let x2 = p.x
+                                let y2 = p.y
+
+                                let sprite = Object.assign({}, dy)
+
+                                // 获取当前攻击角色到被攻击角色的角度, 然后进行偏移
+                                let x1 = playNode.x
+                                let y1 = attackArgs.bodySize.bodyHeight - playNode.y
+                                let angle = Math.round(Math.atan2(y1 - y2, x1 - x2) / Math.PI * 180)
+
+                                sprite.angle = (dy.angle || 0) + 180 - angle
+
+                                let startX = x1
+                                let startY = y1
+
+                                let endX = x2
+                                let endY = attackArgs.bodySize.bodyHeight - y2
+                                let getDis = (x1, x2, y1, y2) => {
+                                    return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
+                                }
+
+                                let getLineFunc = (x1, x2, y1, y2) => {
+                                    // 斜率k
+                                    let k = (y2 - y1) / (x2 - x1)
+                                    let b = y2 - k * x2
+                                    return (x) => {
+                                        return k * x + b
+                                    }
+                                }
+                                sprite.x = endX
+                                sprite.y = endY
+                                let dis = getDis(startX, x2, startY, y2)
+                                if (dis < attackArgs.bodySize.bodyHeight / 2) {
+                                    let f = getLineFunc(startX, x2, startY, y2)
+                                    let newX = endX + (endX < startX ? -1 : 1) * attackArgs.bodySize.bodyHeight / 3
+                                    let newY = f(newX)
+
+                                    sprite.x = newX
+                                    sprite.y = attackArgs.bodySize.bodyHeight - newY
+                                }
+                                let node = this.anni.playSpine(sprite)
+                                if (!zhishixianTime) {
+                                    let ani = node.skeleton.data.animations[0]
+                                    zhishixianTime = ani.duration
+                                }
+                                // node.moveTo(endX, endY, zhishixianTime * 1000)
+
+                            }
+
+                            // 加载指示线后面的爆炸特效
+                            if (dy.effect) {
+                                // 获取指示线的动画时间, 在到达武将框后播放
+                                setTimeout(() => {
+                                    if (!this.anni.hasSpine(dy.effect.name)) {
+                                        this.anni.loadSpine(dy.effect.name, 'skel', playBaoZha)
+                                    } else {
+                                        playBaoZha()
+                                    }
+                                }, zhishixianTime / (dy.speed || 1)  * 1000 * dy.effect.delay || 0.5)
+                            }
+                        }
+
+                        if (!this.anni.hasSpine(dy.name)) {
+                            this.anni.loadSpine(dy.name, 'skel', playZhishixian)
+                        } else {
+                            playZhishixian()
+                        }
+                    }, showTime * (dy.delay || 0))
+
+                }
+            }
+        }
     }
 
     // 手杀触发连续攻击不会马上回框, 而是会在原地重置攻击动作, 当回到框内, 则重新出框
@@ -186,13 +288,12 @@ class PlayerAnimation {
         }
 
         playNode.skeleton.state.setAnimation(0, playNode.action, false)
-        playNode.skeleton.setToSetupPose()
+        // playNode.skeleton.setToSetupPose()
         playNode.completed = false
         playNode.skeleton.completed = true
         let notSetPos = false
         if (!player.shizhounian) {
             // 比较当前位置和回框的位置距离, 如果比较小了, 就重新出框
-            console.log('render', playNode.renderX, playNode.renderY, data.player.x, data.player.y, data.player)
 
             if ((Math.abs(playNode.renderY - data.player.y)) > data.player.height / 2 || Math.abs(playNode.renderX - data.player.x) > data.player.width / 2){
                 notSetPos = true
@@ -748,12 +849,24 @@ function isChuKuang(data) {
     // 如果已经是出框状态, 直接返回, 不能在短时间内连续请求
     let playerState = playerAnimation.playerState[data.id]
     if (playerState) {
-        if (playerState.action != null && playerState.action !== data.action || new Date().getTime() - playerAnimation.playerState[data.id].time < 100){
+        if (playerState.action != null && playerState.action !== data.action){
             return
         }
-        playerAnimation.playerState[data.id]['time'] = new Date().getTime()
-    } else {
-        playerAnimation.playerState[data.id] = {'time': new Date().getTime()}
+
+        // 延时100ms执行动作, 防止两次触发相近
+        if (playerState.time && new Date().getTime() - playerState.time < 50) {
+            if (playerState.lastAction && playerState.lastAction !== data.action) {
+                setTimeout(() => {
+                    isChuKuang(data)
+                }, 100)
+            }
+            return;
+        }
+        playerState['time'] = new Date().getTime()
+        playerState['lastAction'] = data.action
+    }
+    else {
+        playerAnimation.playerState[data.id] = {time: new Date().getTime(), lastAction: data.action}
     }
 
 
@@ -779,7 +892,6 @@ function isChuKuang(data) {
         }
         clearTimeout(actionParams.moveToTimeout)
         clearTimeout(actionParams.showTimeout)
-
         return postMessage({
             id: data.id,
             skinId: primarySkinId,
@@ -826,7 +938,6 @@ function isChuKuang(data) {
 
 function chukuangStart(data) {
     playerAnimation.playAction(data)
-    console.log('anni...', playerAnimation.anni)
 }
 
 function update(data) {

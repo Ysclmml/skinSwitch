@@ -667,15 +667,12 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				x: [0, 0.5],
 				y: [0, 0.5],
 				scale: 1,
-				teshu: 'play2',  // 特殊标签刚刚写错了
 				gongji: {
-					// name: '吕玲绮/战场绝版/chuchang2',
 					name: '吕玲绮/战场绝版/chuchang2',
 					scale: 0.7,
 					action: ['gongji', 'jineng'],  // 现在可以直接填写多个攻击标签, 这样会随机使用一个攻击动作播放
-					// x: [0, 0.5],
-					// y: [0, 0.5],
 				},
+				teshu: 'play2',  // 特殊标签刚刚写错了
 				beijing: {
 					name: '吕玲绮/战场绝版/beijing',
 					scale: 0.4,
@@ -687,7 +684,20 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					scale: 0.8,
 					action: 'play'
 				},
-				shizhounian: true
+				shizhounian: true,
+				// 十周年指示线特效包括shouji和shouji2
+				zhishixian: {
+					name: '吕玲绮/战场绝版/shouji2',  // 指示线
+					scale: 0.8,
+					speed: 0.5,
+					delay: 0.5,  // 指示线在攻击多久后出现, 区间[0, 1], 默认0
+					effect: {  // 爆炸特效 一般是shouji
+						name: '吕玲绮/战场绝版/shouji',  // 指示线
+						scale: 0.6,
+						speed: 0.7,
+						delay: 0.2,
+					}
+				}
 			}
 		},
 		xushao: {
@@ -771,12 +781,55 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				y: [0, 0.1],
 				speed: 1,
 				pos: {
-					x: [0,0.7],
-					y: [0,0.45]
+					x: [0, 0.7],
+					y: [0, 0.45]
 				},
 				scale: 0.55,
 				background: 'skin_liuyan_XiongJuYiZhou_bg.png',
 				skinName: "雄踞益州"
+			},
+			秋霜金枫: {
+				name: "刘焉/秋霜金枫/liuyan_qiushuangjinfeng",
+				x: [0, 0.3],
+				y: [10, 0],
+				scale: 0.6,
+				angle: 0,
+				speed: 1,
+				// teshu: {
+				// 	x: [0, 0.75],
+				// 	y: [0, 0.3],
+				// 	scale: 0.45,
+				// 	name: "刘焉/秋霜金枫/tushe",
+				// 	action:["jineng"]
+				// },// 触发非攻击
+				teshu: "play2",
+				gongji: {
+					x: [0, 0.72],
+					y: [0, 0.4],
+					scale: 0.5,
+					name: "刘焉/秋霜金枫/tushe",
+					action: ["gongji", "jineng"]  // 出杀或攻击时随机播放一个动画
+				},
+				shizhounian: true,  // 标明这是十周年的骨骼, 出场位置和出框默认会在原地, 并且返回也不是位移
+				chuchang: {  // 第一回合出场
+					name: "刘焉/秋霜金枫/chuchang",
+					action: "play",
+					scale: 0.45
+				},
+				shan: "play2", // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
+				background: "刘焉/秋霜金枫/liuyan_qiushuangjinfeng_bg.png",
+				skinName: "秋霜金枫",
+				// 指示线
+				zhishixian: {
+					name: '刘焉/秋霜金枫/shouji2',
+					scale: 0.45,
+					speed: 0.7,
+					effect: {  // 爆炸特效 一般是shouji
+						name: '刘焉/秋霜金枫/shouji',  // 指示线
+						scale: 0.6,
+						speed: 0.7,
+					}
+				}
 			},
 		},
 		re_liru: {
@@ -1003,7 +1056,120 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				},
 				skinName: "明良千古"
 			},
-		}
+		},
+		shen_xunyu: {
+			清明虎年: {
+				name: 'skin_shen_xunyu_QingMingHuNian',
+				x: [0, 0.6],
+				y: [0, 0.3],
+				scale: 0.5,
+				background: 'skin_shen_xunyu_QingMingHuNian_bg.png',
+			},
+		},
+		qinmi: {
+			冠绝天下: {
+				name: '秦宓_冠绝天下/39302_2/XingXiang',
+				x: [0, 0.52],
+				y: [0, 0.5],
+				scale: 0.41,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				action: 'DaiJi',
+				background: 'skin_qinmi_GuanJueTianXia_bg.png',
+				skinName: "冠绝天下",
+				beijing: {
+					name: '秦宓_冠绝天下/39302_2/BeiJing',
+					scale: 0.5,
+					x: [0, 0.6],
+					y: [0, 0.6],
+				},
+			},
+		},
+		shen_lvmeng: {
+			兼资文武: {
+				scale: 0.4,
+				name: "神吕蒙/兼资文武/XingXiang",
+				beijing: {
+					scale: 0.5,
+					name: "神吕蒙/兼资文武/BeiJing",
+					x: [0, 0.6],
+					y: [0, 0.6],
+				},
+				x: [0, 0.5],
+				y: [0, 0.5],
+			},
+		},
+		hujinding: {
+			金粉福颜: {
+				name: '胡金定-金粉福颜/daiji2',
+				"scale": 0.9,
+				"x": [
+					0,
+					0.54
+				],
+				"y": [
+					0,
+					0.42
+				],
+				// background: '何太后战场骨骼/skin_hetaihou_zhanchangjueban_bg.png',
+				beijing: {
+					name: '胡金定-金粉福颜/beijing',
+					scale: 0.3,
+					x: [0, 0.98],
+					y: [0, 0.47]
+				},
+				// teshu: 'play2',  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
+				teshu: {
+					name:"胡金定-金粉福颜/chuchang2",
+					action: ['gongji', 'jineng'] ,  // action不写是默认播放第一个动作
+					// action: ['jineng'] ,  // action不写是默认播放第一个动作
+					scale: 0.7,
+				},  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
+				play2: 'play2',
+				chuchang: {
+					name:"胡金定-金粉福颜/chuchang",
+					scale: 0.6,
+					action: 'play'  // 不填写默认是十周年的play
+				},
+				gongji: {
+					name:"胡金定-金粉福颜/chuchang2",
+					action: ['gongji', 'jineng'] ,  // action不写是默认播放第一个动作
+					// action: ['jineng'] ,  // action不写是默认播放第一个动作
+					scale: 0.7,
+					// x: [0, 0.5],
+					// y: [0, 0.5],
+				},  // 通常是出框需要播放的参数
+				shizhounian: true,
+				// 十周年指示线特效包括shouji和shouji2
+				zhishixian: {
+					name: '胡金定-金粉福颜/shouji2',  // 指示线
+					scale: 0.6,
+					speed: 1.5,
+					effect: {  // 爆炸特效 一般是shouji
+						name: '胡金定-金粉福颜/shouji',  // 指示线
+						scale: 0.6,
+						speed: 0.7,
+						delay: 0.5,
+					}
+				}
+			}
+		},
+		re_zhugeliang: {
+			武侯祠: {
+				name: 'skin_zhugeliang_WuHouCi',
+				x: [0, -0.173],
+				y: [0, 0.38],
+				scale: 0.36,
+				angle: -15,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				background: 'skin_zhugeliang_WuHouCi_bg.png',
+			},
+		},
 	};
 	
 	var extend = {

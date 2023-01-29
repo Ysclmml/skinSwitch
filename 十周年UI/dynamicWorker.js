@@ -204,13 +204,21 @@ function playSkin(dynamic, data) {
 		let node = dynamic.playSpine(sprite.player.beijing)
 		node.isbeijing = true
 
+		// 获取所有actions
+		let chuChangLabel = ''
+		let labels = getAllActionLabels(node)
+		for (let label of labels) {
+			let lowerLabel = label.toLowerCase()
+			if (lowerLabel === 'chuchang') {
+				chuChangLabel = label
+				break
+			}
+		}
 		// 查找背景是否也有出场标签
-		let animation = node.skeleton.data.findAnimation("ChuChang");
-		if (animation) {
-			node.skeleton.state.setAnimation(0,"ChuChang",false, 0);
-
+		// let animation = node.skeleton.data.findAnimation("ChuChang");
+		if (chuChangLabel) {
+			node.skeleton.state.setAnimation(0,chuChangLabel,false, 0);
 			// 获取所有actions
-			let labels = getAllActionLabels(node)
 
 			for (let label of labels) {
 				let lowerLabel = label.toLowerCase()
@@ -305,6 +313,7 @@ function randomChoice(arr) {
 function getAllActionLabels(node) {
 	// 获取所有actions
 	let animations = node.skeleton.data.animations;
+	console.log('animations:: sss', animations)
 	let res = []
 	for (let ani of animations) {
 		res.push(ani.name)
@@ -766,6 +775,7 @@ function action(data) {
 	} else {
 		animation = apnode.skeleton.data.findAnimation(data.action)
 		if (!animation) return
+		apnode.skeleton.state.data.setMix(apnode.player.action || apnode.skeleton.defaultAction, animation.name, 1)
 		apnode.skeleton.state.setAnimationWith(0, animation, false)
 		apnode.skeleton.state.addAnimation(0, apnode.player.action || apnode.skeleton.defaultAction, true, 0)
 	}

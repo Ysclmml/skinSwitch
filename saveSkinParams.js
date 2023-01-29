@@ -251,6 +251,20 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 }
             }
         }
+    },
+    "re_zhugeliang": {
+        "武侯祠": {
+            "scale": 0.25,
+            "x": [
+                0,
+                0.23
+            ],
+            "y": [
+                0,
+                0.5
+            ],
+            "angle": -15
+        }
     }
 }
 }
