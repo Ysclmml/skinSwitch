@@ -407,6 +407,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     let args = null
 
                                     if (dy != null) {
+                                        if (event.triggername !== 'useCardBefore' && event._trigger.targets.length < 2) {
+                                            return
+                                        }
                                         let hand = dui.boundsCaches.hand;
                                         let x1, y1
 
@@ -451,11 +454,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         }
                                     }
 
-                                    if (!(player.__lastGongji && new Date().getTime() - player.__lastGongji < 200)) {
-                                        skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', args ? {attackArgs: args} : {})
-                                    }
-                                    player.__lastGongji = new Date().getTime()
+                                    let timeDelta = new Date().getTime() - player.__lastGongji
 
+                                    if (!player.__lastGongji || timeDelta >= 200) {
+                                        skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', args ? {attackArgs: args} : {});
+                                        player.__lastGongji = new Date().getTime()
+                                    } else if (player.__lastGongji && timeDelta < 200 ) {
+                                        if (args && event.triggername !== 'useCardBefore' && event._trigger.targets.length >= 2) {
+                                            skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', {attackArgs: args, multiZhiShi: true})
+                                            player.__lastGongji = new Date().getTime()
+                                        }
+                                    }
                                     // 放弃使用十周年ui的dcdAni
                                     // if (dy != null) {
                                     //     // 加载骨骼
@@ -4531,7 +4540,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  */
 
 /** 1.10版本更新
- 1. 修改logSkill, 让技能在释放前触发特殊动画
+ 1. 修复logSkill bug, 让技能在释放前触发特殊动画
  2. 添加指示线测试. 暂时效果不算很好, 比较乱
  3. 预览spine功能添加动画时间显示
  */

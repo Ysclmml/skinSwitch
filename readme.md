@@ -137,6 +137,53 @@ caoying:{
 			}
 ```
 
+2023-1-29添加
+
+十周年真动皮有的还有指示线, 可以添加指示线, 参数示例
+
+```js
+lvlingqi: {
+			'战场绝版': {
+				name: '吕玲绮/战场绝版/daiji2',  // 可以直接文件夹带名字
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: 1,
+				gongji: {
+					name: '吕玲绮/战场绝版/chuchang2',
+					scale: 0.7,
+					action: ['gongji', 'jineng'],  // 现在可以直接填写多个攻击标签, 这样会随机使用一个攻击动作播放
+				},
+				teshu: 'play2',  // 特殊标签刚刚写错了
+				beijing: {
+					name: '吕玲绮/战场绝版/beijing',
+					scale: 0.4,
+					x: [0, 1.2],
+					y: [0, 0.5]
+				},
+				chuchang: {
+					name: '吕玲绮/战场绝版/chuchang',
+					scale: 0.8,
+					action: 'play'
+				},
+				shizhounian: true,
+				// 十周年指示线特效包括shouji和shouji2
+				zhishixian: {
+					name: '吕玲绮/战场绝版/shouji2',  // 指示线
+					scale: 0.8,
+					speed: 0.5,
+					delay: 0.5,  // 指示线在骨骼攻击多久后出现, 区间[0, 1], 默认0
+					effect: {  // 爆炸特效 一般是shouji
+						name: '吕玲绮/战场绝版/shouji',  // 指示线
+						scale: 0.6,
+						speed: 0.7,
+						delay: 0.2,  // 在指示线播放多久之后播放爆炸骨骼特效, [0, 0.1]
+					}
+				}
+			}
+		},
+
+```
+
 
 
 ```js

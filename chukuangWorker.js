@@ -175,6 +175,11 @@ class PlayerAnimation {
             setPos(playNode, data);
         }
         playNode.opacity = 1
+        this.playZhiShiXian(playNode, data, showTime)
+    }
+
+    // 播放指示线
+    playZhiShiXian(playNode, data, showTime) {
         // 攻击动作播放指示线动画
         if (data.action === 'GongJi') {
             if (playNode.actionParams.attackArgs) {
@@ -203,9 +208,20 @@ class PlayerAnimation {
 
                                 let sprite = Object.assign({}, dy)
 
+                                let x1, y1
                                 // 获取当前攻击角色到被攻击角色的角度, 然后进行偏移
-                                let x1 = playNode.x
-                                let y1 = attackArgs.bodySize.bodyHeight - playNode.y
+                                if (Array.isArray(playNode.x)) {
+                                    x1 = attackArgs.bodySize.bodyWidth * playNode.x[1] + playNode.x[0]
+                                } else {
+                                    x1 = playNode.x
+                                }
+
+                                if (Array.isArray(playNode.y)) {
+                                    y1 = attackArgs.bodySize.bodyHeight - attackArgs.bodySize.bodyHeight * playNode.y[1] - playNode.y[0]
+                                } else {
+                                    y1 = attackArgs.bodySize.bodyHeight - playNode.y
+                                }
+
                                 let angle = Math.round(Math.atan2(y1 - y2, x1 - x2) / Math.PI * 180)
 
                                 sprite.angle = (dy.angle || 0) + 180 - angle
@@ -229,14 +245,18 @@ class PlayerAnimation {
                                 }
                                 sprite.x = endX
                                 sprite.y = endY
+
+
                                 let dis = getDis(startX, x2, startY, y2)
                                 if (dis < attackArgs.bodySize.bodyHeight / 2) {
-                                    let f = getLineFunc(startX, x2, startY, y2)
-                                    let newX = endX + (endX < startX ? -1 : 1) * attackArgs.bodySize.bodyHeight / 3
-                                    let newY = f(newX)
+                                    // let f = getLineFunc(startX, x2, startY, y2)
+                                    // let newX = endX + (endX < startX ? -1 : 1) * attackArgs.bodySize.bodyHeight / 6
+                                    // let newY = f(newX)
+                                    // console.log('new...', newX, newY)
+                                    sprite.scale = (sprite.scale || 1) * 0.6
 
-                                    sprite.x = newX
-                                    sprite.y = attackArgs.bodySize.bodyHeight - newY
+                                    // sprite.x = newX
+                                    // sprite.y = attackArgs.bodySize.bodyHeight - newY
                                 }
                                 let node = this.anni.playSpine(sprite)
                                 if (!zhishixianTime) {
@@ -287,7 +307,10 @@ class PlayerAnimation {
             return this.playChuKuangSpine(playedSprite, {showTime: actionParams.showTime}, data)
         }
 
-        playNode.skeleton.state.setAnimation(0, playNode.action, false)
+        if (!(actionParams.attackArgs && actionParams.multiZhiShi)) {
+            playNode.skeleton.state.setAnimation(0, playNode.action, false);
+        }
+
         // playNode.skeleton.setToSetupPose()
         playNode.completed = false
         playNode.skeleton.completed = true
