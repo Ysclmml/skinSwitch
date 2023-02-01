@@ -1,5 +1,7 @@
 'use strict';
-importScripts('spine.js', 'animation.js', '../皮肤切换/settings.js');
+importScripts('spine.js', 'animation.js', 'settings.js');
+
+console.log('new worker...')
 
 Array.prototype.remove = function (item) {
 	var index = this.indexOf(item);
@@ -41,7 +43,7 @@ function preLoadChuKuangSkel(dynamic, apnode) {
 	let pLoad = function (actionParams) {
 		if (actionParams) {
 			if (!dynamic.hasSpine(actionParams.name)) {
-				dynamic.loadSpine(actionParams.name, 'skel', function () {
+				dynamic.loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', function () {
 					console.log('预加载出场骨骼成功')
 				}, function (data) {
 					console.log('播放骨骼失败, 参数: ', data)
@@ -50,7 +52,7 @@ function preLoadChuKuangSkel(dynamic, apnode) {
 		}
 	}
 	let arr = [apnode.name]
-	for (let act of [apnode.player.gongjiAction, apnode.player.gongjiAction, apnode.player.chuchangAction]) {
+	for (let act of [apnode.player.gongjiAction]) {
 		if (act && !arr.includes(act.name)) {
 			arr.push(act.name)
 			pLoad(act)
@@ -69,7 +71,10 @@ function playSkin(dynamic, data) {
 	let sprite = (typeof data.sprite == 'string') ? {name: data.sprite} : data.sprite;
 	sprite.loop = true;
 
+
 	let player = sprite.player
+
+	sprite.alpha = player.alpha
 
 	let initPlayerGongJi = function () {
 		if (!player.gongji) {
@@ -162,7 +167,7 @@ function playSkin(dynamic, data) {
 		}
 		if (firstTask) {
 			loadTasks.isRunning = true
-			console.log('task=======', t++, firstTask.isBeiJing)
+			// console.log('task=======', t++, firstTask.isBeiJing)
 			firstTask()
 		}
 	}
@@ -195,6 +200,8 @@ function playSkin(dynamic, data) {
 	let runBeijing = () => {
 		sprite.player.beijing.loop = true
 		sprite.player.beijing.id = chukuangId++
+		if (sprite.player.beijing.alpha == null)
+			sprite.player.beijing.alpha = sprite.player.alpha
 
 		// 如果是双将的话, 复制裁剪.
 		if (sprite.clip) {
@@ -241,7 +248,7 @@ function playSkin(dynamic, data) {
 			run(node);
 		} else {
 			let task = function () {
-				dynamic.loadSpine(sprite.name, 'skel', () => {
+				dynamic.loadSpine(sprite.name, sprite.player.json ? 'json': 'skel', () => {
 					task.finish = true
 					// loadTasks.remove(task)
 					loadTasks.isRunning = false
@@ -251,9 +258,6 @@ function playSkin(dynamic, data) {
 			task.isBeiJing = false
 			loadTasks.push(task)
 			runTask()
-			// dynamic.loadSpine(sprite.name, 'skel', () => {
-			// 	run(node)
-			// })
 		}
 	}
 
@@ -263,7 +267,7 @@ function playSkin(dynamic, data) {
 			runBeijing()
 		} else {
 			let task = function () {
-				dynamic.loadSpine(sprite.player.beijing.name, 'skel', function () {
+				dynamic.loadSpine(sprite.player.beijing.name, sprite.player.beijing.json ? 'json': 'skel', function () {
 					task.finish = true
 					// loadTasks.remove(task)
 					loadTasks.isRunning = false
@@ -273,16 +277,15 @@ function playSkin(dynamic, data) {
 			task.isBeiJing = true
 			loadTasks.push(task)
 			runTask()
-			// dynamic.loadSpine(sprite.player.beijing.name, 'skel', function () {
-			// 	runBeijing()
-			// });
+
 		}
 	} else {
 		if (dynamic.hasSpine(sprite.name)) {
 			run();
 		} else {
 			let task = function () {
-				dynamic.loadSpine(sprite.name, 'skel', () => {
+				let skelType = sprite.player.json ? 'json': 'skel'
+				dynamic.loadSpine(sprite.name, skelType, () => {
 					task.finish = true
 					// loadTasks.remove(task)
 					loadTasks.isRunning = false
@@ -338,7 +341,7 @@ function getLabelIgnoreCase(node, label) {
 
 function create(data) {
 	if (dynamics.length >= 4) return;
-	let dynamic = new duilib.AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas);
+	let dynamic = new newDuilib.AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas);
 	dynamic.id = data.id;
 	dynamics.push(dynamic);
 }
@@ -1387,6 +1390,7 @@ function completeParams(node) {
 		}
 	}
 	node.player.gongji = gongjiAction
+	gongjiAction.alpha = gongjiAction.alpha == null ? node.player.alpha : gongjiAction.alpha
 	node.player.teshu = teshuAction  // 重新赋值
 
 	node.player.gongjiAction = gongjiAction

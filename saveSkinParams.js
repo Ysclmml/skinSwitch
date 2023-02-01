@@ -78,6 +78,17 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     0.54
                 ]
             }
+        },
+        "测试alpha": {
+            "scale": 0.3,
+            "x": [
+                0,
+                0.69
+            ],
+            "y": [
+                0,
+                -0.06
+            ]
         }
     },
     "xushao": {

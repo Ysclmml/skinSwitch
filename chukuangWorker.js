@@ -1,14 +1,28 @@
 'use strict';
-importScripts('../十周年UI/spine.js', '../十周年UI/animation.js');
+importScripts('./spine.js', './animation.js');
 let window = self;
 let devicePixelRatio = 1;
 let documentZoom = 1;
 let HTMLCanvasElement = function () {
     return 'HTMLCanvasElement';
 };
-let HTMLElement = function () {
-    return 'HTMLElement';
+
+class HTMLElement {
+
+    constructor(bound, bodySize) {
+        this.boundRect = bound
+        this.bodySize = bodySize
+    }
+
+    getBoundingClientRect() {
+        return this.boundRect
+    }
 }
+
+// let HTMLElement = function () {
+//     return 'HTMLElement';
+// }
+
 
 Array.prototype.remove = function (item) {
     var index = this.indexOf(item);
@@ -25,7 +39,7 @@ class PlayerAnimation {
 
     constructor(data) {
         console.log('create data----', data)
-        this.anni = new duilib.AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas)
+        this.anni = new newDuilib.AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas)
         this.playerAni = {}  // 这个用来管理每个角色的Id及其skinId的配置数据
 
         this.playerState = {}  // 管理每个角色出框状态, 同时保证一个角色只能有一个出框状态.
@@ -39,9 +53,10 @@ class PlayerAnimation {
         this.completeParams(player)
         let pLoad = function (actionParams, times) {
             if (actionParams) {
+                actionParams.alpha = actionParams.alpha == null ? player.alpha : actionParams.alpha
                 if (!_this.anni.hasSpine(actionParams.name)) {
-
-                    _this.anni.loadSpine(actionParams.name, 'skel', function () {
+                    let skelType = actionParams.json ? 'json': 'skel'
+                    _this.anni.loadSpine(actionParams.name, skelType, function () {
                         console.log('预加载骨骼成功', actionParams.name)
                     }, function () {
                         console.log('播放骨骼失败, 参数: ', actionParams, '次数: ', times)
@@ -96,7 +111,7 @@ class PlayerAnimation {
         }
 
         if (!this.anni.hasSpine(actionParams.name)) {
-            this.anni.loadSpine(actionParams.name, "skel", () => {
+            this.anni.loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', () => {
                 this.playChuKuang(player, actionParams, data)
             }, this.errPlaySpine)
         } else {
@@ -105,8 +120,6 @@ class PlayerAnimation {
     }
 
     playChuKuangSpine(playNode, animation, data, notSetPos) {
-
-        console.log(' playNode.actionParams ====> ', playNode.actionParams)
 
         // 是否要取消连续出框
         if (!this.playerState[data.id])  {}this.playerState[data.id] = {'time': new Date().getTime()};
@@ -175,25 +188,32 @@ class PlayerAnimation {
             setPos(playNode, data);
         }
         playNode.opacity = 1
-        this.playZhiShiXian(playNode, data, showTime)
+        this.playZhiShiXian(playNode, data, animation)
     }
 
     // 播放指示线
-    playZhiShiXian(playNode, data, showTime) {
+    playZhiShiXian(playNode, data, animation) {
         // 攻击动作播放指示线动画
         if (data.action === 'GongJi') {
             if (playNode.actionParams.attackArgs) {
                 let attackArgs = playNode.actionParams.attackArgs
                 let dy = playNode.player.zhishixian
                 if (dy != null) {
-
+                    let delay = dy.delay
+                    if (animation.playRate && delay) {
+                        delay = delay - animation.playRate
+                        if (delay < 0) {
+                            delay = 0
+                        }
+                    }
                     setTimeout(() => {
                         let playBaoZha = () => {
                             for (let p of attackArgs.targets) {
                                 let sprite = Object.assign({}, dy.effect)
-                                sprite.x = p.x
-                                sprite.y = attackArgs.bodySize.bodyHeight - p.y
-                                this.anni.playSpine(sprite)
+                                // sprite.x = p.x
+                                // sprite.y = attackArgs.bodySize.bodyHeight - p.y
+                                let referNode = new HTMLElement(p.boundRect, attackArgs.bodySize)
+                                this.anni.playSpine(sprite, {referNode: referNode})
                             }
                         }
 
@@ -243,8 +263,8 @@ class PlayerAnimation {
                                         return k * x + b
                                     }
                                 }
-                                sprite.x = endX
-                                sprite.y = endY
+                                // sprite.x = endX
+                                // sprite.y = endY
 
 
                                 let dis = getDis(startX, x2, startY, y2)
@@ -258,7 +278,8 @@ class PlayerAnimation {
                                     // sprite.x = newX
                                     // sprite.y = attackArgs.bodySize.bodyHeight - newY
                                 }
-                                let node = this.anni.playSpine(sprite)
+                                let referNode = new HTMLElement(p.boundRect, attackArgs.bodySize)
+                                let node = this.anni.playSpine(sprite, {referNode: referNode})
                                 if (!zhishixianTime) {
                                     let ani = node.skeleton.data.animations[0]
                                     zhishixianTime = ani.duration
@@ -272,7 +293,7 @@ class PlayerAnimation {
                                 // 获取指示线的动画时间, 在到达武将框后播放
                                 setTimeout(() => {
                                     if (!this.anni.hasSpine(dy.effect.name)) {
-                                        this.anni.loadSpine(dy.effect.name, 'skel', playBaoZha)
+                                        this.anni.loadSpine(dy.effect.name, dy.effect.json ? 'json': 'skel', playBaoZha)
                                     } else {
                                         playBaoZha()
                                     }
@@ -281,11 +302,11 @@ class PlayerAnimation {
                         }
 
                         if (!this.anni.hasSpine(dy.name)) {
-                            this.anni.loadSpine(dy.name, 'skel', playZhishixian)
+                            this.anni.loadSpine(dy.name, dy.json ? 'json': 'skel', playZhishixian)
                         } else {
                             playZhishixian()
                         }
-                    }, showTime * (dy.delay || 0))
+                    }, animation.showTime * (delay * 1000 || 0))
 
                 }
             }
@@ -297,7 +318,7 @@ class PlayerAnimation {
         // 重置播放动作与回框倒计时.
         let playNode = actionParams.playNode
         // 这里说明上一次出框已经完成, 可能会让原来的待机显现, 保险起见, 再发一次隐藏的消息
-
+        // 判断上次的动作是否播放完成.
         if (!this.anni.nodes.includes(playNode)) {
             playNode.skeleton.completed = true
             let playedSprite = this.anni.playSpine(playNode.actionParams)
@@ -307,22 +328,46 @@ class PlayerAnimation {
             return this.playChuKuangSpine(playedSprite, {showTime: actionParams.showTime}, data)
         }
 
-        if (!(actionParams.attackArgs && actionParams.multiZhiShi)) {
-            playNode.skeleton.state.setAnimation(0, playNode.action, false);
-        }
+        console.log('连续出框spine...', actionParams.playNode.skeleton.state)
+        let state = actionParams.playNode.skeleton.state
+        let entry = state.tracks[0]
+        let lastTime = entry.animationEnd
+        let curTime = entry.animationLast
 
-        // playNode.skeleton.setToSetupPose()
+        playNode.player = player
+        playNode.actionParams = actionParams
+        if (actionParams.triggername !== 'useCardBefore' && data.action === 'GongJi' && playNode.actionParams.attackArgs) {
+            if (curTime / lastTime >= 0.75) {
+                entry.trackTime = 0
+                console.log('多指重置')
+            } else {
+                lastTime = lastTime - curTime
+                console.log('多指连续')
+            }
+        } else {
+            if (curTime / lastTime >= 0.1) {
+                entry.trackTime = 0
+                console.log('重置----', curTime/lastTime, curTime)
+            } else {
+                lastTime = lastTime - curTime
+                console.log('不重置------', curTime/lastTime, curTime)
+            }
+        }
+        // if (!(actionParams.attackArgs && actionParams.multiZhiShi)) {
+        //     playNode.skeleton.state.setAnimation(0, playNode.action, false);
+        // }
+
         playNode.completed = false
         playNode.skeleton.completed = true
         let notSetPos = false
         if (!player.shizhounian) {
             // 比较当前位置和回框的位置距离, 如果比较小了, 就重新出框
 
-            if ((Math.abs(playNode.renderY - data.player.y)) > data.player.height / 2 || Math.abs(playNode.renderX - data.player.x) > data.player.width / 2){
+            if ((Math.abs(playNode.renderY - data.player.y)) > data.player.height / 3 * 2 || Math.abs(playNode.renderX - data.player.x) > data.player.width / 3 * 2){
                 notSetPos = true
             }
         }
-        this.playChuKuangSpine(playNode, {showTime: actionParams.showTime}, data, notSetPos)
+        this.playChuKuangSpine(playNode, {showTime: lastTime, playRate: entry.trackTime / lastTime}, data, notSetPos)
     }
 
     playChuKuang(player, actionParams, data) {
@@ -565,10 +610,9 @@ class PlayerAnimation {
 }
 
 function setShiZhouNianGongJiPos(apnode, data) {
-    let xRate = data.player.x / data.player.bodyWidth
-    let yRate = data.player.y / data.player.bodyHeight
 
     if (data.me) {
+        let xRate = data.player.x / data.player.bodyWidth
         if (xRate < 0.5) {
             apnode.x = data.player.x + data.player.width
         } else {
@@ -577,38 +621,25 @@ function setShiZhouNianGongJiPos(apnode, data) {
         // apnode.x = data.player.x - data.player.width / 3
         apnode.y = data.player.y + data.player.height * 1.1
     } else {
+        let xRate = data.player.x / data.player.bodyWidth
+        let yRate = (data.player.y + data.player.height) / data.player.bodyHeight
+
         // 根据每个人当时的位置偏移
         apnode.x = data.player.x + data.player.width / 2
-        apnode.y = data.player.y + data.player.height / 2
+        apnode.y = data.player.y + data.player.height / 2 - 25
         if (xRate < 0.15) {
-            apnode.x += data.player.width * 0.7
-        } else if (xRate < 0.25) {
-            apnode.x += data.player.width * 0.6
+            apnode.x += data.player.width * 0.3
         }
 
-        if (xRate > 0.8) {
-            apnode.x -= data.player.width * 0.7
-        } else if (xRate > 0.7) {
-            apnode.x -= data.player.width * 0.6
+        if (xRate > 0.85) {
+            apnode.x -= data.player.width * 0.3
         }
 
-        if (yRate < 0.2) {
-            apnode.y += data.player.height * 0.4
-        } else if (yRate < 0.3) {
-            apnode.y += data.player.height * 0.3
-        } else if (yRate < 0.4) {
-            apnode.y += data.player.height * 0.2
-        }
 
         if (yRate > 0.9) {
-            apnode.y -= data.player.height * 0.7
-        } else if (yRate > 0.8) {
-            apnode.y -= data.player.height * 0.6
-        } else if (yRate > 0.7) {
-            apnode.y -= data.player.height * 0.4
-        } else if (yRate > 0.6) {
             apnode.y -= data.player.height * 0.3
         }
+
     }
 }
 
@@ -631,7 +662,6 @@ function setPos(apnode, data) {
         else if (data.action === 'TeShu') {
             actionParams = apnode.player.teshuAction
             if (actionParams.posAuto && apnode.player.shizhounian) {
-                console.log('teshu:  ', actionParams)
                 return setShiZhouNianGongJiPos(apnode, data)
             }
         } else if (data.action === 'chuchang') {
@@ -647,9 +677,9 @@ function setPos(apnode, data) {
         data.player.y += 100
     } else {
         if (data.action === 'chuchang') {
-            // apnode.x = data.player.x + data.player.width / 2
-            // apnode.y = data.player.y + data.player.height / 2
-            return setShiZhouNianGongJiPos(apnode, data)
+            apnode.x = data.player.x + data.player.width / 2
+            apnode.y = data.player.y + data.player.height / 2 - 20
+            return // setShiZhouNianGongJiPos(apnode, data)
         }
         else if (data.action === 'GongJi') {
             if (apnode.player.shizhounian) {
@@ -872,19 +902,28 @@ function isChuKuang(data) {
     // 如果已经是出框状态, 直接返回, 不能在短时间内连续请求
     let playerState = playerAnimation.playerState[data.id]
     if (playerState) {
-        if (playerState.action != null && playerState.action !== data.action){
-            return
+        if (data.action === 'chuchang') {
+            playerState['time'] = new Date().getTime()
+        }
+        else {
+            if (playerState.action != null && playerState.action !== data.action) {
+                return
+            }
+            if (playerState.lastAction === 'chuchang' && playerState.time && new Date().getTime() - playerState.time <= 200) {
+                return
+            }
+            // 延时100ms执行动作, 防止两次触发相近
+            if (playerState.time && new Date().getTime() - playerState.time < 50) {
+                if (playerState.lastAction && playerState.lastAction !== data.action) {
+                    setTimeout(() => {
+                        isChuKuang(data)
+                    }, 100)
+                }
+                return;
+            }
+
         }
 
-        // 延时100ms执行动作, 防止两次触发相近
-        if (playerState.time && new Date().getTime() - playerState.time < 50) {
-            if (playerState.lastAction && playerState.lastAction !== data.action) {
-                setTimeout(() => {
-                    isChuKuang(data)
-                }, 100)
-            }
-            return;
-        }
         playerState['time'] = new Date().getTime()
         playerState['lastAction'] = data.action
     }

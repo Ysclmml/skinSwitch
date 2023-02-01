@@ -1,8 +1,8 @@
 'use strict';
-var duilib;
-(function(duilib){
+var newDuilib;
+(function(newDuilib){
 	
-	duilib.throttle = function (func, timeout, context) {
+	newDuilib.throttle = function (func, timeout, context) {
 		var args;
 		var timer;
 		var previous;
@@ -29,7 +29,7 @@ var duilib;
 		}
 	};
 	
-	duilib.observeSize = (function(){
+	newDuilib.observeSize = (function(){
 		if (!self.ResizeObserver)
 			return null;
 		
@@ -56,16 +56,16 @@ var duilib;
 		}
 	})();
 	
-	duilib.lerp = function(min, max, fraction){
+	newDuilib.lerp = function(min, max, fraction){
 		return (max - min) * fraction + min;
 	};
 	
-	duilib.ease = function(fraction){
-		if (!duilib.b3ease) duilib.b3ease = new duilib.CubicBezierEase(0.25, 0.1, 0.25, 1);
-		return duilib.b3ease.ease(fraction);
+	newDuilib.ease = function(fraction){
+		if (!newDuilib.b3ease) newDuilib.b3ease = new newDuilib.CubicBezierEase(0.25, 0.1, 0.25, 1);
+		return newDuilib.b3ease.ease(fraction);
 	},
 	
-	duilib.CubicBezierEase = (function(){
+	newDuilib.CubicBezierEase = (function(){
 		function CubicBezierEase (p1x, p1y, p2x, p2y) {
 			this.cX = 3 * p1x;
 			this.bX = 3 * (p2x - p1x) - this.cX;
@@ -99,7 +99,7 @@ var duilib;
 		return CubicBezierEase;
 	})();
 	
-	duilib.TimeStep = (function(){
+	newDuilib.TimeStep = (function(){
 		function TimeStep (initParam) {
 			this.start = initParam.start;
 			this.current = initParam.start;
@@ -112,7 +112,7 @@ var duilib;
 		
 		TimeStep.prototype.update = function (delta) {
 			this.time += delta;
-			this.percent = duilib.ease(Math.min(this.time / this.duration, 1));
+			this.percent = newDuilib.ease(Math.min(this.time / this.duration, 1));
 			
 			var start, end;
 			var isArray = false;
@@ -131,9 +131,9 @@ var duilib;
 			}
 			
 			if (isArray) {
-				this.current = [duilib.lerp(start[0], end[0], this.percent), duilib.lerp(start[1], end[1], this.percent)];
+				this.current = [newDuilib.lerp(start[0], end[0], this.percent), newDuilib.lerp(start[1], end[1], this.percent)];
 			} else {
-				this.current = duilib.lerp(start[0], end[0], this.percent);
+				this.current = newDuilib.lerp(start[0], end[0], this.percent);
 			}
 			
 			if (this.time >= this.duration) this.completed = true;
@@ -142,7 +142,7 @@ var duilib;
 		return TimeStep;
 	})();
 	
-	duilib.APNode = (function(){
+	newDuilib.APNode = (function(){
 		function APNode(initParam) {
 			if (initParam == undefined) initParam = {};
 			this.id = undefined;								// 内部属性，不可更改
@@ -180,6 +180,7 @@ var duilib;
 			this.flipX = initParam.flipX;
 			this.flipY = initParam.flipY;
 			this.player = initParam.player
+			this.premultipliedAlpha = initParam.alpha  // alpha预乘
 		};
 		
 		APNode.prototype.fadeTo = function (opacity, duration) {
@@ -241,7 +242,7 @@ var duilib;
 					var rect = domNode.getBoundingClientRect();
 					this.referBounds = {
 						x: rect.left,
-						y: decadeUI.get.bodySize().height - rect.bottom,
+						y: domNode.bodySize.bodyHeight - rect.bottom,
 						width: rect.width,
 						height: rect.height,
 					};
@@ -412,7 +413,7 @@ var duilib;
 				timestep.completed = false;
 				timestep.duration = duration;
 			} else {
-				timestep = this.timestepMap[key] = new duilib.TimeStep({
+				timestep = this.timestepMap[key] = new newDuilib.TimeStep({
 					start: start,
 					end: end,
 					duration: duration,
@@ -425,7 +426,7 @@ var duilib;
 		return APNode;
 	})();
 
-	duilib.AnimationPlayer = (function(){
+	newDuilib.AnimationPlayer = (function(){
 		/**
 		 * spine动画播放对象
 		 * @param {string} pathPrefix  存放skel相关文件的地址, 供spine api的assetManager调用.
@@ -753,16 +754,16 @@ var duilib;
 			
 			var skeletons = this.spine.skeletons;
 			var skeleton;
-			if (!(sprite instanceof duilib.APNode && sprite.skeleton.completed)) {
+			if (!(sprite instanceof newDuilib.APNode && sprite.skeleton.completed)) {
 				for (var i = 0; i < skeletons.length; i++) {
 					skeleton = skeletons[i];
 					if (skeleton.name == sprite.name && skeleton.completed) break;
 					skeleton = null;
 				}; if (!skeleton) skeleton = this.prepSpine(sprite.name);
 				
-				if (!(sprite instanceof duilib.APNode)) {
+				if (!(sprite instanceof newDuilib.APNode)) {
 					var param = sprite;
-					sprite = new duilib.APNode(sprite);
+					sprite = new newDuilib.APNode(sprite);
 					sprite.id = param.id == undefined ? this.BUILT_ID++ : param.id;
 					this.nodes.push(sprite);
 				}
@@ -775,14 +776,17 @@ var duilib;
 			skeleton.completed = false;
 
 			if (position != undefined) {
-				sprite.x = position.x;
-				sprite.y = position.y;
-				sprite.height = position.height;
-				sprite.width = position.width;
-				sprite.scale = position.scale;
-				sprite.angle = position.angle;
-				sprite.referNode = position.parent;
-				sprite.referFollow = position.follow;
+				for (let k in position) {
+					sprite[k] = position[k]
+				}
+				// sprite.x = position.x;
+				// sprite.y = position.y;
+				// sprite.height = position.height;
+				// sprite.width = position.width;
+				// sprite.scale = position.scale;
+				// sprite.angle = position.angle;
+				// sprite.referNode = position.parent;
+				// sprite.referFollow = position.follow;
 			}
 			
 			var entry = skeleton.state.setAnimation(0, sprite.action ? sprite.action : skeleton.defaultAction, sprite.loop);
@@ -1024,13 +1028,13 @@ var duilib;
 		return AnimationPlayer;
 	})();
 	
-	duilib.AnimationPlayerPool = (function(){
+	newDuilib.AnimationPlayerPool = (function(){
 		function AnimationPlayerPool(size, pathPrefix, thisName){
 			if (!self.spine) return console.error('spine 未定义.');
 			
 			this.name = thisName;
 			this.animations = new Array(size ? size : 1);
-			for (var i = 0; i < this.animations.length; i++) this.animations[i] = new duilib.AnimationPlayer(pathPrefix);
+			for (var i = 0; i < this.animations.length; i++) this.animations[i] = new newDuilib.AnimationPlayer(pathPrefix);
 			
 		};
 		
@@ -1084,14 +1088,14 @@ var duilib;
 		return AnimationPlayerPool;
 	})();
 	
-	duilib.BUILT_ID = 0;
-	duilib.DynamicWorkers = new Array(3);
-	duilib.DynamicPlayer = (function(){
+	newDuilib.BUILT_ID = 0;
+	newDuilib.DynamicWorkers = new Array(3);
+	newDuilib.DynamicPlayer = (function(){
 
 		// 动态皮肤管理对象, 这个是绑定在角色player上的, 军八国战最多有8个角色, 所以定义的WebWorker有两个, 并且每个worker的capacity容量为4
 		// 每个DynamicPlayer对象拥有各自的属性.
 		function DynamicPlayer(pathPrefix){
-			this.id = duilib.BUILT_ID++;  // 这个是全局的Build_id. 用来表示这个动态皮肤播放对象的id, 暂时只看到new DynamicPlayer对象才会导致duilib.BUILT_ID++
+			this.id = newDuilib.BUILT_ID++;  // 这个是全局的Build_id. 用来表示这个动态皮肤播放对象的id, 暂时只看到new DynamicPlayer对象才会导致newDuilib.BUILT_ID++
 			this.dpr = 1;
 			this.width = 120;
 			this.height = 180;
@@ -1101,10 +1105,10 @@ var duilib;
 			var offscreen = self.OffscreenCanvas != undefined;
 			if (offscreen) {
 				offscreen = false;
-				var workers = duilib.DynamicWorkers;
+				var workers = newDuilib.DynamicWorkers;
 				for (var i = 0; i < workers.length; i++) {
 					if (workers[i] == undefined) {
-						workers[i] = new Worker(decadeUIPath + 'dynamicWorker.js');
+						workers[i] = new Worker(skinSwitch.url + 'dynamicWorker.js');
 						workers[i].capacity = 0;  // 每一个worker控制4个角色的动态皮肤对象, 来进行动皮的播放
 					} else if (workers[i].capacity >= 4) {
 						continue;
@@ -1114,7 +1118,7 @@ var duilib;
 					// 创建一个离屏渲染的canvas对象
 					this.canvas = document.createElement('canvas');
 					this.canvas.className = 'animation-player';
-					duilib.observeSize(this.canvas, duilib.throttle(function(newSize){
+					newDuilib.observeSize(this.canvas, newDuilib.throttle(function(newSize){
 						this.height = Math.round(newSize.height);
 						this.width  = Math.round(newSize.width);
 						this.update();
@@ -1124,6 +1128,13 @@ var duilib;
 					// https://developer.mozilla.org/zh-CN/docs/Web/API/OffscreenCanvas
 					var canvas = this.canvas.transferControlToOffscreen();
 					// worker与主线程的通信方式, 这里是发起一个创建动态皮肤的请求
+
+					if (skinSwitch.isMobile()) {
+						pathPrefix = '..//十周年UI/' + pathPrefix
+					} else {
+						pathPrefix = '../十周年UI/' + pathPrefix
+					}
+
 					workers[i].postMessage({
 						message: 'CREATE',
 						id: this.id,  // 当前对象id
@@ -1139,10 +1150,10 @@ var duilib;
 			}
 			
 			if (!offscreen) {
-				var renderer = new duilib.AnimationPlayer(decadeUIPath + pathPrefix);
+				var renderer = new newDuilib.AnimationPlayer(decadeUIPath + pathPrefix);
 				this.canvas = renderer.canvas;
 				this.renderer = renderer;
-				dui.bodySensor.addListener(duilib.throttle(function(){
+				dui.bodySensor.addListener(newDuilib.throttle(function(){
 					this.renderer.resized = false;
 				}, 100, this), true);
 			}
@@ -1253,738 +1264,4 @@ var duilib;
 		return DynamicPlayer;
 	})();
 	
-})(duilib || (duilib = {}));
-
-var decadeModule; if (decadeModule)
-decadeModule.import(function(lib, game, ui, get, ai, _status){
-	decadeUI.animation = (function(){
-		var animation = new decadeUI.AnimationPlayer(decadeUIPath + 'assets/animation/', document.body, 'decadeUI-canvas');
-		decadeUI.bodySensor.addListener(function(){ animation.resized = false; }, true);
-		animation.cap = new decadeUI.AnimationPlayerPool(4, decadeUIPath + 'assets/animation/', 'decadeUI.animation');
-		
-		var fileList = [
-			{ name: 'effect_youxikaishi' },
-			{ name: 'effect_youxikaishi_shousha' },
-			{ name: 'effect_baguazhen' },
-			{ name: 'effect_baiyinshizi' },
-			{ name: 'effect_cixiongshuanggujian' },
-			{ name: 'effect_fangtianhuaji' },
-			{ name: 'effect_guanshifu' },
-			{ name: 'effect_gudingdao' },
-			{ name: 'effect_hanbingjian' },
-			{ name: 'effect_qilingong' },
-			{ name: 'effect_qinggangjian' },
-			{ name: 'effect_qinglongyanyuedao' },
-			{ name: 'effect_renwangdun' },
-			{ name: 'effect_shoujidonghua' },
-			{ name: 'effect_tengjiafangyu' },
-			{ name: 'effect_tengjiaranshao' },
-			{ name: 'effect_zhangbashemao' },
-			{ name: 'effect_zhiliao' },
-			{ name: 'effect_zhugeliannu' },
-			{ name: 'effect_zhuqueyushan' },
-			{ name: 'effect_jinhe' },
-			{ name: 'effect_numa' },
-			{ name: 'effect_nvzhuang' },
-			{ name: 'effect_wufengjian' },
-			{ name: 'effect_yajiaoqiang' },
-			{ name: 'effect_yinfengjia' },
-			{ name: 'effect_zheji' },
-			{ name: 'effect_jisha1' },
-			{ name: 'effect_zhenwang' },
-			{ name: 'effect_lebusishu' },
-			{ name: 'effect_bingliangcunduan' },
-			{ name: 'effect_nanmanruqin'},
-			{ name: 'effect_taoyuanjieyi'},
-			{ name: 'effect_shandian' },
-			{ name: 'effect_wanjianqifa_full'},
-			{ name: 'effect_xianding', fileType: 'json' },
-			{ name: 'effect_caochuanjiejian', follow: true },
-			{ name: 'effect_guohechaiqiao', follow: true },
-			{ name: 'effect_leisha', follow: true },
-			{ name: 'effect_heisha', follow: true },
-			{ name: 'effect_huosha' , follow: true },
-			{ name: 'effect_hongsha', follow: true },
-			{ name: 'effect_huogong', follow: true },
-			{ name: 'effect_panding', follow: true },
-			{ name: 'effect_shan', follow: true },
-			{ name: 'effect_tao', follow: true },
-			{ name: 'effect_tiesuolianhuan', follow: true },
-			{ name: 'effect_jiu', follow: true },
-			{ name: 'effect_shunshouqianyang', follow: true },
-			{ name: 'effect_shushangkaihua', follow: true },
-			{ name: 'effect_wanjianqifa', follow: true},
-			{ name: 'effect_wuzhongshengyou', follow: true },
-			{ name: 'effect_wuxiekeji', follow: true },
-			{ name: 'effect_wugufengdeng', follow: true },
-			{ name: 'effect_yuanjiaojingong', follow: true },
-			{ name: 'effect_zhijizhibi', follow: true },
-			{ name: 'effect_zhulutianxia', follow: true },
-			{ name: 'huanfu'},//国战亮将
-			{ name: 'SSZBB_PJN_junling'},//军令翻牌特效
-			{ name: 'jiuwo'},//救我
-		];
-		
-		var fileNameList = fileList.concat();
-		
-		var read = function() {
-			if (fileNameList.length) {
-				var file = fileNameList.shift();
-				if (file.follow) {
-					//	这个是专门播放追踪卡牌的动画，调用方式 decadeUI.animation.cap.playSpineTo(element, animation, position);
-					//	建议非追踪对象的特效不要滥用，因为每次导入1个骨骼会生成4个预制骨骼，资源占用较多
-					animation.cap.loadSpine(file.name, file.fileType, function(){
-						read();
-					});
-				} else {
-					//	这个是专门播放全屏位置的动画
-					animation.loadSpine(file.name, file.fileType, function(){
-						read();
-						animation.prepSpine(this.name);
-					});
-				}
-			}
-		};read();read();
-		
-		var skillAnimation = (function(){
-			var defines = {
-				skill:{
-					bagua_skill: { skill: 'bagua_skill', name: 'effect_baguazhen', scale: 0.6 },
-					baiyin_skill: { skill: 'baiyin_skill', name: 'effect_baiyinshizi', scale: 0.5 },
-					bazhen_bagua: { skill: 'bazhen_bagua', name: 'effect_baguazhen', scale: 0.6 },
-					cixiong_skill: { skill: 'cixiong_skill', name: 'effect_cixiongshuanggujian', scale: 0.5 },
-					fangtian_skill: { skill: 'fangtian_skill', name: 'effect_fangtianhuaji', scale: 0.7 },
-					guanshi_skill: { skill: 'guanshi_skill', name: 'effect_guanshifu', scale: 0.7 },
-					guding_skill: { skill: 'guding_skill', name: 'effect_gudingdao', scale: 0.6, x: [0, 0.4], y: [0, 0.05] },
-					hanbing_skill: { skill: 'hanbing_skill', name: 'effect_hanbingjian', scale: 0.5 },
-					linglong_bagua: { skill: 'linglong_bagua', name: 'effect_baguazhen', scale: 0.5 },
-					qilin_skill: { skill: 'qilin_skill', name: 'effect_qilingong', scale: 0.5 },
-					qinggang_skill: { skill: 'qinggang_skill', name: 'effect_qinggangjian', scale: 0.7 },
-					qinglong_skill: { skill: 'qinglong_skill', name: 'effect_qinglongyanyuedao', scale: 0.6 },
-					renwang_skill: { skill: 'renwang_skill', name: 'effect_renwangdun', scale: 0.5 },
-					tengjia1: { skill: 'tengjia1', name: 'effect_tengjiafangyu', scale: 0.6 },
-					tengjia2: { skill: 'tengjia2', name: 'effect_tengjiaranshao', scale: 0.6 },
-					tengjia3: { skill: 'tengjia3', name: 'effect_tengjiafangyu', scale: 0.6 },
-					zhangba_skill: { skill: 'zhangba_skill', name: 'effect_zhangbashemao', scale: 0.7 },
-					zhuge_skill: { skill: 'zhuge_skill', name: 'effect_zhugeliannu', scale: 0.5 },
-					zhuque_skill: { skill: 'zhuque_skill', name: 'effect_zhuqueyushan', scale: 0.6 },
-					jinhe_lose: { skill: 'jinhe_lose', name: 'effect_jinhe',scale: 0.4 },
-					numa: { skill: 'numa', name: 'effect_numa', scale: 0.4 },
-					nvzhuang: { skill: 'nvzhuang', name: 'effect_nvzhuang', scale: 0.5 },
-					wufengjian_skill: { skill: 'wufengjian_skill', name: 'effect_wufengjian', scale: 0.4 },
-					yajiaoqiang_skill: { skill: 'yajiaoqiang_skill', name: 'effect_yajiaoqiang', scale: 0.5 },
-					yinfengjia_skill: { skill: 'yinfengjia_skill', name: 'effect_yinfengjia', scale: 0.5 },
-					zheji: { skill: 'zheji', name: 'effect_zheji', scale: 0.35 },
-					lebu: { skill: 'lebu', name: 'effect_lebusishu', scale: 0.7 },
-					bingliang: { skill: 'bingliang', name: 'effect_bingliangcunduan', scale: 0.7 },
-					shandian: { skill: 'shandian', name: 'effect_shandian', scale: 0.7 },
-				},
-				card: {
-					nanman: { card: 'nanman', name: 'effect_nanmanruqin', scale: 0.6, y: [0, 0.4] },
-					wanjian: { card: 'wanjian', name: 'effect_wanjianqifa_full', scale: 1.5},
-					taoyuan: { card: 'taoyuan', name: 'effect_taoyuanjieyi'},
-				}
-			}
-			
-			var cardAnimate = function(card){
-				var anim = defines.card[card.name];
-				if (!anim) return console.error('cardAnimate:' + card.name);
-				animation.playSpine(anim.name, { x: anim.x, y: anim.y, scale: anim.scale });
-			};
-			
-			for (var key in defines.card) {
-				lib.animate.card[defines.card[key].card] = cardAnimate;
-			}
-			
-			var skillAnimate = function (name) {
-				var anim = defines.skill[name];
-				if (!anim) return console.error('skillAnimate:' + name);
-				animation.playSpine(anim.name, { x: anim.x, y: anim.y, scale: anim.scale, parent:this });
-			};
-			
-			for (var key in defines.skill) {
-				lib.animate.skill[defines.skill[key].skill] = skillAnimate;
-			}
-			
-			var trigger = {
-				card:{
-					nvzhuang:{
-						onEquip:function(){
-							if (player.sex == 'male' && player.countCards('he', function(cardx){ return cardx != card; })) {
-								lib.animate.skill['nvzhuang'].call(player, 'nvzhuang');
-								player.chooseToDiscard(true, function(card) {
-									return card != _status.event.card;
-								}, 'he').set('card', card);
-							}
-						},
-						onLose:function(){
-							if (player.sex != 'male') return;
-							var next = game.createEvent('nvzhuang_lose');
-							event.next.remove(next);
-							var evt = event.getParent();
-							if (evt.getlx === false) evt = evt.getParent();
-							evt.after.push(next);
-							next.player = player;
-							next.setContent(function() {
-								if (player.countCards('he')) {
-									lib.animate.skill['nvzhuang'].call(player, 'nvzhuang');
-									player.chooseToDiscard(true, 'he');
-								}
-							});
-						}
-					},
-					zheji:{
-						onEquip:function(){
-							lib.animate.skill['zheji'].call(player, 'zheji');
-						}
-					},
-					numa:{
-						onEquip:function(){
-							lib.animate.skill['numa'].call(player, 'numa');
-						}
-					},
-					lebu:{
-						effect:function(){
-							if (result.bool == false){
-								lib.animate.skill['lebu'].call(player, 'lebu');
-								player.skip('phaseUse');
-							}
-						}
-					},
-					bingliang:{
-						effect:function(){
-							if (result.bool == false) {
-								if (get.is.changban()) {
-									player.addTempSkill('bingliang_changban');
-								} else {
-									lib.animate.skill['bingliang'].call(player, 'bingliang');
-									player.skip('phaseDraw');
-								}
-							}
-						}
-					},
-					shandian:{
-						effect:function(){
-							if (result.bool == false) {
-								lib.animate.skill['shandian'].call(player, 'shandian');
-								player.damage(3, 'thunder', 'nosource');
-							} else {
-								player.addJudgeNext(card);
-							}
-						}
-					},
-				},
-			};
-			
-			
-			for (var j in trigger.card) {
-				if (lib.card[j]) {
-					for (var k in trigger.card[j]) {
-						lib.card[j][k] = trigger.card[j][k];
-					}
-				}
-			}
-		})();
-		
-		return animation;
-	})();
-	
-	decadeUI.backgroundAnimation = (function(){
-		var animation = new decadeUI.AnimationPlayer(decadeUIPath + 'assets/dynamic/', document.body, 'decadeUI-canvas-background');
-		decadeUI.bodySensor.addListener(function(){ animation.resized = false; }, true);
-		
-		animation.dprAdaptive = true;
-		animation.definedAssets = {
-			skin_xiaosha: {
-				default: {
-					name: 'skin_xiaosha_default',
-					x: [ 0, 0.7],
-					y: [ 0, 0.3],
-					height: [0, 0.2],
-				},
-			},
-			skin_chengzhu: {//由于设备不同，无法完美适配，自行调参数
-				城主边框: {
-					name: 'skin_chengzhu_ChengZhuBianKuang',
-					x: [16, 0.89],
-					y: [20, 0.15],
-					height: [0, 0.55],
-				},
-				/*动态边框: {//这部分别管
-					name: 'skin_chengzhu_ChengZhuBianKuang',
-					x: [12, 0.893],
-					y: [16, 0.15],
-					height: [0, 0.53],
-				},*/
-			},
-			skin_caojinyu: {
-				惊鸿: {
-					name: 'skin_caojinyu_JHQY1',
-					x: [200, 0.5],
-					y: [-50, 0.5],
-					height: [0, 0.9],
-				},
-				倩影: {
-					name: 'skin_caojinyu_JHQY2',
-					x: [100, 0.5],
-					y: [-20, 0.5],
-					height: [0, 0.75],
-				},
-			},
-			skin_wangrong: {
-				云裳花容: {
-					name: 'skin_wanrong_YunChangHuaRong',
-					x: [-20, 0.5],
-					y: [-30, 0.5],
-					height: [0, 0.8],
-				},
-			},
-			skin_daqiao: {
-				战场绝版: {
-					name: 'skin_daqiao_ZhanChang',
-					x: [ 0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				清萧清丽: {
-					name: 'skin_daqiao_QingXiaoQingLi',
-					x: [0, 0.5],
-					y: [0, 0.33],
-					height: [0, 0.8],
-				},
-				衣垂绿川: {
-					name: 'skin_daqiao_YiChuiLvChuan',
-					action: 'DaiJi',
-					x: [0, 0.5],
-					y: [-100, 0.5],
-					height: [0, 1.2],
-					disableMask: true,
-				}
-			},
-			skin_caojie: {
-				凤历迎春: {
-					name: 'skin_caojie_FengLiYingChun',
-					y: [75, 0.3],
-					height: [0, 1.5],
-				},
-				战场绝版: {
-					name: 'skin_caojie_ZhanChang',
-					x: [ 0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_caoying: {
-				巾帼花舞: {
-					name: 'fullskin_caoying_JinGuoHuaWu',
-					x: [ 0, 0.4],
-					y: [75, 0.3],
-					height: [0, 0.9],
-				},
-			},
-			skin_baosanniang: {
-				舞剑铸缘: {
-					name: 'skin_baosanniang_WuJianZhuYuan',
-					action: 'DaiJi',
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				漫花剑俏: {
-					name: 'skin_baosanniang_ManHuaJianQiao',
-					// x: [0, 0.7],
-					y: [50, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_caiwenji: {
-				才颜双绝: {
-					name: 'skin_caiwenji_CaiYanShuangJue',
-					y: [-80, 0.5],
-					height: [0, 0.8],
-				},
-			},
-			skin_daqiaoxiaoqiao: {
-				战场绝版: {
-					name: 'skin_daqiaoxiaoqiao_ZhanChang',
-					//x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_diaochan: {
-				玉婵仙子: {
-					name: 'skin_diaochan_YuChanXianZi',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				战场绝版: {
-					name: 'skin_diaochan_ZhanChang',
-					y: [75, 0.3],
-					height: [0, 1],
-				},
-			},
-			skin_dongbai: {
-				娇俏伶俐: {
-					name: 'skin_dongbai_JiaoQiaoLingLi',
-					x: [0, 0.5],
-					y: [0, 0.33],
-					height: [0, 0.96],
-				},
-			},
-			skin_fanyufeng: {
-				斟酒入情: {
-					name: 'skin_fanyufeng_ZhenJiuRuQing',
-					x: [0, 0.5],
-					y: [0, 0.28],
-					height: [0, 1],
-				},
-			},
-			skin_fuhuanghou: {
-				万福千灯: {
-					name: 'skin_fuhuanghou_WanFuQianDeng',
-					//x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_guozhao: {
-				雍容尊雅: {
-					name: 'skin_guozhao_YongRongZunYa',
-					x: [0, 0.5],
-					y: [0, 0.33],
-					height: [0, 0.7],
-				},
-			},
-			skin_hetaihou: {
-				鸩毒除患: {
-					name: 'skin_hetaihou_ZhenDuChuHuan',
-					y: [0, 0.33],
-					height: [0, 0.65],
-				},
-				蛇蝎为心:{
-					name: 'skin_hetaihou_SheXieWeiXin',
-					action: 'DaiJi',
-					y: [5, 0.33],
-					height: [0, 0.76],
-					hideSlots: 'jiubei',
-				},
-				耀紫迷幻:{
-					name: 'skin_hetaihou_YaoZiMiHuan',
-					y: [5, 0.33],
-					height: [0, 0.76],
-				},
-			},
-			skin_huaman: {
-				经典形象: {
-					name: 'skin_huaman_default',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				花俏蛮娇: {
-					name: 'skin_huaman_HuaQiaoManJiao',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				}
-			},
-			skin_lukang: {
-				毁堰破晋: {
-					name: 'skin_lukang_HuiYanPoJin',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_luxun: {
-				谋定天下: {
-					name: 'skin_luxun_MouDingTianXia',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_luxunlvmeng: {
-				清雨踏春: {
-					name: 'skin_luxunlvmeng_QingYuTaChun',
-					// x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_mayunlu: {
-				战场绝版:{
-					name: 'skin_mayunlu_ZhanChang',
-					x: [ 0, 0.6],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_sundengzhoufei: {
-				鹊星夕情: {
-					name: 'skin_sundengzhoufei_QueXingXiQing',
-					// x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_sunluban: {
-				宵靥谜君: {
-					name: 'skin_sunluban_XiaoYeMiJun',
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_sunluyu: {
-				娇俏伶俐: {
-					name: 'skin_sunluyu_JiaoQiaoLingLi',
-					y: [0, 0.3],
-					height: [0, 0.9],
-				},
-			},
-			skin_shuxiangxiang: {
-				花好月圆: {
-					name: 'skin_shuxiangxiang_HuaHaoYueYuan',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				花曳心牵: {
-					name: 'skin_shuxiangxiang_HuaYeXinQian',
-					x: [0, 0.5],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_wangyi: {
-				绝色异彩: {
-					name: 'skin_wangyi_JueSeYiCai',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				战场绝版: {
-					name: 'skin_wangyi_ZhanChang',
-					x: [0, 0.7],
-					y: [75, 0.35],
-					height: [0, 0.8],
-				},
-			},
-			skin_wolongzhuge: {
-				隆中陇亩: {
-					name: 'skin_wolongzhuge_LongZhongLongMu',
-					// x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_wuxian: {
-				锦运福绵: {
-					name: 'skin_wuxian_JinYunFuMian',
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				金玉满堂: {
-					name: 'fullskin_wuxian_JinYuManTang',
-					y: [0, 0.35],
-					height: [0, 0.8],
-				},
-			},
-			skin_xiahoushi: {
-				端华夏莲: {
-					name: 'skin_xiahoushi_DuanHuaXiaLian',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				战场绝版: {
-					name: 'skin_xiahoushi_ZhanChang',
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_xiaoqiao: {
-				花好月圆: {
-					name: 'skin_xiaoqiao_HuaHaoYueYuan',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				采莲江南: {
-					name: 'skin_xiaoqiao_CaiLianJiangNan',
-					action: 'DaiJi',
-					x: [0, 0.5],
-					y: [-100, 0.5],
-					height: [0, 1.2],
-				}
-			},
-			skin_xinxianying: {
-				英装素果: {
-					name: 'skin_xinxianying_YingZhuangSuGuo',
-					//x: [0, 0.7],
-					y: [75, 0.26],
-					//height: [0, 0.8],
-				},
-			},
-			skin_xushi: {
-				拈花思君: {
-					name: 'skin_xushi_NianHuaSiJun',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				为夫弑敌: {
-					name: 'skin_xushi_WeiFuShiDi',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_zhangchangpu: {
-				钟桂香蒲: {
-					name: 'skin_zhangchangpu_ZhongGuiXiangPu',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_zhangchunhua: {
-				花好月圆: {
-					name: 'skin_zhangchunhua_HuaHaoYueYuan',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				战场绝版: {
-					name: 'skin_zhangchunhua_ZhanChang',
-					//x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_zhangqiying: {
-				岁稔年丰: {
-					name: 'skin_zhangqiying_SuiRenNianFeng',
-					y: [0, 0.33],
-					height: [0, 0.8],
-				},
-				逐鹿天下: {
-					name: 'skin_zhangqiying_ZhuLuTianXia',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 1],
-				},
-			},
-			skin_zhangxingcai: {
-				凯旋星花: {
-					name: 'skin_zhangxingcai_KaiXuanXingHua',
-					x: [0, 0.45],
-					y: [0, 0.33],
-					height: [0, 0.8],
-				},
-			},
-			skin_zhenji: {
-				才颜双绝: {
-					name: 'skin_zhenji_CaiYanShuangJue',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				洛神御水: {
-					name: 'skin_zhenji_LuoShenYuShui',
-					x: [0, 0.6],
-					y: [75, 0.3],
-					//height: [0, 0.8],
-				},
-			},
-			skin_zhoufei: {
-				晴空暖鸢: {
-					name: 'skin_zhoufei_QingKongNuanYuan',
-					x: [0, 0.5],
-					y: [0, 0.33],
-					height: [0, 0.8],
-				},
-			},
-			skin_zhugeguo: {
-				兰荷艾莲: {
-					name: 'skin_zhugeguo_LanHeAiLian',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-				仙池起舞: {
-					name: 'skin_zhugeguo_XianChiQiWU',
-					action: 'DaiJi',
-					x: [0, 0.48],
-					y: [0, 0.35],
-					height: [0, 1.5],
-				},
-				英装素果: {
-					name: 'skin_zhugeguo_YingZhuangSuGuo',
-					//x: [0, 0.7],
-					y: [75, 0.3],
-					//height: [0, 0.8],
-				},
-			},
-			skin_zhugeliang: {
-				空城退敌: {
-					name: 'skin_zhugeliang_KongChengTuiDi',
-					x: [0, 0.7],
-					y: [75, 0.3],
-					height: [0, 0.8],
-				},
-			},
-			skin_zhouyi:{
-				剑舞浏漓:{
-					name: 'fullskin_zhouyi_JianWuLiuLi',
-					y: [0, 0.5],
-					height: [0, 1.2],
-				},
-			},
-			
-		};
-		
-		animation.stop = animation.stopSpineAll;
-		animation.play = function (name, skin) {
-			var definedAssets = this.definedAssets;
-			if (definedAssets[name] == void 0 || definedAssets[name][skin] == void 0) 
-				return console.log('没有预定义[asset:' + name + ', skin:' + skin + ']的动态背景.');
-			
-			if (this.current && this.current.name == name)
-				return;
-			
-			this.stopSpineAll();
-			var playAsset = definedAssets[name][skin];
-			if (!this.hasSpine(playAsset.name)) {
-				var _this = this;
-				_this.loadSpine(playAsset.name, 'skel', function(){
-					if (_this.current && _this.current.name == playAsset.name) return;
-					_this.current = _this.loopSpine(playAsset);
-				});
-			} else {
-				this.current = this.loopSpine(playAsset);
-			}
-		};
-		
-		
-		animation.check();
-		var background = duicfg.dynamicBackground
-		if (background != void 0 && background != 'off') {
-			var name = background.split('_');
-			var skin = name.splice(name.length - 1, 1)[0];
-			animation.play(name.join('_'), skin);
-		}
-		
-		return animation;
-	})();
-	
-	// 下面是我自用的，可能会删掉
-	window.dcdAnim = decadeUI.animation;
-	window.dcdBackAnim = decadeUI.backgroundAnimation;
-	window.game = game;
-	window.get = get;
-	window.ui = ui;
-	window._status = _status;
-});
-
+})(newDuilib || (newDuilib = {}));

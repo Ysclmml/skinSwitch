@@ -698,6 +698,28 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 						delay: 0.2,
 					}
 				}
+			},
+			'测试json': {
+				name: 'test_json/spine_update_renwu',  // 可以直接文件夹带名字
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: 1,
+				json: true  // 标明当前是json骨骼, 同理如果包含其他骨骼, 都需要指定json字段
+			},
+			'测试alpha': {
+				name: 'test_alpha/i_agnes_skeleton',  // 可以直接文件夹带名字
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: 0.3,
+				action: 'idle',
+				teshu: 'idle_touch_1',
+				gongji: {
+					action: 'cutin',
+					x: [0, 0.8],
+					y: [0, 0.4],
+					showTime: 2
+				},
+				alpha: true,
 			}
 		},
 		xushao: {
@@ -804,8 +826,8 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				// },// 触发非攻击
 				teshu: "play2",
 				gongji: {
-					x: [0, 0.72],
-					y: [0, 0.4],
+					// x: [0, 0.72],
+					// y: [0, 0.4],
 					scale: 0.5,
 					name: "刘焉/秋霜金枫/tushe",
 					action: ["gongji", "jineng"]  // 出杀或攻击时随机播放一个动画
@@ -822,12 +844,14 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				// 指示线
 				zhishixian: {
 					name: '刘焉/秋霜金枫/shouji2',
-					scale: 0.45,
+					scale: 0.8,
 					speed: 0.7,
+					delay: 0.1,
 					effect: {  // 爆炸特效 一般是shouji
 						name: '刘焉/秋霜金枫/shouji',  // 指示线
 						scale: 0.6,
-						speed: 0.7,
+						speed: 1,
+						delay: 0.2,
 					}
 				}
 			},
@@ -931,6 +955,53 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				shan: "play3", // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
 				background: "梁兴/骁勇金衔/static_bg.png",
 				skinName: "骁勇金衔"
+			},
+		},
+		wenyang: {
+			骁勇金衔: {
+				name: "文鸯/骁勇金衔/daiji2",
+				x: [0, 0.5],
+				y: [0, 0.4],
+				scale: 1.0,
+				angle: 0,
+				speed: 1,
+				teshu: {
+					x: [0, 0.75],
+					y: [0, 0.3],
+					scale: 0.4,
+					name: "文鸯/骁勇金衔/daiji",
+					action:["play2"]
+				},// 触发非攻击
+				gongji: {
+					x: [0, 0.72],
+					y: [0, 0.4],
+					scale: 0.5,
+					name: "文鸯/骁勇金衔/chuchang2",
+					action: ["jineng","gongji"]  // 出杀或攻击时随机播放一个动画
+				},
+				shizhounian: true,  // 标明这是十周年的骨骼, 出场位置和出框默认会在原地, 并且返回也不是位移
+				chuchang: {  // 第一回合出场
+					name: "文鸯/骁勇金衔/chuchang",
+					action: "play",
+					scale: 0.45,
+					// showTime: 5,
+					loop: true,
+				},
+				shan: "play3", // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
+				background: "文鸯/骁勇金衔/static_bg.png",
+				skinName: "骁勇金衔",
+				zhishixian: {
+					name: '文鸯/骁勇金衔/shouji2',  // 指示线
+					scale: 0.6,
+					speed: 0.8,
+					delay: 0.4,
+					effect: {  // 爆炸特效 一般是shouji
+						name: '文鸯/骁勇金衔/shouji',  // 指示线
+						scale: 0.6,
+						speed: 0.7,
+						delay: 0.3,
+					}
+				}
 			},
 		},
 
@@ -1125,7 +1196,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					name:"胡金定-金粉福颜/chuchang2",
 					action: ['gongji', 'jineng'] ,  // action不写是默认播放第一个动作
 					// action: ['jineng'] ,  // action不写是默认播放第一个动作
-					scale: 0.7,
+					scale: 0.6,
 				},  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
 				play2: 'play2',
 				chuchang: {
@@ -1137,7 +1208,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					name:"胡金定-金粉福颜/chuchang2",
 					action: ['gongji', 'jineng'] ,  // action不写是默认播放第一个动作
 					// action: ['jineng'] ,  // action不写是默认播放第一个动作
-					scale: 0.7,
+					scale: 0.6,
 					// x: [0, 0.5],
 					// y: [0, 0.5],
 				},  // 通常是出框需要播放的参数
@@ -1188,6 +1259,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 		ol_zhangchangpu: decadeUI.dynamicSkin.zhangchangpu,
 		re_zhenji: decadeUI.dynamicSkin.zhenji,
 		xin_liru: decadeUI.dynamicSkin.re_liru,     //李儒
+		db_wenyang: decadeUI.dynamicSkin.wenyang,
 	};decadeUI.get.extend(decadeUI.dynamicSkin, extend);
 	
 });

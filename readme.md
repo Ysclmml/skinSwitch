@@ -8,9 +8,7 @@
 
    文件这些操作动皮的扩展发生冲突.
 
-2. 当前这个扩展是把K佬的`EngEX`插件的动皮部分功能抽离进行魔改. 因此可能暂时不和原
-
-来的`EngEX`扩展兼容, 但是当前扩展是支持原来`EngEX`的动态换肤功能与动态皮肤出框攻击的功能的. 
+2. 当前这个扩展是把K佬的`EngEX`插件的动皮部分功能抽离进行魔改. 因此要是用原有的Eng, 只能先把eng动皮相关的功能关闭
 
 3. 原本取这个扩展的名字为<<`皮肤切换`>>的原因是因为个人想做个动皮静皮切换的功能, 
 
@@ -19,7 +17,7 @@
 的思想, 我就不做这个东西了. 
 
 4. 如果导入本扩展导致崩溃报错想要还原, 只要还原十周年UI备份的2个改动文件, 然后删除本扩展即可. 
-4. 真动皮攻击音效问题, 这个放到本扩展下的audio/effect目录下, 名字与待机皮肤相同即可. 这个与eng的音效目录相同.
+4. 真动皮攻击音效问题, 可以放到本扩展下的audio/effect目录或者和骨骼同一级目录, 音效名字与待机皮肤相同即可. 
 
 #### 扩展功能
 
@@ -183,6 +181,45 @@ lvlingqi: {
 		},
 
 ```
+
+2023-1-31添加
+
+添加json骨骼支持, 如果使用到的骨骼是json,都需要指定json字段为true. 如果出框骨骼和待机骨骼不一样,同样需要指定json为true
+
+```js
+'测试json': {
+				name: 'test_json/spine_update_renwu',  // 可以直接文件夹带名字
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: 1,
+				json: true  // 标明当前是json骨骼, 同理如果包含其他骨骼, 都需要指定json字段
+			},
+```
+
+支持alpha预乘骨骼, 狗卡的骨骼都是不需要alpha预乘的, 如果需要添加其他游戏的spine骨骼, 可能需要alpha预乘功能. 
+
+**注意,  alpha预乘在待机处填写后, 如果包含其他骨骼, 其他骨骼都会默认需要alpha预乘, 如果不需要, 需要显示指定为false**
+
+```js
+'测试alpha': {
+				name: 'test_alpha/i_agnes_skeleton',  // 可以直接文件夹带名字
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: 0.3,
+				action: 'idle',
+				teshu: 'idle_touch_1',
+				gongji: {
+					action: 'cutin',
+					x: [0, 0.8],
+					y: [0, 0.4],
+					showTime: 2
+                    // alpha: false, 如果出框骨骼不一致且不需要预乘, 需要显示指定false
+				},
+				alpha: true, // 标明当前骨骼是需要alpha预乘
+			}
+```
+
+
 
 
 
@@ -358,227 +395,11 @@ else if (item[1] == 'textbutton') {
 							} 
 ```
 
-
-
-因为对十周年UI的文件做了一些修改, 所以要使用需要先导入十周年文件. 需要先备份一下原来的3个文件. 扩展设置页面有提供按钮. 会在原十周年UI目录下创建备份文件夹. 只需要备份一次即可. 
-
-主要只改动 `animiation.js` , `dynamicWorker.js`改动如下.
-
-3 `animiation.js`
-
-改动非常简单.
-
-`APNode`构造方法添加了player参数保存`dynamicSkin.js`的动皮配置参数.
-
-![](./doc/十周年改动3.png)
-
-4. `animiation.js`文件,  当场上有8个角色有动皮时, 千幻雷修的手杀大屏也需要实例化一个DynamicPlayer对象, 由于原十周年定义最多有8个. 所以可能需要改动这个worker的数量, 让最多有3个worker工作. 
-
-   ![](./doc/十周年改动4.png)
-
-5. `dynamicWorker.js`完全重写
-
  
 
 #### 扩展兼容问题
 
 本人测试时使用了特效测试, 手杀UI, 无名杀补丁,原版千幻聆音都没有出现问题. 理论上UI扩展,武将扩展都不会出现兼容问题.
 
-`EngEX扩展暂时还没有适配`
-
-雷佬的千幻聆音雷修版本,个人今天简单使用了下,  已经简单的做了适配, 主要修改千幻聆音`extension.js`的如下部分
-
-因为千幻聆音雷修依赖EngEX扩展的动皮出框, 所以需要替换全局eng的引用. 
-
-需要在扩展的开头加上下面的替换原eng的引用即可. 
-
-因为本人扩展是基于Engex的, 所以两者的动皮出框接口都是相同, 下面替换eng为公用的`dynamicExt`
-
-**第一处:** 
-
-```js
-let qhly_hasExtension = function (str) {
-    if (!str || typeof str != 'string') return false;
-    if (lib.config && lib.config.extensions) {
-        for (var i of lib.config.extensions) {
-            if (i.indexOf(str) == 0) {
-                if (lib.config['extension_' + i + '_enable']) return true;
-            }
-        }
-    }
-    return false;
-}
-if (qhly_hasExtension('皮肤切换')) {
-    window.dynamicExt = window.skinSwitch
-} else{
-    window.dynamicExt = window.eng
-}
-```
-
-![](./doc/千幻1.png)
-
-**第二处,** 因为雷佬是通过`game.qhly_hasExtension('EngEX')`函数来判断eng扩展的,
-
-所以全局替换 `game.qhly_hasExtension('EngEX')`  -> `dynamicExt` , 这样并不会改变原来的功能判断.
-
-**第三处:** 这里是为了解决重复初始化同一角色的问题, 在大概200多行的地方
-
-```js
-if (this.dynamic) {
-    if (this.dynamic.primary) this.stopDynamic(true, false)
-    if (this.dynamic.deputy) this.stopDynamic(false, true)
-    // this.stopDynamic();
-}
-```
-
-![](./doc/千幻改动2.png)
-
-**第四处**
-
-修改`game.qhly_changeDynamicSkin = function (str, name, character, character2) {  `...}函数, 这个函数是用来更换动皮的.
-
-![](./doc/千幻2.png)
-
-如上所示, 添加修改了两处, 第一个疑似雷修1.62版本的bug, 我这边在双将模式下,修改动皮皮肤, 会被千幻原来的静皮覆盖, 所以这里去掉静皮. 
-
-```js
- // 修改 修改完动皮后, 取消原来的背景
-if (get.itemtype(node) === 'player' && dynamicExt) {
-    let ava = bool1 ? 'primary' : 'deputy'
-    let obj = node.getElementsByClassName(ava + "-avatar")[0];
-    obj.style.backgroundImage = null
-}
-```
-
-
-
-第二个: 在播放动皮的时候添加一个参数, 标明这时预览手杀大页的动皮. 
-
-```js
-qhlxBigAvatar: node.classList.contains('qh-shousha-big-avatar')
-```
-
-**第5处和第6处**
-
-都是一样的原因, 疑似雷修1.62版本的bug. 当大图预览动皮的时候, 返回到原来的界面播放动皮会失败, 这时因为原来的动皮
-
-播放没有停止. 
-
-```js
-if (subView.avatar.dynamic && subView.avatar.dynamic.primary) {
-    subView.avatar.stopDynamic()
-}
-```
-
-代码位置大概在两处, 十周年UI预览和手杀UI大图预览页面的返回按键监听函数添加
-
-![](./doc/千幻3.png)
-
-![](./doc/千幻4.png)
-
-第7处: 直接替换`game.playShoushaAvatar`函数
-
-```js
-game.playShoushaAvatar = function (node) {
-    if (lib.config['extension_千幻聆音_qhly_shoushaTexiao'] && game.qhly_hasExtension('皮肤切换')) {
-        // 留空表示可以往下走.
-    } else if (!lib.config['extension_千幻聆音_qhly_shoushaTexiao'] || !game.qhly_hasExtension('EngEX') || !lib.config['extension_EngEX_SSSEffect']) return;
-    var mainPlayer = document.getElementById('mainView');
-    if (!mainPlayer || !node.dynamic || !node.dynamic.primary || node.dynamic.primary.name != _status.currentTexiao) {
-        clearInterval(_status.texiaoTimer);
-        clearTimeout(_status.texiaoTimer2);
-        return;
-    }
-    if (game.qhly_hasExtension('皮肤切换')) {
-        node.isQhlx = true // 表示当前动皮角色是千幻雷修版本的
-        window.skinSwitch.postMsgApi.actionGongJi(node)  // 直接调用封装的播放动皮
-    } else {
-        let res = dynamicExt.dynamic.checkCanBeAction(node);
-        if (res) {
-            var renderer = node.dynamic.renderer;
-            var canvas = node.getElementsByClassName("animation-player")[0];
-            var dynamicWrap = node.getElementsByClassName("qhdynamic-big-wrap")[0];
-            renderer.onmessage = function (e) {
-                if (e.data) {
-                    if (dynamicWrap) dynamicWrap.style.zIndex = "64";
-                    if (canvas) {
-                        canvas.style.position = "fixed";
-                        canvas.style.height = "100%";
-                        canvas.style.width = "100%";
-                    }
-                    node.style.zIndex = 64;
-
-                    renderer.onmessage = function (e) {
-                        if (e.data) {
-                            game.playAudio("..", "extension", "EngEX/audio/effect", res.dynamic.name + ".mp3");
-                            renderer.onmessage = function (e) {
-                                if (dynamicWrap) dynamicWrap.style.zIndex = "62";
-                                if (canvas) {
-                                    canvas.style.height = null;
-                                    canvas.style.width = null;
-                                    canvas.style.position = null;
-                                }
-                                node.style.zIndex = 62;
-                                node.GongJi = false;
-                            };
-                        }
-                    };
-                } else {
-                    dynamicWrap = null;
-                    canvas = null;
-                    renderer = null;
-                    res = null;
-                }
-            };
-            var pp = dynamicExt.getCoordinate(node, true);
-            if (renderer.postMessage) renderer.postMessage({
-                message: "ACTION",
-                id: node.dynamic.id,
-                action: "Qhly",
-                skinID: res.dynamic.id,
-                //isDouble: res.isDouble,
-                //deputy: res.deputy,
-                //needHide: res.needHide,
-                //me: false,
-                //direction: dynamicExt.getDirection(node),
-                player: pp
-            });
-        }
-    }
-}
-```
-
-第8处, 原来雷修的手杀大屏播放页面是每个角色点开都会和每个角色的动皮一样去创建一个dynamic对象, 其实没有必要, 因为关闭窗口,这个dynamic对象可以缓存. 这样只有第一次需要进行创建, 这样也防止了场上动皮过多会创建过多dynamic对象以及过多的canvas对象.
-
-大概在8394行关闭手杀大屏页面时候,同时缓存该dynamic, 然后在下一次打开手杀大屏页面, 重新挂载到新的node上
-
-在这里还需要添加一行:
-
-```js
- subView.avatar.name = name  // 还需要添加当前角色name
-```
-
-
-
-![](./doc/千幻6.png)
-
-```js
-                    // 雷佬1.62版本没有停止大页的动画, 导致退出去会与默认头像的重叠, 主动停止动画
-                    if (subView.avatar.dynamic && subView.avatar.dynamic.primary) {
-                        subView.avatar.stopDynamic()
-                        // 手杀大屏的dynamic共用一个即可, 每次关闭之前的预览动画就行, 因为每次只会显示一个, 没必要每个角色都初始化一个dynamic对象.
-                        window.shoushaBigAvatarDynamic = subView.avatar.dynamic
-                    }
-```
-
-大概8298行
-
-![](./doc/千幻5.png)
-
-```js
-                if (window.shoushaBigAvatarDynamic) {
-                    subView.avatar.dynamic = window.shoushaBigAvatarDynamic
-                    subView.avatar.$dynamicWrap.appendChild(window.shoushaBigAvatarDynamic.canvas)
-                }
-```
+如果需要是用千幻聆音, 请在相应群下载本人修改过的兼容皮肤切换extension.
 

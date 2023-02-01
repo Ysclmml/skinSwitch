@@ -11,6 +11,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 console.log('必须安装启用十周年UI与十周年动皮')
                 return
             }
+
+            function groupChange(player) {
+                Object.defineProperty(player,
+                    'group', {
+                        get: function () {
+                            console.log('get 拦截....')
+                            return player.__gruoup;
+                        },
+                        set: function (g) {
+                            console.log('set 设置....')
+                            player.__gruoup = g
+                        },
+                        enumerable: true,
+                        configurable: true,
+                    })
+            }
+
             // 根据本地的存储内容, 更改十周年UI的skinDynamic的数据
             function updateDecadeDynamicSkin(timer) {
 
@@ -24,6 +41,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     if (timer) {
                         clearTimeout(timer)
                     }
+                    modifyDecadeUIContent()
                     if (!skinSwitch.saveSkinParams) return
                     for (let k in skinSwitch.saveSkinParams) {
                         // 只更新存在key的数据
@@ -66,6 +84,134 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             // 替换十周年内容
             function modifyDecadeUIContent() {
                 let Player = {};
+
+                function pfqh_reinit(from, to, maxHp, online) {
+                    var info1 = lib.character[from];
+                    var info2 = lib.character[to];
+                    var smooth = true;
+                    let originName2 = this.name2
+                    if (maxHp == 'nosmooth') {
+                        smooth = false;
+                        maxHp = null;
+                    }
+                    if (this.name2 == from) {
+                        this.name2 = to;
+                        if (this.isUnseen(0) && !this.isUnseen(1)) {
+                            this.sex = info2[0];
+                            this.name = to;
+                        }
+                        if (smooth) this.smoothAvatar(true);
+                        this.node.avatar2.setBackground(to, 'character');
+                        this.node.name2.innerHTML = get.slimName(to);
+                    } else if (this.name == from || this.name1 == from) {
+                        if (this.name1 == from) {
+                            this.name1 = to;
+                        }
+                        if (!this.classList.contains('unseen2')) {
+                            this.name = to;
+                            this.sex = info2[0];
+                        }
+                        if (smooth) this.smoothAvatar(false);
+                        this.node.avatar.setBackground(to, 'character');
+                        this.node.name.innerHTML = get.slimName(to);
+
+                        if (this == game.me && ui.fakeme) {
+                            ui.fakeme.style.backgroundImage = this.node.avatar.style.backgroundImage;
+                        }
+                    } else {
+                        return this;
+                    }
+                    if (online) {
+                        return;
+                    }
+                    for (var i = 0; i < info1[3].length; i++) {
+                        this.removeSkill(info1[3][i]);
+                    }
+                    for (var i = 0; i < info2[3].length; i++) {
+                        this.addSkill(info2[3][i]);
+                    }
+                    if (Array.isArray(maxHp)) {
+                        this.maxHp = maxHp[1];
+                        this.hp = maxHp[0];
+                    } else {
+                        var num;
+                        if (maxHp === false) {
+                            num = 0;
+                        } else {
+                            if (typeof maxHp != 'number') {
+                                maxHp = get.infoMaxHp(info2[2]);
+                            }
+                            num = maxHp - get.infoMaxHp(info1[2]);
+                        }
+                        if (typeof this.singleHp == 'boolean') {
+                            if (num % 2 != 0) {
+                                if (this.singleHp) {
+                                    this.maxHp += (num + 1) / 2;
+                                    this.singleHp = false;
+                                } else {
+                                    this.maxHp += (num - 1) / 2;
+                                    this.singleHp = true;
+                                    if (!game.online) {
+                                        this.doubleDraw();
+                                    }
+                                }
+                            } else {
+                                this.maxHp += num / 2;
+                            }
+                        } else {
+                            this.maxHp += num;
+                        }
+                    }
+                    game.broadcast(function (player, from, to, skills) {
+                        player.reinit(from, to, null, true);
+                        player.applySkills(skills);
+                    }, this, from, to, get.skillState(this));
+                    game.addVideo('reinit3', this, {
+                        from: from,
+                        to: to,
+                        hp: this.maxHp,
+                        avatar2: this.name2 == to
+                    });
+                    this.update();
+
+                    var skin = skinSwitch.getDynamicSkin(null, to);
+                    if (this.doubleAvatar) {
+                        let primary = true;
+                        let deputy = true;
+                        // 上面会重新赋值, 所以这里需要修改变身bug
+                        if (originName2 === from) primary = false;
+                        else deputy = false;
+                        if (this.dynamic) {
+                            this.stopDynamic(primary, deputy);
+                            decadeUI.CUR_DYNAMIC--;
+                        }
+                        if (skin) {
+                            skin.player = skin
+                            this.playDynamic(skin, deputy);
+                            decadeUI.CUR_DYNAMIC++;
+                            skinSwitch.dynamic.setBackground(deputy ? "deputy" : "primary", this);
+                        }
+                    } else {
+                        let isYh = this.getElementsByClassName("skinYh");
+                        if (this.dynamic) {
+                            this.stopDynamic();
+                            decadeUI.CUR_DYNAMIC--;
+                        }
+                        if (skin) {
+                            skin.player = skin;
+                            this.playDynamic(skin, false);
+                            decadeUI.CUR_DYNAMIC++;
+                            this.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
+                            if (isYh.length < 1) {
+                                let yh = skinSwitch.createYH(this.group);
+                                this.appendChild(yh);
+                            }
+                        } else {
+                            if (isYh.length > 1) isYh[0].remove();
+                        }
+                    }
+                };
+
                 if (lib.config[skinSwitch.decadeKey.dynamicSkin]) {
                     if (self.OffscreenCanvas === undefined) {
                         alert("您的设备环境不支持新版手杀动皮效果，请更换更好的设备或者不使用此版本的手杀动皮效果");
@@ -214,22 +360,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         if (lib.version >= '1.9.117.2') {
                             console.log('======== version >= 1.9.117.2===========')
-
-                            // 保存原始的logSkill
-                            lib.element.player._pfqh_replace_logSkill = lib.element.player.logSkill
-
-                            lib.element.player.logSkill = function (name, targets, nature, logv) {
-                                if (game.phaseNumber > 0) {
-                                    if (name.indexOf("_") !== 0 && skinSwitch.filterSkills.indexOf(name) === -1 || this.skills.indexOf(name) !== -1) {
-                                        if (this.isAlive() && this.dynamic && !this.GongJi) {
-                                            skinSwitch.chukuangWorkerApi.chukuangAction(this, 'TeShu')
+                            if (!lib.element.player._pfqh_replace_logSkill) {
+                                // 保存原始的logSkill
+                                lib.element.player._pfqh_replace_logSkill = lib.element.player.logSkill;
+                                lib.element.player.logSkill = function (name, targets, nature, logv) {
+                                    if (game.phaseNumber > 0) {
+                                        if (name.indexOf("_") !== 0 && skinSwitch.filterSkills.indexOf(name) === -1 || this.skills.indexOf(name) !== -1) {
+                                            if (this.isAlive() && this.dynamic && !this.GongJi) {
+                                                console.log('logskill teshu=====')
+                                                skinSwitch.chukuangWorkerApi.chukuangAction(this, 'TeShu')
+                                            }
                                         }
                                     }
+                                    return lib.element.player._pfqh_replace_logSkill.apply(this, [name, targets, nature, logv])
                                 }
-
-                                return lib.element.player._pfqh_replace_logSkill.apply(this, [name, targets, nature, logv])
-
                             }
+
 
                             // lib.skill._pfqh_logskill = {
                             //     trigger: {player: 'logSkill'},
@@ -413,6 +559,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         let hand = dui.boundsCaches.hand;
                                         let x1, y1
 
+                                        let isPhone = skinSwitch.isMobile()
+
                                         args = {
                                             hand: null,  // 手牌区域
                                             attack: {},  // 攻击方坐标
@@ -435,6 +583,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         } else {
                                             x1 = player.cacheLeft + player.cacheWidth / 2 + rect.width / 32 * 12;
                                             y1 = player.cacheTop + player.cacheHeight / 2 + rect.height / 32 * 12 ;
+                                            if (isPhone) {
+                                                y1 = player.cacheTop + player.cacheHeight / 2 ;
+                                            }
                                             args.attack = {
                                                 x: x1,
                                                 y: y1
@@ -446,23 +597,39 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             p.checkBoundsCache(true);
                                             let x2 = p.cacheLeft + p.cacheWidth / 2 + rect.width / 32 * 12;
                                             let y2 = p.cacheTop + p.cacheHeight / 2 + rect.height / 32 * 12;
-
+                                            if (isPhone) {
+                                                y2 = p.cacheTop + p.cacheHeight / 2 ;
+                                            }
                                             args.targets.push({
                                                 x: x2,
-                                                y: y2
+                                                y: y2,
+                                                boundRect: p.getBoundingClientRect()
                                             })
                                         }
                                     }
 
-                                    let timeDelta = new Date().getTime() - player.__lastGongji
+                                    // 记忆上次的攻击事件, useCard, useCard1, useCard2,会短时间内连续触发. 这样先过滤掉
 
-                                    if (!player.__lastGongji || timeDelta >= 200) {
-                                        skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', args ? {attackArgs: args} : {});
-                                        player.__lastGongji = new Date().getTime()
-                                    } else if (player.__lastGongji && timeDelta < 200 ) {
-                                        if (args && event.triggername !== 'useCardBefore' && event._trigger.targets.length >= 2) {
-                                            skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', {attackArgs: args, multiZhiShi: true})
-                                            player.__lastGongji = new Date().getTime()
+                                    let timeDelta = player.__lastGongji ? new Date().getTime() - player.__lastGongji.t : 10000
+
+                                    if (timeDelta >= 200) {
+                                        console.log('出框111', 'event', event, 'delta', timeDelta)
+                                        skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', args ? {attackArgs: args, triggername: event.triggername} : {});
+                                        player.__lastGongji = {
+                                            t: new Date().getTime(),
+                                            tLen: event._trigger.targets.length
+                                        }
+                                    } else {
+                                        if (args && event.triggername !== 'useCardBefore') {
+                                            if (event._trigger.targets.length <= player.__lastGongji.tLen) {
+                                                return
+                                            }
+                                            console.log('出框2222', 'event', event, 'delta', timeDelta)
+                                            skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', {attackArgs: args, triggername: event.triggername})
+                                            player.__lastGongji = {
+                                                t: new Date().getTime(),
+                                                tLen: event._trigger.targets.length
+                                            }
                                         }
                                     }
                                     // 放弃使用十周年ui的dcdAni
@@ -603,7 +770,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 return player.isAlive() && player.dynamic && !player.GongJi;
                             },
                             content: function () {
-                                console.log('使用技能_ts....')
                                 skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu')
                             }
                         }
@@ -633,7 +799,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             },
                             forced: true,
                             filter: function (event, player) {
-                                return game.players.length > 1 && player.phaseNumber===0 && player === event.player && !player.doubleAvatar && player.dynamic && player.dynamic.primary && player.dynamic.primary.player.chuchang
+                                return game.players.length > 1  /*&&player.phaseNumber===0*/ && player === event.player && !player.doubleAvatar && player.dynamic && player.dynamic.primary && player.dynamic.primary.player.chuchang
                             },
                             content: function () {
                                 skinSwitch.chukuangWorkerApi.chukuangAction(player, 'chuchang')
@@ -676,133 +842,107 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                             }
                         }
-                        // 覆盖reinit方法
-                        lib.element.player.reinit = function (from, to, maxHp, online) {
-                            var info1 = lib.character[from];
-                            var info2 = lib.character[to];
-                            var smooth = true;
-                            let originName2 = this.name2
-                            if (maxHp == 'nosmooth') {
-                                smooth = false;
-                                maxHp = null;
-                            }
-                            if (this.name2 == from) {
-                                this.name2 = to;
-                                if (this.isUnseen(0) && !this.isUnseen(1)) {
-                                    this.sex = info2[0];
-                                    this.name = to;
-                                }
-                                if (smooth) this.smoothAvatar(true);
-                                this.node.avatar2.setBackground(to, 'character');
-                                this.node.name2.innerHTML = get.slimName(to);
-                            } else if (this.name == from || this.name1 == from) {
-                                if (this.name1 == from) {
-                                    this.name1 = to;
-                                }
-                                if (!this.classList.contains('unseen2')) {
-                                    this.name = to;
-                                    this.sex = info2[0];
-                                }
-                                if (smooth) this.smoothAvatar(false);
-                                this.node.avatar.setBackground(to, 'character');
-                                this.node.name.innerHTML = get.slimName(to);
 
-                                if (this == game.me && ui.fakeme) {
-                                    ui.fakeme.style.backgroundImage = this.node.avatar.style.backgroundImage;
-                                }
-                            } else {
-                                return this;
-                            }
-                            if (online) {
-                                return;
-                            }
-                            for (var i = 0; i < info1[3].length; i++) {
-                                this.removeSkill(info1[3][i]);
-                            }
-                            for (var i = 0; i < info2[3].length; i++) {
-                                this.addSkill(info2[3][i]);
-                            }
-                            if (Array.isArray(maxHp)) {
-                                this.maxHp = maxHp[1];
-                                this.hp = maxHp[0];
-                            } else {
-                                var num;
-                                if (maxHp === false) {
-                                    num = 0;
-                                } else {
-                                    if (typeof maxHp != 'number') {
-                                        maxHp = get.infoMaxHp(info2[2]);
-                                    }
-                                    num = maxHp - get.infoMaxHp(info1[2]);
-                                }
-                                if (typeof this.singleHp == 'boolean') {
-                                    if (num % 2 != 0) {
-                                        if (this.singleHp) {
-                                            this.maxHp += (num + 1) / 2;
-                                            this.singleHp = false;
-                                        } else {
-                                            this.maxHp += (num - 1) / 2;
-                                            this.singleHp = true;
-                                            if (!game.online) {
-                                                this.doubleDraw();
-                                            }
+                        // 游戏开始时检查所有角色的圆弧组别是否正确
+                        lib.skill._fix_yh = {
+                            trigger: {
+                                global: 'gameStart'
+                            },
+                            forced: true,
+                            filter: function (event, player) {
+                                return get.mode() !== 'guozhan' && !player.isUnseen(0) && !player.isUnseen(1) && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
+                            },
+                            content: function () {
+                                for (let p of game.players) {
+                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
+                                    let isYh = p.getElementsByClassName("skinYh")
+
+                                    if (isYh.length > 0) {
+                                        let yh = isYh[0]
+                                        let splits = (yh.src || '').split('/')
+                                        let sub = splits[splits.length - 1]
+                                        let curGroup = sub.split('.')[0]
+                                        if (curGroup !== p.group) {
+                                            isYh[0].remove()
+                                            yh = skinSwitch.createYH(p.group)
+                                            p.append(yh)
                                         }
                                     } else {
-                                        this.maxHp += num / 2;
+                                        let yh = skinSwitch.createYH(p.group)
+                                        p.append(yh)
                                     }
-                                } else {
-                                    this.maxHp += num;
                                 }
-                            }
-                            game.broadcast(function (player, from, to, skills) {
-                                player.reinit(from, to, null, true);
-                                player.applySkills(skills);
-                            }, this, from, to, get.skillState(this));
-                            game.addVideo('reinit3', this, {
-                                from: from,
-                                to: to,
-                                hp: this.maxHp,
-                                avatar2: this.name2 == to
-                            });
-                            this.update();
 
-                            var skin = skinSwitch.getDynamicSkin(null, to);
-                            if (this.doubleAvatar) {
-                                let primary = true;
-                                let deputy = true;
-                                // 上面会重新赋值, 所以这里需要修改变身bug
-                                if (originName2 === from) primary = false;
-                                else deputy = false;
-                                if (this.dynamic) {
-                                    this.stopDynamic(primary, deputy);
-                                    decadeUI.CUR_DYNAMIC--;
-                                }
-                                if (skin) {
-                                    skin.player = skin
-                                    this.playDynamic(skin, deputy);
-                                    decadeUI.CUR_DYNAMIC++;
-                                    skinSwitch.dynamic.setBackground(deputy ? "deputy" : "primary", this);
-                                }
-                            } else {
-                                let isYh = this.getElementsByClassName("skinYh");
-                                if (this.dynamic) {
-                                    this.stopDynamic();
-                                    decadeUI.CUR_DYNAMIC--;
-                                }
-                                if (skin) {
-                                    skin.player = skin;
-                                    this.playDynamic(skin, false);
-                                    decadeUI.CUR_DYNAMIC++;
-                                    this.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
-                                    if (isYh.length < 1) {
-                                        let yh = skinSwitch.createYH(this.group);
-                                        this.appendChild(yh);
-                                    }
-                                } else {
-                                    if (isYh.length > 1) isYh[0].remove();
-                                }
                             }
-                        };
+                        }
+
+                        lib.skill._fix_yh = {
+                            trigger: {
+                                global: 'gameStart'
+                            },
+                            forced: true,
+                            filter: function (event, player) {
+                                return get.mode() !== 'guozhan' && !player.isUnseen(0) && !player.isUnseen(1) && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
+                            },
+                            content: function () {
+                                for (let p of game.players) {
+                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
+                                    let isYh = p.getElementsByClassName("skinYh")
+
+                                    if (isYh.length > 0) {
+                                        let yh = isYh[0]
+                                        let splits = (yh.src || '').split('/')
+                                        let sub = splits[splits.length - 1]
+                                        let curGroup = sub.split('.')[0]
+                                        if (curGroup !== p.group) {
+                                            isYh[0].remove()
+                                            yh = skinSwitch.createYH(p.group)
+                                            p.append(yh)
+                                        }
+                                    } else {
+                                        let yh = skinSwitch.createYH(p.group)
+                                        p.append(yh)
+                                    }
+                                }
+
+                            }
+                        }
+
+                        // 不知道怎么合并, 在回合开始和回合结束, 检测Player的group变化
+                        lib.skill._fix_phase_yh = {
+                            trigger: {
+                                player: ['phaseBegin', 'phaseEnd']
+                            },
+                            forced: true,
+                            filter: function (event, player) {
+                                return get.mode() !== 'guozhan' && !player.isUnseen(0) && !player.isUnseen(1) && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
+                            },
+                            content: function () {
+                                for (let p of game.players) {
+                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
+                                    let isYh = p.getElementsByClassName("skinYh")
+
+                                    if (isYh.length > 0) {
+                                        let yh = isYh[0]
+                                        let splits = (yh.src || '').split('/')
+                                        let sub = splits[splits.length - 1]
+                                        let curGroup = sub.split('.')[0]
+                                        if (curGroup !== p.group) {
+                                            isYh[0].remove()
+                                            yh = skinSwitch.createYH(p.group)
+                                            p.append(yh)
+                                        }
+                                    } else {
+                                        let yh = skinSwitch.createYH(p.group)
+                                        p.append(yh)
+                                    }
+                                }
+
+                            }
+                        }
+
+                        // 覆盖reinit方法
+                        lib.element.player.reinit = pfqh_reinit
 
                         // game原有的init函数, 模仿千幻聆音, 为了防止被覆盖, 直接拷贝过来, 也代表着需要随时和game主体的保持一致. 不然会出bug, 就和logSkill一样
                         let gameInit = function(character,character2,skill){
@@ -1281,7 +1421,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             if (animation.player) {
                                 animation.player.isMobile = skinSwitch.isMobile()
                             }
-
                             var avatar = dynamic.play(animation);
 
                             if (deputy === true) {
@@ -1295,6 +1434,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             skinSwitch.chukuangPlayerInit(this, !deputy, animation.player)
                         }
 
+                        window.duilib = newDuilib
+                        // console.log('=====', duilib, newDuilib)
+
                         // 先初步进行初始化
                         if (!lib.config['extension_千幻聆音_enable'] || lib.config['extension_千幻聆音_qhly_decadeCloseDynamic'] || !(lib.config.qhly_currentViewSkin === 'decade' || lib.config.qhly_currentViewSkin === 'shousha')) {
                             overrides(lib.element.player, Player)
@@ -1303,11 +1445,21 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let retryOverride = function (times, timer) {
                         if (times < 0) return
                         if (!window.decadeUI || !lib.skill._decadeUI_usecardBegin) {
+                            console.log(`第${times}次尝试`)
                             let ti = setTimeout(() => {
                                 retryOverride(times-1, ti)
                             }, 10)
                         } else {
                             overrides(lib.element.player, Player)
+                            console.log('替换十周年UI player成功')
+                            // 为当前的每一个player更换init方法
+                            for (let i = 0; i < game.players.length; i++) {
+                                game.players[i].init = Player.init;
+                                game.players[i].playDynamic = Player.playDynamic;
+                                game.players[i].showCharacter = Player.showCharacter;
+                                game.players[i].reinit = pfqh_reinit;
+                            }
+
                             if (timer) {
                                 clearTimeout(timer)
                             }
@@ -1317,6 +1469,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     if (!lib.config['extension_千幻聆音_enable'] || lib.config['extension_千幻聆音_qhly_decadeCloseDynamic'] || !(lib.config.qhly_currentViewSkin === 'decade' || lib.config.qhly_currentViewSkin === 'shousha')) {
                         retryOverride(20)
                     }
+                    // groupChange(lib.element.player)
+                    // for (let i = 0; i < game.players.length; i++) {
+                    //     groupChange(game.players[i])
+                    // }
                 }
 
                 // ======== 替换结束 ========
@@ -1328,9 +1484,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     dest[key] = src[key];
                 }
             }
-            modifyDecadeUIContent()
             updateDecadeDynamicSkin()
-
+            modifyDecadeUIContent()
             // 提前加载换肤的骨骼
             if (window.dcdAnim) {
                 dcdAnim.loadSpine(skinSwitch.huanfu.name, 'skel')
@@ -1339,7 +1494,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
         precontent:function() {
             window.skinSwitch = {
                 name: "皮肤切换",
-                version: 1.09,
+                version: 1.11,
                 url: lib.assetURL + "extension/皮肤切换/",
                 path: 'extension/皮肤切换',
                 dcdPath: 'extension/十周年UI',
@@ -1376,6 +1531,26 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                     }
                     return false;
+                },
+                //判断文件、文件夹是否存在
+                qhly_checkFileExist: function (path, callback) {
+                    if (lib.node && lib.node.fs) {
+                        try {
+                            var stat = lib.node.fs.statSync(__dirname + '/' + path);
+                            callback(stat);
+                        } catch (e) {
+                            callback(false);
+                            return;
+                        }
+                    } else {
+                        resolveLocalFileSystemURL(lib.assetURL + path, (function (name) {
+                            return function (entry) {
+                                callback(true);
+                            }
+                        }(name)), function () {
+                            callback(false);
+                        });
+                    }
                 },
                 isMobile: function () {
                     return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|OperaMini/i.test(navigator.userAgent));
@@ -2754,12 +2929,27 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 direction: me ? false : skinSwitch.getDirection(player),
                                 player: pp,
                             })
+
+                            // 标记为出框状态
+                            player.chukuangState = {
+                                status: true,
+                                action: data.action
+                            }
+
                             if (data.action === 'GongJi' || data.action === 'TeShu') {
                                 // 音效默认寻找与待机动作同名的音效
                                 let playName = avatar.player.name
                                 // 暂时不区分不同出框攻击的音效.
                                 // 开始播放音效, 音效名等同
-                                game.playAudio("..", "extension", "皮肤切换/audio/effect", playName + ".mp3")
+                                // 优先播放十周年同名文件夹下同名的音效文件
+                                let path = 'extension/十周年UI/assets/dynamic/' + playName + '.mp3'
+                                skinSwitch.qhly_checkFileExist(path, exists => {
+                                    if (exists) {
+                                        game.playAudio("..", path)
+                                    } else {
+                                        game.playAudio("..", "extension", "皮肤切换/audio/effect", playName + ".mp3")
+                                    }
+                                })
                             }
 
                         })
@@ -2769,6 +2959,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let player = this.getPlayerById(data.id, data.qhlxBigAvatar)
                         if (!player || !player.dynamic) return
                         let dynamic = player.dynamic
+                        player.chukuangState = {
+                            status: false,
+                        }
                         if (!dynamic.primary && !dynamic.deputy) {
                             return
                         }
@@ -2825,9 +3018,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
                     skinSwitch.chukuangWorkerInit()
                     if (!isPrimary && player.dynamic.deputy) {
+                        console.log('初始化preload deputy...')
                         skinSwitch.chukuangWorkerApi.preLoad(player.dynamic.id, player.dynamic.deputy.id, playParams)
                     }
                     else if (isPrimary && player.dynamic.primary) {
+                        console.log('初始化preload primary...')
                         skinSwitch.chukuangWorkerApi.preLoad(player.dynamic.id, player.dynamic.primary.id, playParams)
                     }
                 },
@@ -2840,9 +3035,53 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     <style>
                         #preview-canvas { position: absolute; width: 100% ;height: 100%; }
                         .previewWindow span {display: inline-block; margin-left: 20px}
+                        input[type='range'] {
+                        -webkit-appearance: none;
+                        width: 200px;
+                        border-radius: 10px; /*这个属性设置使填充进度条时的图形为圆角*/
+                      }
+                      input[type='range']::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                      }
+                      input[type='range']::-webkit-slider-runnable-track {
+                        height: 8px;
+                        border-radius: 10px; /*将轨道设为圆角的*/
+                        background-color: #d6a63c;
+                      }
+                      input[type='range']:focus {
+                        outline: none;
+                      }
+                
+                      input[type='range']::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                        height: 24px;
+                        width: 24px;
+                        margin-top: -8px; /*使滑块超出轨道部分的偏移量相等*/
+                        background: #ffffff;
+                        border-radius: 50%;
+                        cursor: pointer;
+                      }
+                
+                      input[type='range']:focus::-webkit-slider-thumb {
+                        background: #d6a63c;
+                        /* background-image: url('https://p3-passport.byteacctimg.com/img/user-avatar/fc8114566fc29a28d2d49e1964872775~300x300.image'),
+                          -webkit-gradient(linear, left top, left bottom, color-stop(0, #fefefe), color-stop(0.49, #dddddd), color-stop(0.51, #d1d1d1), color-stop(1, #a1a1a1));
+                        background-size: 20px;
+                        background-repeat: no-repeat;
+                        background-position: 50%; */
+                        box-shadow: 0 0 0 3px #fff, 0 0 0 6px #d6a63c;
+                      }
+                
+                      input[type='range']::-webkit-slider-thumb:hover {
+                        background: #d6a63c;
+                      }
+                      input[type='range']:active::-webkit-slider-thumb {
+                        background: #d6a63c;
+                      }
+                        
                     </style>
                     <canvas id="preview-canvas"></canvas>
-                    <div style="color: #fff; position: absolute; top: 0; left: 30px;">
+                    <div id="previewSpineDom" style="color: #fff; position: absolute; top: 0; left: 30px;">
                         <span style="font-weight: bold">spine动画预览窗口</span>
                         <span>目录:</span><select id="folders"></select>
                         <span>骨骼:</span><select id="skeletonList"></select>
@@ -2851,9 +3090,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <span>α预乘:</span><input type="checkbox" id="premultipliedAlpha">
                         <span>flipX:</span><input type="checkbox" id="flipX">
                         <span>flipY:</span><input type="checkbox" id="flipY">
-                        <span>大小:<input id="scale" type="number" value="0.5" step="0.05"></span>
-                        <span>x: <input id="posX" type="number" value="0.5" step="0.05"></span>
-                        <span>y: <input id="posY" type="number" value="0.5" step="0.05"></span>
+                        <span>大小:<input id="scale" type="number" value="0.5" step="0.05" style="width: 50px"></span>
+                        <span>x: <input id="posX" type="number" value="0.5" step="0.05" style="width: 50px"></span>
+                        <span>y: <input id="posY" type="number" value="0.5" step="0.05" style="width: 50px"></span>
                         <span>动画时长:<span id="aniTime"></span></span>
                         <button id="closePreviewWindow" style="margin-left: 20px">关闭预览窗口</button>
                     </div>
@@ -2880,7 +3119,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     let scaleSlider
                     if (window.decadeUI) {
-                        scaleSlider = decadeUI.component.slider(0.1, 3, 0.5)
+                        scaleSlider = document.createElement('input')
+                        scaleSlider.min = '0'
+                        scaleSlider.max = '3'
+                        scaleSlider.value = '0.5'
+                        scaleSlider.type = 'range';
+
+                        // scaleSlider = decadeUI.component.slider(0.1, 3, 0.5)
                         scaleSlider.setAttribute('step', '0.1')
                         let scaleNode = document.getElementById('scale')
                         scaleNode.parentNode.insertBefore(scaleSlider, scaleNode)
@@ -2888,7 +3133,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     let speedSlider
                     if (window.decadeUI) {
-                        speedSlider = decadeUI.component.slider(0.1, 3, 1)
+
+                        speedSlider = document.createElement('input')
+                        speedSlider.min = '0'
+                        speedSlider.max = '4'
+                        speedSlider.type = 'range';
+                        // speedSlider = decadeUI.component.slider(0, 3, 1)
                         speedSlider.setAttribute('step', '0.1')
 
                         let con = document.createElement('span')
@@ -2906,10 +3156,63 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         };
 
                     }
+                    // 将会包装事件的 debounce 函数
+                    function debounce(fn, delay) {
+                        // 维护一个 timer
+                        let timer = null;
+
+                        return function() {
+                            // 通过 ‘this’ 和 ‘arguments’ 获取函数的作用域和变量
+                            let context = this;
+                            let args = arguments;
+
+                            clearTimeout(timer);
+                            timer = setTimeout(function() {
+                                fn.apply(context, args);
+                            }, delay);
+                        }
+                    }
+                    // 拨动动画时长, 跳转到某刻 https://juejin.cn/post/7125409030113067015
+                    let timeSlider
+                    if (window.decadeUI) {
+                        timeSlider = document.createElement('input')
+                        timeSlider.min = '0'
+                        timeSlider.max = '1'
+                        // timeSlider = decadeUI.component.slider(0, 1, 0)
+                        timeSlider.setAttribute('step', '0.01')
+                        timeSlider.type = 'range';
+
+                        let con = document.createElement('span')
+                        let text = document.createElement('span')
+                        text.innerHTML = '进度: 0'
+                        timeSlider.value = '0'
+                        con.appendChild(text)
+                        con.appendChild(timeSlider)
+
+                        let closePreviewWindow = document.getElementById('closePreviewWindow')
+                        closePreviewWindow.parentNode.insertBefore(con, closePreviewWindow)
+
+                        timeSlider.addEventListener('input', debounce(function(e){
+                            text.innerHTML = `进度: ${timeSlider.value}`
+
+                            // 修改speed为0, 并且跳转到具体的时间
+                            let state = skeletons[activeSkeleton].state
+                            speedSlider.value = 0
+                            speedSlider.onchange()
+
+                            let entry = state.tracks[0]
+                            entry.trackTime = Number(timeSlider.value) * entry.animationEnd
+
+                        }, 10))
+                    }
 
                     let angleSlider
                     if (window.decadeUI) {
-                        angleSlider = decadeUI.component.slider(0, 360, 0)
+                        angleSlider = document.createElement('input')
+                        angleSlider.min = '0'
+                        angleSlider.max = '360'
+                        angleSlider.type = 'range'
+                        // angleSlider = decadeUI.component.slider(0, 360, 0)
                         angleSlider.setAttribute('step', '1')
 
                         let con = document.createElement('span')
@@ -2927,6 +3230,217 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         };
 
                     }
+
+                    canvas = document.getElementById('preview-canvas')
+
+                    //  添加双指缩放事件和移动事件
+                    /**
+                     * 获取两点间距离
+                     * @param {object} a 第一个点坐标
+                     * @param {object} b 第二个点坐标
+                     * @returns
+                     */
+                    function getDistance(a, b) {
+                        const x = a.x - b.x;
+                        const y = a.y - b.y;
+                        return Math.hypot(x, y); // Math.sqrt(x * x + y * y);
+                    }
+                    /**
+                     * 获取中点坐标
+                     * @param {object} a 第一个点坐标
+                     * @param {object} b 第二个点坐标
+                     * @returns
+                     */
+                    function getCenter(a, b) {
+                        const x = (a.x + b.x) / 2;
+                        const y = (a.y + b.y) / 2;
+                        return { x: x, y: y };
+                    }
+
+
+                    let result, // 图片缩放宽高
+                        x, // x轴偏移量
+                        y, // y轴偏移量
+                        scale = 0.5, // 缩放比例
+                        maxScale,
+                        minScale = 0.1;
+
+                    // 控制缩放问题 https://juejin.cn/post/6982387923266043941
+                    let canvasSize = canvas.getBoundingClientRect()
+                    x = 0.5 * canvasSize.width
+                    y = 0.5 * canvasSize.height
+                    result = {width: canvasSize.width, height: canvasSize.height}
+
+                    // 双指缩放逻辑
+                    // 全局变量
+                    let isPointerdown = false, // 按下标识
+                        pointers = [], // 触摸点数组
+                        point1 = { x: 0, y: 0 }, // 第一个点坐标
+                        point2 = { x: 0, y: 0 }, // 第二个点坐标
+                        diff = { x: 0, y: 0 }, // 相对于上一次pointermove移动差值
+                        lastPointermove = { x: 0, y: 0 }, // 用于计算diff
+                        lastPoint1 = { x: 0, y: 0 }, // 上一次第一个触摸点坐标
+                        lastPoint2 = { x: 0, y: 0 }, // 上一次第二个触摸点坐标
+                        lastCenter; // 上一次中心点坐标
+                    // 绑定 pointerdown
+                    canvas.addEventListener('pointerdown', function (e) {
+                        pointers.push(e);
+                        point1 = { x: pointers[0].clientX, y: pointers[0].clientY };
+                        if (pointers.length === 1) {
+                            isPointerdown = true;
+                            // image.setPointerCapture(e.pointerId);
+                            lastPointermove = { x: pointers[0].clientX, y: pointers[0].clientY };
+                        } else if (pointers.length === 2) {
+                            point2 = { x: pointers[1].clientX, y: pointers[1].clientY };
+                            lastPoint2 = { x: pointers[1].clientX, y: pointers[1].clientY };
+                            lastCenter = getCenter(point1, point2);
+                        }
+                        lastPoint1 = { x: pointers[0].clientX, y: pointers[0].clientY };
+                    });
+
+                    // 绑定 pointermove
+                    canvas.addEventListener('pointermove', function (e) {
+                        if (isPointerdown) {
+                            handlePointers(e, 'update');
+                            const current1 = { x: pointers[0].clientX, y: pointers[0].clientY };
+                            if (pointers.length === 1) {
+
+                                let vx =  x / canvasSize.width
+                                let vy =  y / canvasSize.height
+                                let px = document.getElementById('posX')
+                                let py = document.getElementById('posY')
+                                px.value = vx.toString()
+                                py.value = vy.toString()
+                                allLoadSkels[curDir][activeSkeleton].previewParams.posX = px.value
+                                allLoadSkels[curDir][activeSkeleton].previewParams.posY = py.value
+
+                                // 单指拖动查看图片
+                                diff.x = current1.x - lastPointermove.x;
+                                diff.y = current1.y - lastPointermove.y;
+                                lastPointermove = { x: current1.x, y: current1.y };
+                                x += diff.x;
+                                y -= diff.y;
+
+                                // image.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0) scale(' + scale + ')';
+                            } else if (pointers.length === 2) {
+                                console.log('xxxx======yyyyy---scale', x, y, scale)
+                                console.log('newX', x / canvasSize.width)
+                                console.log('nweY', y / canvasSize.width)
+
+                                const current2 = { x: pointers[1].clientX, y: pointers[1].clientY };
+                                // 计算相对于上一次移动距离比例 ratio > 1放大，ratio < 1缩小
+                                let ratio = getDistance(current1, current2) / getDistance(lastPoint1, lastPoint2);
+                                // 缩放比例
+                                const _scale = scale * ratio;
+                                if (_scale > maxScale) {
+                                    scale = maxScale;
+                                    ratio = maxScale / scale;
+                                } else if (_scale < minScale) {
+                                    scale = minScale;
+                                    ratio = minScale / scale;
+                                } else {
+                                    scale = _scale;
+                                }
+                                // 计算当前双指中心点坐标
+                                const center = getCenter(current1, current2);
+                                // 计算图片中心偏移量，默认transform-origin: 50% 50%
+                                // 如果transform-origin: 30% 40%，那origin.x = (ratio - 1) * result.width * 0.3
+                                // origin.y = (ratio - 1) * result.height * 0.4
+                                // 如果通过修改宽高或使用transform缩放，但将transform-origin设置为左上角时。
+                                // 可以不用计算origin，因为(ratio - 1) * result.width * 0 = 0
+                                const origin = {
+                                    x: (ratio - 1) * result.width * 0.5,
+                                    y: (ratio - 1) * result.height * 0.5
+                                };
+                                // 计算偏移量，认真思考一下为什么要这样计算(带入特定的值计算一下)
+                                x -= (ratio - 1) * (center.x - x) - origin.x - (center.x - lastCenter.x);
+                                y -= (ratio - 1) * (center.y - y) - origin.y - (center.y - lastCenter.y);
+
+
+                                // image.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0) scale(' + scale + ')';
+                                lastCenter = { x: center.x, y: center.y };
+                                lastPoint1 = { x: current1.x, y: current1.y };
+                                lastPoint2 = { x: current2.x, y: current2.y };
+                            }
+                        }
+                        e.preventDefault();
+                    });
+
+                    // 绑定 pointerup
+                    canvas.addEventListener('pointerup', function (e) {
+                        if (isPointerdown) {
+                            handlePointers(e, 'delete');
+                            if (pointers.length === 0) {
+                                isPointerdown = false;
+                            } else if (pointers.length === 1) {
+                                point1 = { x: pointers[0].clientX, y: pointers[0].clientY };
+                                lastPointermove = { x: pointers[0].clientX, y: pointers[0].clientY };
+                            }
+                        }
+                    });
+
+                    // 绑定 pointercancel
+                    canvas.addEventListener('pointercancel', function (e) {
+                        if (isPointerdown) {
+                            isPointerdown = false;
+                            pointers.length = 0;
+                        }
+                    });
+
+                    // 放大缩小事件
+                    canvas.addEventListener('wheel', function (e) {
+                        let ratio = 1.1;
+                        // 缩小
+                        if (e.deltaY > 0) {
+                            ratio = 1 / 1.1;
+                        }
+                        // 限制缩放倍数
+                        const _scale = scale * ratio;
+                        if (_scale > maxScale) {
+                            ratio = maxScale / scale;
+                            scale = maxScale;
+                        } else if (_scale < minScale) {
+                            ratio = minScale / scale;
+                            scale = minScale;
+                        } else {
+                            scale = _scale;
+                        }
+                        // 目标元素是img说明鼠标在img上，以鼠标位置为缩放中心，否则默认以图片中心点为缩放中心
+                        // if (e.target.tagName === 'IMG') {
+                        //     const origin = {
+                        //         x: (ratio - 1) * result.width * 0.5,
+                        //         y: (ratio - 1) * result.height * 0.5
+                        //     };
+                        //     // 计算偏移量
+                        //     x -= (ratio - 1) * (e.clientX - x) - origin.x;
+                        //     y -= (ratio - 1) * (e.clientY - y) - origin.y;
+                        // }
+
+
+                        scaleSlider.value = scale;
+                        // 手动触发change事件
+                        scaleSlider.dispatchEvent(new CustomEvent('change'));
+
+                        e.preventDefault();
+                    })
+
+                    /**
+                     * 更新或删除指针
+                     * @param {PointerEvent} e
+                     * @param {string} type
+                     */
+                    function handlePointers(e, type) {
+                        for (let i = 0; i < pointers.length; i++) {
+                            if (pointers[i].pointerId === e.pointerId) {
+                                if (type === 'update') {
+                                    pointers[i] = e;
+                                } else if (type === 'delete') {
+                                    pointers.splice(i, 1);
+                                }
+                            }
+                        }
+                    }
+
 
                     document.getElementById('closePreviewWindow').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                         // 删除自己当前节点即可
@@ -3283,7 +3797,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         var skeleton = skeletons[activeSkeleton].skeleton;
                         var state = skeletons[activeSkeleton].state;
                         var bounds = skeletons[activeSkeleton].bounds;
-
                         let speed = 1
                         if (speedSlider) {
                             speed = speedSlider.value
@@ -3398,6 +3911,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             }, function() {
                 skinSwitch.saveSkinParams = {}
             });
+
+            // 加载新的ani
+            lib.init.js(skinSwitch.url, 'animation')
 
             let editBox  // 编辑动皮参数的弹窗
             let adjustPos  // 显示动画的相对位置. 这个是相对全局window, 用于辅助调试pos位置
@@ -4344,14 +4860,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
 
                 // 引入js
-                let js = function (path) {
+                let js = function (path, onload, onerror) {
                     if (!path) return console.error('path');
 
                     let script = document.createElement('script');
-                    script.onload = function () {
-                        window.skinSwitchMessage = new SkinSwitchMessage()
-                    }
-                    script.onerror = function () {
+                    script.onload = onload
+                    script.onerror = onerror || function () {
                         console.error(this.src + 'not found');
                     }
                     script.src = path
@@ -4360,7 +4874,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 // <!-- 消息外层容器，因为消息提醒基本上是全局的，所以这里用id，所有的弹出消息都是需要插入到这个容器里边的 -->
                 let msgContainer = ui.create.div(document.getElementById('arena'))
                 msgContainer.id = 'message-container'
-                js(skinSwitch.url + 'component/message.js')
+                js(skinSwitch.url + 'component/message.js', () => {
+                    window.skinSwitchMessage = new SkinSwitchMessage()
+                })
 
                 // 在看千幻聆音代码的时候发现切换皮肤后会执行一个回调函数, 这个可以比较好的解决动静皮互相切换的问题, 只有非千幻聆音雷修版本才会触发这个回调函数
                 if (lib.config[skinSwitch.configKey.useDynamic] && skinSwitch.qhly_hasExtension('千幻聆音') && !(lib.config['qhly_viewskin_css'] === 'newui_dc' ||  lib.config['qhly_viewskin_css'] === 'newui_ss')) {
@@ -4392,14 +4908,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
                 },
             },
-            "backupFileDui": {
-                name: "<div><button class='engBtn' onclick='skinSwitch.backupFileDui()'>备份十周年文件</button></div>",
-                clear: true
-            },
-            "ImportFileDui": {
-                name: "<div><button id='importFileDui' class='engBtn' onclick='skinSwitch.modifyFileDui()'>导入十周年文件</button> </div>",
-                clear: true
-            },
+            // "backupFileDui": {
+            //     name: "<div><button class='engBtn' onclick='skinSwitch.backupFileDui()'>备份十周年文件</button></div>",
+            //     clear: true
+            // },
+            // "ImportFileDui": {
+            //     name: "<div><button id='importFileDui' class='engBtn' onclick='skinSwitch.modifyFileDui()'>导入十周年文件</button> </div>",
+            //     clear: true
+            // },
             "previewDynamic": {
                 name: "<div><button onclick='skinSwitch.previewDynamic()'>预览spine动画(资源文件放入asset文件中)</button></div>",
                 clear: true
@@ -4410,7 +4926,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 clear: true
             },
             'closeXYPosAdjust': {
-                name: "是否关闭位置微调",
+                name: "关闭位置微调",
                 "init": true,
                 "intro": "预览窗口空间有点不够,这个微调功能用到比较少,所以可以选择关闭",
             },
@@ -4425,7 +4941,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 "intro": "将预览动态皮肤参数界面加入顶部菜单栏",
             },
             "hideHuanFu": {
-                name: "关闭更换动皮",
+                name: "更换动皮",
                 "init": false,
                 "intro": "如果安装了千幻雷修,可以关闭更换动皮功能",
             },
@@ -4458,13 +4974,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 translate:{
                 },
             },
-            intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;初次使用请先备份并导入十周年UI的animation.js和dynamicWorker.js文件<br>&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有搬自于EngEX扩展的动皮换肤功能,但是并不支持静态皮肤切换, 完整体验需要配合千幻聆音雷修版本,支持动态静态皮肤切换. 本扩展完全兼容千幻雷修并会保持同步更新兼容。<br>&nbsp;&nbsp;注意：由于重新定义了部分函数(logSill)，会和部分扩展的部分内容相互覆盖。<br>&nbsp;&nbsp;<font color=\"red\">每次更新扩展后, 请首先重新覆盖一下原先十周年UI的dynamicWorker文件</font>',
+            intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,攻击附带指示线以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有动静皮切换功能,其中静皮切换需要配合千幻聆音是用. 如果想是用UI更好看的动静切换功能, 请使用千幻雷修版本的动静切换。<br><br>&nbsp;&nbsp;4.现在动皮支持json的骨骼以及可以添加alpha预乘参数',
+            // intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;初次使用请先备份并导入十周年UI的animation.js和dynamicWorker.js文件<br>&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有搬自于EngEX扩展的动皮换肤功能,但是并不支持静态皮肤切换, 完整体验需要配合千幻聆音雷修版本,支持动态静态皮肤切换. 本扩展完全兼容千幻雷修并会保持同步更新兼容。<br>&nbsp;&nbsp;注意：由于重新定义了部分函数(logSill)，会和部分扩展的部分内容相互覆盖。<br>&nbsp;&nbsp;<font color=\"red\">每次更新扩展后, 请首先重新覆盖一下原先十周年UI的dynamicWorker文件</font>',
             // intro:"基于EngEX扩展的动态换肤部分魔改.原来使用E佬写的EngEX插件自动出框非常好用,但是非常麻烦的是调整参数不方便, 于是就自己观摩E佬和特效测试扩展大佬的代码编写了调整参数这个简单的扩展\n" +
             //     "基于本人是个后端人员,审美有限(汗),所以换肤部分样式素材基本照搬E佬的EngEX扩展. 第一次写插件,应该有挺多bug,希望见谅.",
             author:"yscl",
             diskURL:"",
             forumURL:"",
-            version:"1.07",
+            version:"1.11",
         },
         files:{"character":[],"card":[],"skill":[]}}
 })
@@ -4544,3 +5061,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  2. 添加指示线测试. 暂时效果不算很好, 比较乱
  3. 预览spine功能添加动画时间显示
  */
+
+/** 1.11版本更新
+ 1. 指示线能正确指示武将框中央.
+ 2. 将十周年worker的文件放到自己这边进行管理, 以后不用进行替换十周年文件替换了
+ 3. 增加将动皮音效放入十周年文件夹动皮同文件下, 也ok
+ 4. 可以使用json骨骼作为待机骨骼, 可以使用需要alpha预乘的骨骼
+ 6. 增加开局和回合开始结束检查角色的框是否正确. 修复界左慈这类可以变换势力的武将
+ 7. 预览spine添加鼠标控制以及滑动控制大小位置, 双指捏合放大缩小
+*/
