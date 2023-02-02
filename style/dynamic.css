@@ -283,3 +283,14 @@
     clip-path: polygon(0% 99%, 0% 6%, 11% 1%, 52% 0%, 86% 0%, 99% 6%, 100% 100%);
 }
 
+
+
+/* 预览样式 */
+.pfqh-preview-background {
+    z-index: 3000;
+    display: block;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+}

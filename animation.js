@@ -240,9 +240,15 @@ var newDuilib;
 			if (domNode) {
 				if (this.referFollow || !this.referBounds) {
 					var rect = domNode.getBoundingClientRect();
+					let y
+					if (window.decadeUI) {
+						y = decadeUI.get.bodySize().height - rect.bottom
+					} else {
+						y = domNode.bodySize.bodyHeight - rect.bottom
+					}
 					this.referBounds = {
 						x: rect.left,
-						y: domNode.bodySize.bodyHeight - rect.bottom,
+						y: y,
 						width: rect.width,
 						height: rect.height,
 					};
@@ -776,17 +782,11 @@ var newDuilib;
 			skeleton.completed = false;
 
 			if (position != undefined) {
+				sprite.referNode = position.parent;
+				sprite.referFollow = position.follow;
 				for (let k in position) {
 					sprite[k] = position[k]
 				}
-				// sprite.x = position.x;
-				// sprite.y = position.y;
-				// sprite.height = position.height;
-				// sprite.width = position.width;
-				// sprite.scale = position.scale;
-				// sprite.angle = position.angle;
-				// sprite.referNode = position.parent;
-				// sprite.referFollow = position.follow;
 			}
 			
 			var entry = skeleton.state.setAnimation(0, sprite.action ? sprite.action : skeleton.defaultAction, sprite.loop);

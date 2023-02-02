@@ -913,12 +913,12 @@ function isChuKuang(data) {
                 return
             }
             // 延时100ms执行动作, 防止两次触发相近
-            if (playerState.time && new Date().getTime() - playerState.time < 50) {
-                if (playerState.lastAction && playerState.lastAction !== data.action) {
-                    setTimeout(() => {
-                        isChuKuang(data)
-                    }, 100)
-                }
+            if (playerState.time && new Date().getTime() - playerState.time < 40) {
+                // if (playerState.lastAction && playerState.lastAction !== data.action) {
+                //     setTimeout(() => {
+                //         isChuKuang(data)
+                //     }, 100)
+                // }
                 return;
             }
 

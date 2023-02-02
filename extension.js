@@ -612,7 +612,15 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                                     let timeDelta = player.__lastGongji ? new Date().getTime() - player.__lastGongji.t : 10000
 
+                                    // 间隔极短的连续攻击忽略不计
+                                    if (timeDelta < 20) return
+
                                     if (timeDelta >= 200) {
+                                        if (/*timeDelta <= 350 &&*/ event.triggername !== 'useCardBefore') {
+                                            if (event._trigger.targets.length <= player.__lastGongji.tLen) {
+                                                return
+                                            }
+                                        }
                                         console.log('出框111', 'event', event, 'delta', timeDelta)
                                         skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', args ? {attackArgs: args, triggername: event.triggername} : {});
                                         player.__lastGongji = {
@@ -3028,7 +3036,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 },
                 // 这个就是官方spine的demo拿来简单修改修改, 做一个简单的preview预览页面
                 previewDynamic: function () {
-                    let previewWindow = ui.create.div('.previewWindow', ui.window)
+
+                    let background = ui.create.div('.pfqh-preview-background', ui.window);
+
+                    let previewWindow = ui.create.div('.previewWindow', background)
                     previewWindow.id = 'previewWindowDiv'
                     previewWindow.style = `background: rgb(60,60,60);z-index: 3000;position: fixed; width: 100%; height: 100%;`
                     previewWindow.innerHTML = `
@@ -3118,18 +3129,16 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let isClosed = false   // 全局信号, 通知关闭, 停止渲染
 
                     let scaleSlider
-                    if (window.decadeUI) {
-                        scaleSlider = document.createElement('input')
-                        scaleSlider.min = '0'
-                        scaleSlider.max = '3'
-                        scaleSlider.value = '0.5'
-                        scaleSlider.type = 'range';
+                    scaleSlider = document.createElement('input')
+                    scaleSlider.min = '0'
+                    scaleSlider.max = '3'
+                    scaleSlider.value = '0.5'
+                    scaleSlider.type = 'range';
 
-                        // scaleSlider = decadeUI.component.slider(0.1, 3, 0.5)
-                        scaleSlider.setAttribute('step', '0.1')
-                        let scaleNode = document.getElementById('scale')
-                        scaleNode.parentNode.insertBefore(scaleSlider, scaleNode)
-                    }
+                    // scaleSlider = decadeUI.component.slider(0.1, 3, 0.5)
+                    scaleSlider.setAttribute('step', '0.1')
+                    let scaleNode = document.getElementById('scale')
+                    scaleNode.parentNode.insertBefore(scaleSlider, scaleNode)
 
                     let speedSlider
                     if (window.decadeUI) {
@@ -3172,6 +3181,32 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }, delay);
                         }
                     }
+
+                    let thunderForbidTouch = function () {
+                        _status.th_swipe_up = lib.config.swipe_up;
+                        lib.config.swipe_up = ''
+                        _status.th_swipe_down = lib.config.swipe_down;
+                        lib.config.swipe_down = ''
+                        _status.th_swipe_left = lib.config.swipe_left;
+                        lib.config.swipe_left = ''
+                        _status.th_swipe_right = lib.config.swipe_right;
+                        lib.config.swipe_right = ''
+                        _status.th_gamePause = ui.click.pause
+                        ui.click.pause = ()=>{}
+                    }
+
+                    let thunderAllowTouch = function () {
+                        if (_status.th_swipe_up) {
+                            lib.config.swipe_up =  _status.th_swipe_up
+                            lib.config.swipe_down = _status.th_swipe_down
+                            lib.config.swipe_left = _status.th_swipe_left
+                            lib.config.swipe_right = _status.th_swipe_right
+                            ui.click.pause = _status.th_gamePause
+                        }
+                    }
+
+                    thunderForbidTouch()
+
                     // 拨动动画时长, 跳转到某刻 https://juejin.cn/post/7125409030113067015
                     let timeSlider
                     if (window.decadeUI) {
@@ -3184,7 +3219,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         let con = document.createElement('span')
                         let text = document.createElement('span')
-                        text.innerHTML = '进度: 0'
+                        text.innerHTML = '进度: 0.00'
                         timeSlider.value = '0'
                         con.appendChild(text)
                         con.appendChild(timeSlider)
@@ -3193,7 +3228,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         closePreviewWindow.parentNode.insertBefore(con, closePreviewWindow)
 
                         timeSlider.addEventListener('input', debounce(function(e){
-                            text.innerHTML = `进度: ${timeSlider.value}`
+                            text.innerHTML = `进度: ${Number(timeSlider.value).toFixed(2)}`
 
                             // 修改speed为0, 并且跳转到具体的时间
                             let state = skeletons[activeSkeleton].state
@@ -3231,223 +3266,70 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     }
 
+                    // 被监视的元素
                     canvas = document.getElementById('preview-canvas')
-
-                    //  添加双指缩放事件和移动事件
-                    /**
-                     * 获取两点间距离
-                     * @param {object} a 第一个点坐标
-                     * @param {object} b 第二个点坐标
-                     * @returns
-                     */
-                    function getDistance(a, b) {
-                        const x = a.x - b.x;
-                        const y = a.y - b.y;
-                        return Math.hypot(x, y); // Math.sqrt(x * x + y * y);
-                    }
-                    /**
-                     * 获取中点坐标
-                     * @param {object} a 第一个点坐标
-                     * @param {object} b 第二个点坐标
-                     * @returns
-                     */
-                    function getCenter(a, b) {
-                        const x = (a.x + b.x) / 2;
-                        const y = (a.y + b.y) / 2;
-                        return { x: x, y: y };
-                    }
-
-
-                    let result, // 图片缩放宽高
-                        x, // x轴偏移量
-                        y, // y轴偏移量
-                        scale = 0.5, // 缩放比例
-                        maxScale,
-                        minScale = 0.1;
-
-                    // 控制缩放问题 https://juejin.cn/post/6982387923266043941
+                    let px = document.getElementById('posX')
+                    let py = document.getElementById('posY')
                     let canvasSize = canvas.getBoundingClientRect()
-                    x = 0.5 * canvasSize.width
-                    y = 0.5 * canvasSize.height
-                    result = {width: canvasSize.width, height: canvasSize.height}
+                    let x = 0.5 * canvasSize.width
+                    let y = 0.5 * canvasSize.height
+                    let scale = 0.5
+                    // 开始监视el上的手势变化
+                    const at = new AnyTouch(canvas)
 
-                    // 双指缩放逻辑
-                    // 全局变量
-                    let isPointerdown = false, // 按下标识
-                        pointers = [], // 触摸点数组
-                        point1 = { x: 0, y: 0 }, // 第一个点坐标
-                        point2 = { x: 0, y: 0 }, // 第二个点坐标
-                        diff = { x: 0, y: 0 }, // 相对于上一次pointermove移动差值
-                        lastPointermove = { x: 0, y: 0 }, // 用于计算diff
-                        lastPoint1 = { x: 0, y: 0 }, // 上一次第一个触摸点坐标
-                        lastPoint2 = { x: 0, y: 0 }, // 上一次第二个触摸点坐标
-                        lastCenter; // 上一次中心点坐标
-                    // 绑定 pointerdown
-                    canvas.addEventListener('pointerdown', function (e) {
-                        pointers.push(e);
-                        point1 = { x: pointers[0].clientX, y: pointers[0].clientY };
-                        if (pointers.length === 1) {
-                            isPointerdown = true;
-                            // image.setPointerCapture(e.pointerId);
-                            lastPointermove = { x: pointers[0].clientX, y: pointers[0].clientY };
-                        } else if (pointers.length === 2) {
-                            point2 = { x: pointers[1].clientX, y: pointers[1].clientY };
-                            lastPoint2 = { x: pointers[1].clientX, y: pointers[1].clientY };
-                            lastCenter = getCenter(point1, point2);
-                        }
-                        lastPoint1 = { x: pointers[0].clientX, y: pointers[0].clientY };
+                    // 当拖拽的时候pan事件触发 拖拽事件
+                    at.on('pan', (e) => {
+                        if (e.nativeEvent.touches && e.nativeEvent.touches.length > 1) return
+                        // e包含位移/速度/方向等信息
+                        // 获取x,y偏移
+                        let deltaX = e.deltaX
+                        let deltaY = e.deltaY
+                        x += deltaX
+                        y -= deltaY
+                        let vx =  x / canvasSize.width
+                        let vy =  y / canvasSize.height
+                        px.value = vx.toString()
+                        py.value = vy.toString()
+                        allLoadSkels[curDir][activeSkeleton].previewParams.posX = px.value
+                        allLoadSkels[curDir][activeSkeleton].previewParams.posY = py.value
                     });
 
-                    // 绑定 pointermove
-                    canvas.addEventListener('pointermove', function (e) {
-                        if (isPointerdown) {
-                            handlePointers(e, 'update');
-                            const current1 = { x: pointers[0].clientX, y: pointers[0].clientY };
-                            if (pointers.length === 1) {
-
-                                let vx =  x / canvasSize.width
-                                let vy =  y / canvasSize.height
-                                let px = document.getElementById('posX')
-                                let py = document.getElementById('posY')
-                                px.value = vx.toString()
-                                py.value = vy.toString()
-                                allLoadSkels[curDir][activeSkeleton].previewParams.posX = px.value
-                                allLoadSkels[curDir][activeSkeleton].previewParams.posY = py.value
-
-                                // 单指拖动查看图片
-                                diff.x = current1.x - lastPointermove.x;
-                                diff.y = current1.y - lastPointermove.y;
-                                lastPointermove = { x: current1.x, y: current1.y };
-                                x += diff.x;
-                                y -= diff.y;
-
-                                // image.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0) scale(' + scale + ')';
-                            } else if (pointers.length === 2) {
-                                console.log('xxxx======yyyyy---scale', x, y, scale)
-                                console.log('newX', x / canvasSize.width)
-                                console.log('nweY', y / canvasSize.width)
-
-                                const current2 = { x: pointers[1].clientX, y: pointers[1].clientY };
-                                // 计算相对于上一次移动距离比例 ratio > 1放大，ratio < 1缩小
-                                let ratio = getDistance(current1, current2) / getDistance(lastPoint1, lastPoint2);
-                                // 缩放比例
-                                const _scale = scale * ratio;
-                                if (_scale > maxScale) {
-                                    scale = maxScale;
-                                    ratio = maxScale / scale;
-                                } else if (_scale < minScale) {
-                                    scale = minScale;
-                                    ratio = minScale / scale;
-                                } else {
-                                    scale = _scale;
-                                }
-                                // 计算当前双指中心点坐标
-                                const center = getCenter(current1, current2);
-                                // 计算图片中心偏移量，默认transform-origin: 50% 50%
-                                // 如果transform-origin: 30% 40%，那origin.x = (ratio - 1) * result.width * 0.3
-                                // origin.y = (ratio - 1) * result.height * 0.4
-                                // 如果通过修改宽高或使用transform缩放，但将transform-origin设置为左上角时。
-                                // 可以不用计算origin，因为(ratio - 1) * result.width * 0 = 0
-                                const origin = {
-                                    x: (ratio - 1) * result.width * 0.5,
-                                    y: (ratio - 1) * result.height * 0.5
-                                };
-                                // 计算偏移量，认真思考一下为什么要这样计算(带入特定的值计算一下)
-                                x -= (ratio - 1) * (center.x - x) - origin.x - (center.x - lastCenter.x);
-                                y -= (ratio - 1) * (center.y - y) - origin.y - (center.y - lastCenter.y);
-
-
-                                // image.style.transform = 'translate3d(' + x + 'px, ' + y + 'px, 0) scale(' + scale + ')';
-                                lastCenter = { x: center.x, y: center.y };
-                                lastPoint1 = { x: current1.x, y: current1.y };
-                                lastPoint2 = { x: current2.x, y: current2.y };
-                            }
-                        }
-                        e.preventDefault();
-                    });
-
-                    // 绑定 pointerup
-                    canvas.addEventListener('pointerup', function (e) {
-                        if (isPointerdown) {
-                            handlePointers(e, 'delete');
-                            if (pointers.length === 0) {
-                                isPointerdown = false;
-                            } else if (pointers.length === 1) {
-                                point1 = { x: pointers[0].clientX, y: pointers[0].clientY };
-                                lastPointermove = { x: pointers[0].clientX, y: pointers[0].clientY };
-                            }
-                        }
-                    });
-
-                    // 绑定 pointercancel
-                    canvas.addEventListener('pointercancel', function (e) {
-                        if (isPointerdown) {
-                            isPointerdown = false;
-                            pointers.length = 0;
-                        }
-                    });
-
-                    // 放大缩小事件
-                    canvas.addEventListener('wheel', function (e) {
-                        let ratio = 1.1;
-                        // 缩小
-                        if (e.deltaY > 0) {
-                            ratio = 1 / 1.1;
-                        }
-                        // 限制缩放倍数
-                        const _scale = scale * ratio;
-                        if (_scale > maxScale) {
-                            ratio = maxScale / scale;
-                            scale = maxScale;
-                        } else if (_scale < minScale) {
-                            ratio = minScale / scale;
-                            scale = minScale;
-                        } else {
-                            scale = _scale;
-                        }
-                        // 目标元素是img说明鼠标在img上，以鼠标位置为缩放中心，否则默认以图片中心点为缩放中心
-                        // if (e.target.tagName === 'IMG') {
-                        //     const origin = {
-                        //         x: (ratio - 1) * result.width * 0.5,
-                        //         y: (ratio - 1) * result.height * 0.5
-                        //     };
-                        //     // 计算偏移量
-                        //     x -= (ratio - 1) * (e.clientX - x) - origin.x;
-                        //     y -= (ratio - 1) * (e.clientY - y) - origin.y;
-                        // }
-
-
-                        scaleSlider.value = scale;
+                    at.on(['pinchin', 'pinchout'], debounce((e) => {
+                        // e包含位移/速度/方向等信息
+                        // 获取x,y偏移
+                        // scale *= e.scale
+                        if (e.scale > 1) scale += 0.1
+                        else if (e.scale < 1) scale -= 0.1
+                        scaleSlider.value = scale.toString()
                         // 手动触发change事件
                         scaleSlider.dispatchEvent(new CustomEvent('change'));
-
                         e.preventDefault();
-                    })
+                    }, 250))
 
-                    /**
-                     * 更新或删除指针
-                     * @param {PointerEvent} e
-                     * @param {string} type
-                     */
-                    function handlePointers(e, type) {
-                        for (let i = 0; i < pointers.length; i++) {
-                            if (pointers[i].pointerId === e.pointerId) {
-                                if (type === 'update') {
-                                    pointers[i] = e;
-                                } else if (type === 'delete') {
-                                    pointers.splice(i, 1);
-                                }
-                            }
+                    canvas.addEventListener('wheel', debounce(function (e) {
+                        let ratio = 0.05;
+                        // 缩小
+
+                        if (e.deltaY > 0) {
+                            ratio = -0.05;
                         }
-                    }
-
+                        scale = scale + ratio;
+                        // 限制缩放倍数
+                        if (scale < 0.1) scale = 0.1
+                        scaleSlider.value = scale.toString()
+                        // 手动触发change事件
+                        scaleSlider.dispatchEvent(new CustomEvent('input'));
+                        e.preventDefault();
+                    }, 0))
 
                     document.getElementById('closePreviewWindow').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
                         // 删除自己当前节点即可
-                        let self = document.getElementById('previewWindowDiv')
+                        let self = background
+                        // let self = document.getElementById('previewWindowDiv')
                         let parent = self.parentElement
                         // 停止当前的render
                         isClosed = true
+                        thunderAllowTouch()
                         setTimeout(() => {
                             // 延时删除节点, 等待最后一次渲染完成
                             parent.removeChild(self)
@@ -3513,7 +3395,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         // 动态的获取放入asset文件夹下的所有文件, 然后下拉进行预览
                         game.getFileList(skinSwitch.path + '/assets', function (folds, files) {
-
+                            let folderSel = document.getElementById('folders')
                             let getDynamicFiles = files => {
                                 let skels = {}
                                 files.forEach(file => {
@@ -3526,9 +3408,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 })
                                 return skels
                             }
-                            // 加载主目录下的所有文件
-                            allSkels['根目录'] = getDynamicFiles(files)
-                            let folderSel = document.getElementById('folders')
                             let folderAdd = function (folder, selected) {
                                 let option = document.createElement('option')
                                 option.setAttribute('value', folder)
@@ -3536,20 +3415,56 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 if (selected) option.setAttribute('selected', selected)
                                 folderSel.options.add(option)
                             }
-                            folderAdd('根目录', true)
-
+                            let selectFolder = ''
+                            if (files.length > 0) {
+                                // 加载主目录下的所有文件
+                                allSkels['根目录'] = getDynamicFiles(files);
+                                folderAdd('根目录', true)
+                                selectFolder = '根目录'
+                            }
 
                             // 获取以及和二级目录对应的文件信息
                             folds.forEach(fold => {
                                 game.getFileList(skinSwitch.path + '/assets/' + fold, function (folds, files)  {
                                     allSkels[fold] = getDynamicFiles(files)
-                                    folderAdd(fold, false)
+                                    if (!selectFolder) {
+                                        folderAdd(fold, true)
+                                        selectFolder = fold
+                                        curDir = fold
+                                    } else {
+                                        folderAdd(fold, false)
+                                    }
                                 })
                             })
+                            console.log('selectFolder===', selectFolder)
+                            if (!selectFolder && folds.length == 0) {
+                                if (window.skinSwitchMessage) {
+                                    skinSwitchMessage.show({
+                                        'type': 'warning',
+                                        'text': `assets文件夹并无骨骼可以进行预览`,
+                                        'duration': 3000
+                                    })
+                                }
+                                return
+                            }
 
-                            // 先加载根目录下的所有骨骼
-                            loadAssets('根目录', allSkels['根目录'])
-                            requestAnimationFrame(load)
+                            let waitFirstLoad = function () {
+                                if (!selectFolder) {
+                                    requestAnimationFrame(waitFirstLoad)
+                                } else {
+                                    loadAssets(selectFolder, allSkels[selectFolder])
+                                    requestAnimationFrame(load)
+                                }
+                            }
+
+                            // 等待第一个文件夹加载完成
+                            if (!selectFolder && folds.length > 0) {
+                                requestAnimationFrame(waitFirstLoad)
+                            } else {
+                                loadAssets(selectFolder, allSkels[selectFolder])
+                                requestAnimationFrame(load)
+                            }
+
                         })
 
                         document.getElementById('scale').oninput = function (e) {
@@ -3586,7 +3501,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                         if (scaleSlider) {
-                            scaleSlider.onchange = function(){
+                            scaleSlider.oninput = function(){
                                 // let v= s1.value / 8;
                                 document.getElementById('scale').value = scaleSlider.value
                                 allLoadSkels[curDir][activeSkeleton].previewParams.scale = scaleSlider.value
@@ -3914,6 +3829,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
             // 加载新的ani
             lib.init.js(skinSwitch.url, 'animation')
+            lib.init.js(skinSwitch.url + 'component', 'any-touch.umd.min')
 
             let editBox  // 编辑动皮参数的弹窗
             let adjustPos  // 显示动画的相对位置. 这个是相对全局window, 用于辅助调试pos位置
@@ -4878,6 +4794,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     window.skinSwitchMessage = new SkinSwitchMessage()
                 })
 
+
                 // 在看千幻聆音代码的时候发现切换皮肤后会执行一个回调函数, 这个可以比较好的解决动静皮互相切换的问题, 只有非千幻聆音雷修版本才会触发这个回调函数
                 if (lib.config[skinSwitch.configKey.useDynamic] && skinSwitch.qhly_hasExtension('千幻聆音') && !(lib.config['qhly_viewskin_css'] === 'newui_dc' ||  lib.config['qhly_viewskin_css'] === 'newui_ss')) {
                     if (!lib.qhly_callbackList) lib.qhly_callbackList = []
@@ -4974,7 +4891,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 translate:{
                 },
             },
-            intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,攻击附带指示线以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有动静皮切换功能,其中静皮切换需要配合千幻聆音是用. 如果想是用UI更好看的动静切换功能, 请使用千幻雷修版本的动静切换。<br><br>&nbsp;&nbsp;4.现在动皮支持json的骨骼以及可以添加alpha预乘参数',
+            intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,攻击附带指示线以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有动静皮切换功能,其中静皮切换需要配合千幻聆音是用. 如果想是用UI更好看的动静切换功能, 请使用千幻雷修版本的动静切换。<br><br>&nbsp;&nbsp;4.现在动皮支持json的骨骼以及可以添加alpha预乘参数<br><br>&nbsp;&nbsp;最后, 感谢无名杀超市群的逝去の記憶,鹰击长空帮忙测试与提出意见',
             // intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;初次使用请先备份并导入十周年UI的animation.js和dynamicWorker.js文件<br>&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有搬自于EngEX扩展的动皮换肤功能,但是并不支持静态皮肤切换, 完整体验需要配合千幻聆音雷修版本,支持动态静态皮肤切换. 本扩展完全兼容千幻雷修并会保持同步更新兼容。<br>&nbsp;&nbsp;注意：由于重新定义了部分函数(logSill)，会和部分扩展的部分内容相互覆盖。<br>&nbsp;&nbsp;<font color=\"red\">每次更新扩展后, 请首先重新覆盖一下原先十周年UI的dynamicWorker文件</font>',
             // intro:"基于EngEX扩展的动态换肤部分魔改.原来使用E佬写的EngEX插件自动出框非常好用,但是非常麻烦的是调整参数不方便, 于是就自己观摩E佬和特效测试扩展大佬的代码编写了调整参数这个简单的扩展\n" +
             //     "基于本人是个后端人员,审美有限(汗),所以换肤部分样式素材基本照搬E佬的EngEX扩展. 第一次写插件,应该有挺多bug,希望见谅.",
@@ -5071,3 +4988,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  7. 预览spine添加鼠标控制以及滑动控制大小位置, 双指捏合放大缩小
  8. 修复动皮出框可能抽搐(极短时间内连续出框)的问题
 */
+
+/** 1.11.1与1.11.2版本更新
+ 1. 骨骼预览判断更完整, 防止报错
+ 2. 骨骼预览图层关闭bug
+ 3. 手杀骨骼连续出框抽搐抖动问题
+ 4. 修复ani文件修改导致位置偏移bug
+
+ */
