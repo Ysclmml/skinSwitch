@@ -3302,7 +3302,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         else if (e.scale < 1) scale -= 0.1
                         scaleSlider.value = scale.toString()
                         // 手动触发change事件
-                        scaleSlider.dispatchEvent(new CustomEvent('change'));
+                        scaleSlider.dispatchEvent(new CustomEvent('input'));
                         e.preventDefault();
                     }, 250))
 
