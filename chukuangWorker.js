@@ -38,7 +38,6 @@ let chukuangId = 99999   // 自动出框的nodeID起始, 为了不和主线程�
 class PlayerAnimation {
 
     constructor(data) {
-        console.log('create data----', data)
         this.anni = new newDuilib.AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas)
         this.playerAni = {}  // 这个用来管理每个角色的Id及其skinId的配置数据
 
@@ -49,6 +48,7 @@ class PlayerAnimation {
     // 提前把当前角色动皮需要用到的骨骼加载, 可能有默认的骨骼, 出场骨骼, 攻击骨骼, 特殊骨骼
     preLoadPlayerSkel(data) {
         let player = data.player
+        if (!player) return
         let _this = this
         this.completeParams(player)
         let pLoad = function (actionParams, times) {
@@ -68,7 +68,7 @@ class PlayerAnimation {
             }
         }
         let arr = []
-        for (let act of [{name: player.name}, player.gongjiAction, player.teshuAction, player.chuchangAction]) {
+        for (let act of [{name: player.name, json: player.json, alpha: player.alpha}, player.gongjiAction, player.teshuAction, player.chuchangAction]) {
             if (act && !arr.includes(act.name)) {
                 arr.push(act.name)
                 pLoad(act, 0)
@@ -135,11 +135,15 @@ class PlayerAnimation {
                 delayTime = 300
             }
             showTime -= delayTime
+
             // 暂时还是开启动画播放速度默认调为1.2, 默认为1太慢了
             if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2
 
         } else {
             if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2
+
+
+
         }
         showTime /= (playNode.speed || 1)
         console.log('showTime', showTime, animation.showTime, playNode.speed)
@@ -393,7 +397,7 @@ class PlayerAnimation {
         playedSprite.actionParams = actionParams
         actionParams.playNode = playedSprite
 
-        this.playChuKuangSpine(playedSprite, {showTime: actionParams.showTime}, data)
+        this.playChuKuangSpine(playedSprite, {showTime: actionParams.showTime}, data);
     }
 
     errPlaySpine (data) {
@@ -906,6 +910,7 @@ function isChuKuang(data) {
             playerState['time'] = new Date().getTime()
         }
         else {
+            console.log(playerState, new Date().getTime(), new Date().getTime() - playerState.time < 40)
             if (playerState.action != null && playerState.action !== data.action) {
                 return
             }
@@ -924,12 +929,12 @@ function isChuKuang(data) {
 
         }
 
-        playerState['time'] = new Date().getTime()
-        playerState['lastAction'] = data.action
+        // playerState['time'] = new Date().getTime()
+        // playerState['lastAction'] = data.action
     }
-    else {
-        playerAnimation.playerState[data.id] = {time: new Date().getTime(), lastAction: data.action}
-    }
+    // else {
+    //     playerAnimation.playerState[data.id] = {time: new Date().getTime(), lastAction: data.action}
+    // }
 
 
     let primarySkinId = data.primarySkinId
@@ -940,6 +945,14 @@ function isChuKuang(data) {
     let extraParams = data.extraParams
 
     if (completePlayerParams(primaryPlayer, data.action)) {
+        if (!playerState) {
+            playerAnimation.playerState[data.id] = {time: new Date().getTime(), lastAction: data.action};
+        } else {
+            playerAnimation.playerState[data.id].time = new Date().getTime()
+            playerAnimation.playerState[data.id].lastAction =  data.action
+        }
+
+
         let actionParams
         if (data.action === 'GongJi') actionParams = primaryPlayer.gongjiAction
         else if (data.action === 'chukuang') actionParams = primaryPlayer.chuchangAction
@@ -954,6 +967,8 @@ function isChuKuang(data) {
         }
         clearTimeout(actionParams.moveToTimeout)
         clearTimeout(actionParams.showTimeout)
+
+
         return postMessage({
             id: data.id,
             skinId: primarySkinId,
@@ -966,6 +981,14 @@ function isChuKuang(data) {
   
     let deputyPlayer = playerAnimation.findPlayerParams(data.id, deputySkinId)
     if (completePlayerParams(deputyPlayer, data.action)) {
+
+        if (!playerState) {
+            playerAnimation.playerState[data.id] = {time: new Date().getTime(), lastAction: data.action};
+        } else {
+            playerAnimation.playerState[data.id].time = new Date().getTime()
+            playerAnimation.playerState[data.id].lastAction =  data.action
+        }
+
         let actionParams
         if (data.action === 'GongJi') actionParams = deputyPlayer.gongjiAction
         else if (data.action === 'chukuang') actionParams = deputyPlayer.chuchangAction
@@ -990,6 +1013,7 @@ function isChuKuang(data) {
             qhlxBigAvatar: deputyPlayer.qhlxBigAvatar
         })
     }
+
     postMessage({
         id: data.id,
         message: 'noActionChuKuang',

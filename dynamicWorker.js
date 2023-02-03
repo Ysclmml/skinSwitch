@@ -66,13 +66,17 @@ let loadTasks = []  // 存储所有加载spine骨骼的任务. 保证背景骨�
 loadTasks.isRunning = false
 
 // 播放, 稍微修改以下, 如果包含不一样的皮肤出框, 提前加载好对应的骨骼,减少下次的加载时间
+// 将这个函数改成只加载, 加载后再进行播放.
 function playSkin(dynamic, data) {
 	update(dynamic, data);
 	let sprite = (typeof data.sprite == 'string') ? {name: data.sprite} : data.sprite;
 	sprite.loop = true;
 
-
-	let player = sprite.player
+	let player
+	if (!sprite.player) {
+		sprite.player = sprite
+	}
+	player = sprite.player
 
 	sprite.alpha = player.alpha
 
@@ -146,36 +150,47 @@ function playSkin(dynamic, data) {
 		}
 
 	}
-
-	let runTask = function () {
-		if (loadTasks.isRunning) {
-			return
-		}
-		// 找出背景的task优先执行
-		let firstTask
-		for (let task of loadTasks) {
-			if (!task.finish) {
-				if (task.isBeiJing) {
-					firstTask = task
-					break
-				} else {
-					if (!firstTask) {
-						firstTask = task
-					}
-				}
+	let loadAllSkels = () => {
+		let loadDaiJi = () => {
+			let skelType = sprite.player.json ? 'json': 'skel'
+			if (dynamic.hasSpine(sprite.name)) {
+				postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
+			} else {
+				dynamic.loadSpine(sprite.name, skelType, () => {
+					postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
+				})
 			}
 		}
-		if (firstTask) {
-			loadTasks.isRunning = true
-			// console.log('task=======', t++, firstTask.isBeiJing)
-			firstTask()
+
+		if (sprite.player && sprite.player.beijing != null) {
+			if (dynamic.hasSpine(sprite.player.beijing.name)) {
+				loadDaiJi()
+			} else {
+				dynamic.loadSpine(sprite.player.beijing.name, sprite.player.beijing.json ? 'json': 'skel', function () {
+					loadDaiJi()
+				})
+			}
+		} else {
+			loadDaiJi()
 		}
+
 	}
+	loadAllSkels()
+}
+
+// 骨骼加载后真正开始播放
+function startPlaySkin(data) {
+	data = data.data
+	let dynamic = dynamics.getById(data.id);
+
+	if (!dynamic) return;
+	let sprite = data.sprite
 
 	let run = function (beijingNode) {
-		let t = dynamic.playSpine(sprite);
+		let t = dynamic.playSpine(sprite)
 		t.opacity = 0
 		t.beijingNode = beijingNode
+
 		let labels = getAllActionLabels(t)
 		if (labels.includes('ChuChang')) {
 			// 清空原来的state状态, 添加出场
@@ -190,11 +205,16 @@ function playSkin(dynamic, data) {
 				}
 			}
 		}
-
+		// 重置一下背景和待机的时间
+		if (beijingNode) {
+			beijingNode.skeleton.state.tracks[0].trackTime = 0
+			t.skeleton.state.tracks[0].trackTime = 0
+		}
+		sortNodes();
 		t.opacity = 1;
 		// 将node保存一下, 表示是千幻大屏预览的node
 		t.qhlxBigAvatar = sprite.qhlxBigAvatar
-		runTask()
+		postMessage({id: data.id, type: 'playSkinEnd'})
 	}
 
 	let runBeijing = () => {
@@ -222,9 +242,8 @@ function playSkin(dynamic, data) {
 			}
 		}
 		// 查找背景是否也有出场标签
-		// let animation = node.skeleton.data.findAnimation("ChuChang");
 		if (chuChangLabel) {
-			node.skeleton.state.setAnimation(0,chuChangLabel,false, 0);
+			node.skeleton.state.setAnimation(0, chuChangLabel, false, 0);
 			// 获取所有actions
 
 			for (let label of labels) {
@@ -238,68 +257,23 @@ function playSkin(dynamic, data) {
 				}
 			}
 		}
-
 		// 检查当前节点是否存在位于背景层下的node, 提上来
+		sortNodes()
+		run(node)
+	}
+
+	let sortNodes = () => {
 		dynamic.nodes.sort((a, b) => {
 			return b.id - a.id
 		})
-
-		if (dynamic.hasSpine(sprite.name)) {
-			run(node);
-		} else {
-			let task = function () {
-				dynamic.loadSpine(sprite.name, sprite.player.json ? 'json': 'skel', () => {
-					task.finish = true
-					// loadTasks.remove(task)
-					loadTasks.isRunning = false
-					run(node)
-				})
-			}
-			task.isBeiJing = false
-			loadTasks.push(task)
-			runTask()
-		}
 	}
-
-	// 是否播放背景spine
-	if (sprite.player && sprite.player.beijing != null) {
-		if (dynamic.hasSpine(sprite.player.beijing.name)) {
-			runBeijing()
-		} else {
-			let task = function () {
-				dynamic.loadSpine(sprite.player.beijing.name, sprite.player.beijing.json ? 'json': 'skel', function () {
-					task.finish = true
-					// loadTasks.remove(task)
-					loadTasks.isRunning = false
-					runBeijing()
-				})
-			}
-			task.isBeiJing = true
-			loadTasks.push(task)
-			runTask()
-
-		}
+	if (sprite.player.beijing) {
+		runBeijing()
 	} else {
-		if (dynamic.hasSpine(sprite.name)) {
-			run();
-		} else {
-			let task = function () {
-				let skelType = sprite.player.json ? 'json': 'skel'
-				dynamic.loadSpine(sprite.name, skelType, () => {
-					task.finish = true
-					// loadTasks.remove(task)
-					loadTasks.isRunning = false
-					run()
-				})
-			}
-			task.isBeiJing = false
-			loadTasks.push(task)
-			runTask()
-
-			// dynamic.loadSpine(sprite.name, 'skel', run);
-		}
+		run()
 	}
 }
+
 
 // 返回0-a-1中的随机整数
 function randomInt(a) {
@@ -316,7 +290,6 @@ function randomChoice(arr) {
 function getAllActionLabels(node) {
 	// 获取所有actions
 	let animations = node.skeleton.data.animations;
-	console.log('animations:: sss', animations)
 	let res = []
 	for (let ani of animations) {
 		res.push(ani.name)
@@ -794,6 +767,7 @@ function position(data) {
 	if (data.mode === 'daiji') {
 		window.postMessage({id: data.id, type: 'position', x: apnode.player.x, y: apnode.player.y, scale: apnode.player.scale, angle: apnode.player.angle})
 	} else if (data.mode === 'beijing') {
+		console.log('apnode====', apnode, apnode.beijingNode)
 		if (apnode.beijingNode) {
 			window.postMessage({id: data.id, type: 'position', x: apnode.beijingNode.x, y: apnode.beijingNode.y, scale: apnode.beijingNode.scale, angle: apnode.beijingNode.angle})
 		}
@@ -1148,7 +1122,9 @@ onmessage = function (e) {
 		case 'PLAY':
 			play(data)
 			break;
-
+		case 'StartPlay':  // 真正开始播放背景和待机骨骼
+			startPlaySkin(data)
+			break
 		case 'STOP':
 			stop(data)
 			break;
@@ -1522,6 +1498,10 @@ function playDaiJi(apnode) {
 		}
 	} else {
 		apnode.skeleton.state.setAnimation(0, apnode.skeleton.defaultAction, true, 0);
+	}
+	if (apnode.beijingNode) {
+		apnode.beijingNode.skeleton.state.tracks[0].trackTime = 0
+		apnode.skeleton.state.tracks[0].trackTime = 0
 	}
 }
 

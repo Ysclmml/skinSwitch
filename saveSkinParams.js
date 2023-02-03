@@ -276,6 +276,24 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
             ],
             "angle": -15
         }
+    },
+    "caojinyu": {
+        "测试骨骼": {
+            "beijing": {
+                scale: 0.35,
+                x: [-50, 0.5],
+                y: [0, 0.5]
+            },
+            "scale": 0.35,
+            "x": [
+                -50,
+                0.5
+            ],
+            "y": [
+                0,
+                0.5
+            ]
+        }
     }
 }
 }

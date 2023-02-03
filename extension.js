@@ -201,7 +201,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             skin.player = skin;
                             this.playDynamic(skin, false);
                             decadeUI.CUR_DYNAMIC++;
-                            this.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
+                            if (skin.background) {
+                                this.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
+                            } else {
+                                this.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/皮肤切换/images/card/card.png")'
+                            }
                             if (isYh.length < 1) {
                                 let yh = skinSwitch.createYH(this.group);
                                 this.appendChild(yh);
@@ -1125,6 +1129,20 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                         Player.init = function (character, character2, skill) {
+
+                            let xxx = 1
+                            setTimeout(() => {
+                                xxx = 2
+                            }, 3000)
+                            let yy = () => {
+                                if (xxx === 1) {
+                                    console.log('加载结束')
+                                    requestAnimationFrame(yy)
+                                } else {
+                                    console.log('加载结束')
+                                }
+                            }
+
                             // EngEX设计的动皮露头外框, 还是比较好看的.
                             let isYh = this.getElementsByClassName("skinYh");
                             if (isYh.length > 0) {
@@ -1224,10 +1242,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         }
                                     }
 
-                                    this.playDynamic(skin, i === 1);
                                     if (!this.doubleAvatar && !isHide) {
-                                        this.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
+                                        if (skin.background) {
+                                            this.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
+                                        } else {
+                                            this.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/皮肤切换/images/card/card.png")'
+                                        }
                                     }
+                                    this.playDynamic(skin, i === 1);
                                     if (!increased) {
                                         increased = true;
                                         decadeUI.CUR_DYNAMIC++;
@@ -1283,14 +1305,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     text = text.substr(1);
 
                                 result.node.name.innerText = text;
-                            }
-                            if (showDynamic) {
-                                // dcdAnim.playSpine({
-                                //     'name': "../../../皮肤切换/images/huanfu/huanfu",
-                                //     loop: false,
-                                //     scale: 0.5,
-                                //     speed: 0.5
-                                //     }, { scale: 0.5, parent: this })
                             }
                             return result;
                         };
@@ -1381,25 +1395,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 this.dynamic = dynamic;
                                 this.$dynamicWrap.appendChild(dynamic.canvas)
 
-                                // 再添加一个div层, 让canvas挂载到这个div中, 和背景图层分离
-                                // if (get.itemtype(this) === 'player' && lib.config['extension_十周年UI_newDecadeStyle'] === "on") {
-                                // 	// 再添加一个div层, 让canvas挂载到这个div中, 和背景图层分离
-                                // 	let newDynamicWrap = ui.create.div('.dynamicPlayerCanvas', this.$dynamicWrap.parentNode)
-                                // 	newDynamicWrap.appendChild(dynamic.canvas);
-                                // 	this.$newDynamicWrap = newDynamicWrap
-                                // } else {
-                                // 	this.$dynamicWrap.appendChild(dynamic.canvas);
-                                // }
                             }
-                            // else {
-                            // 	if (deputy && dynamic.deputy) {
-                            // 		dynamic.stop(dynamic.deputy);
-                            // 		dynamic.deputy = null;
-                            // 	} else if (dynamic.primary) {
-                            // 		dynamic.stop(dynamic.primary);
-                            // 		dynamic.primary = null;
-                            // 	}
-                            // }
 
                             if (typeof animation == 'string') animation = { name: animation };
                             if (this.doubleAvatar) {
@@ -1440,11 +1436,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             this.classList.add(deputy ? 'd-skin2' : 'd-skin');
                             // 播放完动皮自动调用初始化功能
                             skinSwitch.chukuangPlayerInit(this, !deputy, animation.player)
+
                         }
 
                         window.duilib = newDuilib
-                        // console.log('=====', duilib, newDuilib)
-
                         // 先初步进行初始化
                         if (!lib.config['extension_千幻聆音_enable'] || lib.config['extension_千幻聆音_qhly_decadeCloseDynamic'] || !(lib.config.qhly_currentViewSkin === 'decade' || lib.config.qhly_currentViewSkin === 'shousha')) {
                             overrides(lib.element.player, Player)
@@ -2128,7 +2123,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             //     skinSwitch.chukuangPlayerInit(player, isPrimary, skin)
                             // }
                             player.playDynamic(skin, !isPrimary);
-                            player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
+                            if (skin.background) {
+                                player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
+                            } else {
+                                player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/皮肤切换/images/card/card.png")'
+                            }
                             player.classList.add(!isPrimary ? 'd-skin2' : 'd-skin');
                             // 设置当前皮肤的背景和语音, 调用千幻聆音
                             if (skinSwitch.qhly_hasExtension('千幻聆音')) {
@@ -2194,7 +2193,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 // 重新初始化
 
                                 player.playDynamic(skin, false);
-                                player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
+                                if (skin.background) {
+                                    player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
+                                } else {
+                                    player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/皮肤切换/images/card/card.png")'
+                                }
                                 if (lib.config[skinSwitch.configKey.dynamicSkin]) {
                                     var cg = lib.config[skinSwitch.configKey.dynamicSkin];
                                     cg[player.name] = e.alt;
@@ -2761,6 +2764,21 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             skinID: skinId
                         });
                     },
+                    startPlay: function (player, data) {
+                        if (!player.dynamic) return
+
+                        player.dynamic.renderer.postMessage({
+                            message: 'StartPlay',
+                            data: data,
+                        })
+                        skinSwitch.rendererOnMessage.addListener(player, 'playSkinEnd', function () {
+                            let img = player.$dynamicWrap.style.backgroundImage
+                            // 取消原来设置的默认动皮
+                            if (img.endsWith('card.png")')) {
+                                player.$dynamicWrap.style.backgroundImage = ''
+                            }
+                        })
+                    },
                 },
                 chukuangWorkerApi: {
                     create: function () {
@@ -2772,6 +2790,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let div = ui.create.div('.chukuang-canvas-wraper', document.body)
                         div.appendChild(canvas)
                         div.id = 'chukuang-canvas-wraper'
+                        canvas.id = 'chukuang-canvas'
                         // 监听屏幕大小变化, 重新更新canvas大小
                         if (self.ResizeObserver) {
                             let ro = new ResizeObserver(entries => {
@@ -2919,6 +2938,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             return
                         }
 
+                        let chukuangCanvas = document.getElementById('chukuang-canvas')
+                        chukuangCanvas.style.width = '100.1%'
                         player.dynamic.renderer.postMessage({
                             message: 'hideAllNode',
                             id: dynamic.id,
@@ -2937,7 +2958,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 direction: me ? false : skinSwitch.getDirection(player),
                                 player: pp,
                             })
-
                             // 标记为出框状态
                             player.chukuangState = {
                                 status: true,
@@ -2973,6 +2993,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (!dynamic.primary && !dynamic.deputy) {
                             return
                         }
+                        let chukuangCanvas = document.getElementById('chukuang-canvas')
+                        chukuangCanvas.style.width = '100%'
                         player.dynamic.renderer.postMessage({
                             message: 'recoverDaiJi',
                             id: data.id,
@@ -3020,6 +3042,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 },
                 chukuangPlayerInit: function(player, isPrimary, playParams) {
                     if (!player.dynamic) return
+
+                    // 动皮播放开始播放骨骼.  虽然放在这里不是很合适. 为了减少其他扩展添加的扩展. todo, 后面更换
+                    skinSwitch.rendererOnMessage.addListener(player, 'loadFinish', function (data) {
+                        skinSwitch.postMsgApi.startPlay(player, data)
+                    })
+
                     // 检查只有当前是player或者是千幻大屏预览才会进行初始化
                     if (!(get.itemtype(player) === 'player' || player.classList.contains('qh-shousha-big-avatar'))) {
                         return
@@ -4066,6 +4094,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 }
 
                 let selfLoopPlay = function(mode) {
+
                     let canvas = player.getElementsByClassName("animation-player")[0];
                     let dynamicWrap
                     if (player.isQhlx) {
@@ -4230,7 +4259,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 })
                                 return
                             }
-                            // 更新位置
+                            // 更新大小
+                            console.log('scale------', mode, v)
                             skinSwitch.postMsgApi.adjust(player, mode, {scale: v})
                             setTimeout(() => {
                                 getCurPosition(mode)
@@ -4331,6 +4361,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         adjustdaiji.classList.remove('adjust-select')
                         adjustbeijing.classList.remove('adjust-select')
                     }
+                    getCurPosition('daiji')
                     currentPlay = 'daiji'
                 })
 
@@ -4349,15 +4380,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         getCurPosition('daiji')
                         show(adjustDirection)
                     }
-
-                    // 显示当前的位置, 在屏幕中间用小圆块表示, 拖动小圆块来调整位置, 因为这个计算不是很准, 暂时放弃了.
-                    // if (!isHide(adjustPos)) {
-                    //     hide(adjustPos)
-                    // } else {
-                    //     getCurPosition('daiji')
-                    //     show(adjustPos)
-                    // }
-                    //
 
                 })
 
