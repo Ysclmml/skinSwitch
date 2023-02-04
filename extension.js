@@ -3076,7 +3076,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         .previewWindow span {display: inline-block; margin-left: 20px}
                         input[type='range'] {
                         -webkit-appearance: none;
-                        width: 200px;
+                        width: 180px;
                         border-radius: 10px; /*这个属性设置使填充进度条时的图形为圆角*/
                       }
                       input[type='range']::-webkit-slider-thumb {
@@ -3117,6 +3117,37 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                       input[type='range']:active::-webkit-slider-thumb {
                         background: #d6a63c;
                       }
+                      
+                      #previewSpineDom span, #previewSpineDom select{
+                        margin-bottom: 8px;
+                      }
+                      
+                      #previewSpineDom select{
+                        height: 26px;
+                      }
+                      
+                      .closeBtn {
+                        border-radius: 3px;
+                        color: white;
+                        margin: 0;
+                        line-height: 1;
+                        padding: 0 14px;
+                        height: 34px;
+                        border: none;
+                        display: inline-flex;
+                        flex-wrap: nowrap;
+                        flex-shrink: 0;
+                        align-items: center;
+                        justify-content: center;
+                        user-select: none;
+                        text-align: center;
+                        cursor: pointer;
+                        text-decoration: none;
+                        white-space: nowrap;
+                        background-color: #18a058;  
+                      }
+                      
+                      
                         
                     </style>
                     <canvas id="preview-canvas"></canvas>
@@ -3133,7 +3164,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <span>x: <input id="posX" type="number" value="0.5" step="0.05" style="width: 50px"></span>
                         <span>y: <input id="posY" type="number" value="0.5" step="0.05" style="width: 50px"></span>
                         <span>动画时长:<span id="aniTime"></span></span>
-                        <button id="closePreviewWindow" style="margin-left: 20px">关闭预览窗口</button>
+                        <button id="closePreviewWindow" style="margin-left: 20px" class="closeBtn">关闭预览窗口</button>
                     </div>
                     `
                     let canvas;
