@@ -3153,6 +3153,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     <canvas id="preview-canvas"></canvas>
                     <div id="previewSpineDom" style="color: #fff; position: absolute; top: 0; left: 30px;">
                         <span style="font-weight: bold">spine动画预览窗口</span>
+                        <span>版本:</span><select id="spineVersion">
+                            <option label="3.6"  value="3.6" selected></option>
+                            <option label="4.0"  value="4"></option>
+                        </select>
                         <span>目录:</span><select id="folders"></select>
                         <span>骨骼:</span><select id="skeletonList"></select>
                         <span>动画标签:</span><select id="animationList"></select>
@@ -3167,18 +3171,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <button id="closePreviewWindow" style="margin-left: 20px" class="closeBtn">关闭预览窗口</button>
                     </div>
                     `
+
+                    let version = '3.6'  // 默认版本号为空
+                    let assetsPath   // 默认资源路径
+                    let spineLib
+                    let webGlSpine
                     let canvas;
                     let gl;
                     let shader;
                     let batcher;
-                    let mvp = new spine.webgl.Matrix4();
+                    let mvp;
                     let skeletonRenderer;
                     let assetManager;
                     let debugRenderer;
                     let shapes;
                     let lastFrameTime;
                     let activeSkeleton = "";
-
                     let curDir = '根目录'  // 标明当前预览的目录, 默认是根目录
                     let skeletons = {}
                     let allLoadSkels = {}  // 管理所有已经加载好的骨骼文件
@@ -3186,6 +3194,65 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let allSkels = {}  // 管理所有骨骼数据. 骨骼名称和骨骼后缀
 
                     let isClosed = false   // 全局信号, 通知关闭, 停止渲染
+                    let renderRequestId = null
+                    let stopRenderSign = null
+
+                    // 被监视的元素
+                    canvas = document.getElementById('preview-canvas')
+                    let px = document.getElementById('posX')
+                    let py = document.getElementById('posY')
+                    let canvasSize = canvas.getBoundingClientRect()
+                    let x = 0.5 * canvasSize.width
+                    let y = 0.5 * canvasSize.height
+                    let scale = 0.5
+                    // 开始监视el上的手势变化
+                    const at = new AnyTouch(canvas)
+
+                    let globalValInitial = function () {
+                        // spine4把一些webgl的库从spine.webgl.xxx 移动到了spine本身
+                        if (version === '3.6') {
+                            assetsPath = 'assets'
+                            spineLib = spine
+                            webGlSpine = spine.webgl
+                        } else if (version === '4') {
+                            assetsPath = 'assets_4'
+                            spineLib = spine_4
+                            webGlSpine = spine_4
+                            webGlSpine.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
+                            webGlSpine.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
+                            webGlSpine.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
+                            webGlSpine.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
+
+                        }
+
+                        mvp = new webGlSpine.Matrix4();
+                        x = 0.5 * canvasSize.width
+                        y = 0.5 * canvasSize.height
+                        scale = 0.5
+                        activeSkeleton = "";
+                        curDir = '根目录'  // 标明当前预览的目录, 默认是根目录
+                        skeletons = {}
+                        allLoadSkels = {}  // 管理所有已经加载好的骨骼文件
+                        allLoadAssetType = {}  // 管理所有已经加载好的骨骼文件
+                        allSkels = {}  // 管理所有骨骼数据. 骨骼名称和骨骼后缀
+                        // 初始化Option
+                        document.getElementById('folders').options.length = 0
+                        document.getElementById('skeletonList').options.length = 0
+                        document.getElementById('animationList').options.length = 0
+
+                    };
+
+                    let versionSelect = document.getElementById('spineVersion')
+                    versionSelect.onchange = function (e) {
+                        version = versionSelect.options[versionSelect.selectedIndex].value
+                        stopRenderSign = true
+
+                        setTimeout(() => {
+                            globalValInitial()
+                            init() // 切换版本重新初始化
+                        }, 100)
+                    }
+                    globalValInitial()
 
                     let scaleSlider
                     scaleSlider = document.createElement('input')
@@ -3200,8 +3267,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     scaleNode.parentNode.insertBefore(scaleSlider, scaleNode)
 
                     let speedSlider
-                    if (window.decadeUI) {
-
+                    {
                         speedSlider = document.createElement('input')
                         speedSlider.min = '0'
                         speedSlider.max = '4'
@@ -3268,7 +3334,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     // 拨动动画时长, 跳转到某刻 https://juejin.cn/post/7125409030113067015
                     let timeSlider
-                    if (window.decadeUI) {
+                    {
                         timeSlider = document.createElement('input')
                         timeSlider.min = '0'
                         timeSlider.max = '1'
@@ -3301,7 +3367,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
 
                     let angleSlider
-                    if (window.decadeUI) {
+                    {
                         angleSlider = document.createElement('input')
                         angleSlider.min = '0'
                         angleSlider.max = '360'
@@ -3324,17 +3390,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         };
 
                     }
-
-                    // 被监视的元素
-                    canvas = document.getElementById('preview-canvas')
-                    let px = document.getElementById('posX')
-                    let py = document.getElementById('posY')
-                    let canvasSize = canvas.getBoundingClientRect()
-                    let x = 0.5 * canvasSize.width
-                    let y = 0.5 * canvasSize.height
-                    let scale = 0.5
-                    // 开始监视el上的手势变化
-                    const at = new AnyTouch(canvas)
 
                     // 当拖拽的时候pan事件触发 拖拽事件
                     at.on('pan', (e) => {
@@ -3432,28 +3487,28 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                         // Create a simple shader, mesh, model-view-projection matrix, SkeletonRenderer, and AssetManager.
-                        shader = spine.webgl.Shader.newTwoColoredTextured(gl);
-                        batcher = new spine.webgl.PolygonBatcher(gl);
+                        shader = webGlSpine.Shader.newTwoColoredTextured(gl);
+                        batcher = new webGlSpine.PolygonBatcher(gl);
                         mvp.ortho2d(0, 0, canvas.width - 1, canvas.height - 1);
-                        skeletonRenderer = new spine.webgl.SkeletonRenderer(gl);
-                        assetManager = new spine.webgl.AssetManager(gl, skinSwitch.url + 'assets/');
+                        skeletonRenderer = new webGlSpine.SkeletonRenderer(gl);
+                        assetManager = new webGlSpine.AssetManager(gl, skinSwitch.url + assetsPath + '/');
 
                         // Create a debug renderer and the ShapeRenderer it needs to render lines.
-                        debugRenderer = new spine.webgl.SkeletonDebugRenderer(gl);
+                        debugRenderer = new webGlSpine.SkeletonDebugRenderer(gl);
                         debugRenderer.drawRegionAttachments = true;
                         debugRenderer.drawBoundingBoxes = true;
                         debugRenderer.drawMeshHull = true;
                         debugRenderer.drawMeshTriangles = true;
                         debugRenderer.drawPaths = true;
-                        debugShader = spine.webgl.Shader.newColored(gl);
-                        shapes = new spine.webgl.ShapeRenderer(gl);
+                        debugShader = webGlSpine.Shader.newColored(gl);
+                        shapes = new webGlSpine.ShapeRenderer(gl);
 
                         // Tell AssetManager to load the resources for each skeleton, including the exported .skel file, the .atlas file and the .png
                         // file for the atlas. We then wait until all resources are loaded in the load() method.
 
 
                         // 动态的获取放入asset文件夹下的所有文件, 然后下拉进行预览
-                        game.getFileList(skinSwitch.path + '/assets', function (folds, files) {
+                        game.getFileList(skinSwitch.path + '/' + assetsPath, function (folds, files) {
                             let folderSel = document.getElementById('folders')
                             let getDynamicFiles = files => {
                                 let skels = {}
@@ -3484,7 +3539,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                             // 获取以及和二级目录对应的文件信息
                             folds.forEach(fold => {
-                                game.getFileList(skinSwitch.path + '/assets/' + fold, function (folds, files)  {
+                                game.getFileList(`${skinSwitch.path}/${assetsPath}/${fold}`, function (folds, files)  {
                                     allSkels[fold] = getDynamicFiles(files)
                                     if (!selectFolder) {
                                         folderAdd(fold, true)
@@ -3495,8 +3550,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     }
                                 })
                             })
-                            console.log('selectFolder===', selectFolder)
-                            if (!selectFolder && folds.length == 0) {
+                            if (!selectFolder && folds.length === 0) {
                                 if (window.skinSwitchMessage) {
                                     skinSwitchMessage.show({
                                         'type': 'warning',
@@ -3554,7 +3608,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             } else {
                                 setupUI();
                                 lastFrameTime = Date.now() / 1000;
-                                resize();
                                 requestAnimationFrame(render)
                             }
                         }
@@ -3606,7 +3659,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                             setupUI();
                             lastFrameTime = Date.now() / 1000;
-                            resize();
+
+                            stopRenderSign = null  // 加载好资源允许继续渲染, 防止错误
+                            
                             requestAnimationFrame(render); // Loading is done, call render every frame.
                         } else {
                             requestAnimationFrame(load);
@@ -3619,26 +3674,26 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let atlas = assetManager.get(name + ".atlas");
 
                         // Create a AtlasAttachmentLoader that resolves region, mesh, boundingbox and path attachments
-                        let atlasLoader = new spine.AtlasAttachmentLoader(atlas);
+                        let atlasLoader = new spineLib.AtlasAttachmentLoader(atlas);
 
                         // Create a SkeletonBinary instance for parsing the .skel file.
-                        let skeletonBinary = new spine.SkeletonBinary(atlasLoader);
+                        let skeletonBinary = new spineLib.SkeletonBinary(atlasLoader);
 
                         // Set the scale to apply during parsing, parse the file, and create a new skeleton.
                         skeletonBinary.scale = 1;
                         let skeletonData
                         if (type === 'json') {
-                            skeletonData = 	new spine.SkeletonJson(atlasLoader).readSkeletonData(assetManager.get(name + ".json"));
+                            skeletonData = 	new spineLib.SkeletonJson(atlasLoader).readSkeletonData(assetManager.get(name + ".json"));
                         } else {
                             skeletonData = skeletonBinary.readSkeletonData(assetManager.get(name + ".skel"));
                         }
-                        let skeleton = new spine.Skeleton(skeletonData);
+                        let skeleton = new spineLib.Skeleton(skeletonData);
                         skeleton.setSkinByName('default');
                         let bounds = calculateSetupPoseBounds(skeleton);
 
                         // Create an AnimationState, and set the initial animation in looping mode.
-                        let animationStateData = new spine.AnimationStateData(skeleton.data);
-                        let animationState = new spine.AnimationState(animationStateData);
+                        let animationStateData = new spineLib.AnimationStateData(skeleton.data);
+                        let animationState = new spineLib.AnimationState(animationStateData);
 
                         // 默认第一个动画
                         let initialAnimation = skeleton.data.animations[0].name
@@ -3672,8 +3727,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     function calculateSetupPoseBounds(skeleton) {
                         skeleton.setToSetupPose();
                         skeleton.updateWorldTransform();
-                        var offset = new spine.Vector2();
-                        var size = new spine.Vector2();
+                        var offset = new spineLib.Vector2();
+                        var size = new spineLib.Vector2();
                         skeleton.getBounds(offset, size, []);
                         return { offset: offset, size: size };
                     }
@@ -3732,11 +3787,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         let initInputVal = () => {
                             document.getElementById('scale').value = skeletons[activeSkeleton].previewParams.scale
-                            if (scaleSlider) {
-                                scaleSlider.value = skeletons[activeSkeleton].previewParams.scale
-                            }
+                            scale = skeletons[activeSkeleton].previewParams.scale
+                            scaleSlider.value = skeletons[activeSkeleton].previewParams.scale
                             document.getElementById('posX').value = skeletons[activeSkeleton].previewParams.posX
+                            x = skeletons[activeSkeleton].previewParams.posX * canvasSize.width
                             document.getElementById('posY').value = skeletons[activeSkeleton].previewParams.posY
+                            y = skeletons[activeSkeleton].previewParams.posY * canvasSize.height
                             document.getElementById('premultipliedAlpha').checked = Boolean(skeletons[activeSkeleton].previewParams.premultipliedAlpha)
                         }
 
@@ -3754,6 +3810,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     // spine动画本质就是不断的调用render函数重新渲染. 根据每一次的delta差值计算出当前帧应该渲染什么画面
                     let render = function () {
                         if (isClosed) return
+                        if (stopRenderSign) {
+                            console.log('stopRenderSign===')
+                            return requestAnimationFrame(render);
+                        }
 
                         var now = Date.now() / 1000;
                         var delta = now - lastFrameTime;
@@ -3788,19 +3848,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         // Bind the shader and set the texture and model-view-projection matrix.
                         shader.bind();
-                        shader.setUniformi(spine.webgl.Shader.SAMPLER, 0);
+                        shader.setUniformi(webGlSpine.Shader.SAMPLER, 0);
 
-                        shader.setUniform4x4f(spine.webgl.Shader.MVP_MATRIX, mvp.values);
+                        shader.setUniform4x4f(webGlSpine.Shader.MVP_MATRIX, mvp.values);
 
                         // Start the batch and tell the SkeletonRenderer to render the active skeleton.
                         batcher.begin(shader);
 
                         skeleton.opacity = 1
 
-                        skeleton.flipX = document.getElementById('flipX').checked
-                        skeleton.flipY = document.getElementById('flipY').checked
-
-
+                        if (version === '4') {
+                            skeleton.scaleX = document.getElementById('flipX').checked ? -1 : 1
+                            skeleton.scaleY = document.getElementById('flipY').checked ? -1 : 1
+                        } else {
+                            skeleton.flipX = document.getElementById('flipX').checked
+                            skeleton.flipY = document.getElementById('flipY').checked
+                        }
                         skeletonRenderer.premultipliedAlpha = Boolean(skeletons[activeSkeleton].previewParams.premultipliedAlpha)
                         // skeletonRenderer.premultipliedAlpha = true;
                         skeletonRenderer.draw(batcher, skeleton);
@@ -3812,7 +3875,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let debug = document.getElementById('debug').checked
                         if (debug) {
                             debugShader.bind();
-                            debugShader.setUniform4x4f(spine.webgl.Shader.MVP_MATRIX, mvp.values);
+                            debugShader.setUniform4x4f(webGlSpine.Shader.MVP_MATRIX, mvp.values);
                             // debugRenderer.premultipliedAlpha = premultipliedAlpha;
                             shapes.begin(debugShader);
                             debugRenderer.draw(shapes, skeleton);
@@ -3834,19 +3897,19 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         // Calculations to center the skeleton in the canvas.
                         let bounds = skeletons[activeSkeleton].bounds;
                         let skeleton = skeletons[activeSkeleton]
-                        // var centerX = bounds.offset.x + bounds.size.x / 2;
-                        // var centerY = bounds.offset.y + bounds.size.y / 2;
+                        var centerX = bounds.offset.x + bounds.size.x / 2;
+                        var centerY = bounds.offset.y + bounds.size.y / 2;
                         // var scaleX = bounds.size.x / canvas.width;
                         // var scaleY = bounds.size.y / canvas.height;
                         // var scale = Math.max(scaleX, scaleY) * 1.2;
                         // if (scale < 1) scale = 1;
-                        // var width = canvas.width * scale;
-                        // var height = canvas.height * scale;
+                        var width = canvas.width ;
+                        var height = canvas.height ;
 
                         // 这个函数的作用: https://blog.csdn.net/FrankieWang008/article/details/7003961  https://www.cnblogs.com/yangxiaoluck/archive/2012/02/22/2363124.html
                         // 正射投影，又叫平行投影。 正射投影的最大一个特点是无论物体距离相机多远，投影后的物体大小尺寸不变
                         // 定义裁剪面,裁剪面中心
-                        // mvp.ortho2d(centerX - width / 2, centerY - height / 2, width, height);
+                        mvp.ortho2d(centerX - width / 2, centerY - height / 2, width, height);
                         gl.viewport(0, 0, canvas.width, canvas.height);
 
                         // 获取输入的属性
@@ -3856,6 +3919,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         mvp.ortho2d(0, 0, canvas.width, canvas.height);
                         mvp.translate(canvas.width*posX, posY * canvas.height, 0)
+                        // mvp.translate(1, 2, 0)
+
                         mvp.scale(scale, scale, 0)
 
 
@@ -3889,6 +3954,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             // 加载新的ani
             lib.init.js(skinSwitch.url, 'animation')
             lib.init.js(skinSwitch.url + 'component', 'any-touch.umd.min')
+            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64')
 
             let editBox  // 编辑动皮参数的弹窗
             let adjustPos  // 显示动画的相对位置. 这个是相对全局window, 用于辅助调试pos位置
