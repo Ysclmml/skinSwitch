@@ -1,5 +1,5 @@
 'use strict';
-importScripts('./spine.js', './animation.js');
+importScripts('./spine.js', './animation.js', './spine-lib/spine_4_0_64.js');
 let window = self;
 let devicePixelRatio = 1;
 let documentZoom = 1;
@@ -19,9 +19,11 @@ class HTMLElement {
     }
 }
 
-// let HTMLElement = function () {
-//     return 'HTMLElement';
-// }
+// 重新复制老版本的方法
+spine_4.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
+spine_4.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
+spine_4.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
+spine_4.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
 
 
 Array.prototype.remove = function (item) {
@@ -39,10 +41,16 @@ class PlayerAnimation {
 
     constructor(data) {
         this.anni = new newDuilib.AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas)
+        this.spnie4Anni = new newDuilib.Spine4AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas)
         this.playerAni = {}  // 这个用来管理每个角色的Id及其skinId的配置数据
 
         this.playerState = {}  // 管理每个角色出框状态, 同时保证一个角色只能有一个出框状态.
         this.isMobile = data.isMobile
+
+    }
+
+    getAnni(player) {
+        return player.version === '4.0' ? this.spnie4Anni : this.anni
     }
 
     // 提前把当前角色动皮需要用到的骨骼加载, 可能有默认的骨骼, 出场骨骼, 攻击骨骼, 特殊骨骼
@@ -54,16 +62,18 @@ class PlayerAnimation {
         let pLoad = function (actionParams, times) {
             if (actionParams) {
                 actionParams.alpha = actionParams.alpha == null ? player.alpha : actionParams.alpha
-                if (!_this.anni.hasSpine(actionParams.name)) {
-                    let skelType = actionParams.json ? 'json': 'skel'
-                    _this.anni.loadSpine(actionParams.name, skelType, function () {
+                let anni = _this.getAnni(player)
+
+                if (!anni.hasSpine(actionParams.name)) {
+                    let skelType = actionParams.json ? 'json': 'skel';
+                    anni.loadSpine(actionParams.name, skelType, function () {
                         console.log('预加载骨骼成功', actionParams.name)
                     }, function () {
                         console.log('播放骨骼失败, 参数: ', actionParams, '次数: ', times)
                         if (times < 0) {
                             pLoad(actionParams, times + 1)
                         }
-                    })
+                    });
                 }
             }
         }
@@ -110,8 +120,8 @@ class PlayerAnimation {
             return this.lianxuChuKuang(player, actionParams, data)
         }
 
-        if (!this.anni.hasSpine(actionParams.name)) {
-            this.anni.loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', () => {
+        if (!this.getAnni(player).hasSpine(actionParams.name)) {
+            this.getAnni(player).loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', () => {
                 this.playChuKuang(player, actionParams, data)
             }, this.errPlaySpine)
         } else {
@@ -217,7 +227,7 @@ class PlayerAnimation {
                                 // sprite.x = p.x
                                 // sprite.y = attackArgs.bodySize.bodyHeight - p.y
                                 let referNode = new HTMLElement(p.boundRect, attackArgs.bodySize)
-                                this.anni.playSpine(sprite, {referNode: referNode})
+                                this.getAnni(playNode.player).playSpine(sprite, {referNode: referNode})
                             }
                         }
 
@@ -283,7 +293,7 @@ class PlayerAnimation {
                                     // sprite.y = attackArgs.bodySize.bodyHeight - newY
                                 }
                                 let referNode = new HTMLElement(p.boundRect, attackArgs.bodySize)
-                                let node = this.anni.playSpine(sprite, {referNode: referNode})
+                                let node = this.getAnni(playNode.player).playSpine(sprite, {referNode: referNode})
                                 if (!zhishixianTime) {
                                     let ani = node.skeleton.data.animations[0]
                                     zhishixianTime = ani.duration
@@ -296,8 +306,8 @@ class PlayerAnimation {
                             if (dy.effect) {
                                 // 获取指示线的动画时间, 在到达武将框后播放
                                 setTimeout(() => {
-                                    if (!this.anni.hasSpine(dy.effect.name)) {
-                                        this.anni.loadSpine(dy.effect.name, dy.effect.json ? 'json': 'skel', playBaoZha)
+                                    if (!this.getAnni(playNode.player).hasSpine(dy.effect.name)) {
+                                        this.getAnni(playNode.player).loadSpine(dy.effect.name, dy.effect.json ? 'json': 'skel', playBaoZha)
                                     } else {
                                         playBaoZha()
                                     }
@@ -305,8 +315,8 @@ class PlayerAnimation {
                             }
                         }
 
-                        if (!this.anni.hasSpine(dy.name)) {
-                            this.anni.loadSpine(dy.name, dy.json ? 'json': 'skel', playZhishixian)
+                        if (!this.getAnni(playNode.player).hasSpine(dy.name)) {
+                            this.getAnni(playNode.player).loadSpine(dy.name, dy.json ? 'json': 'skel', playZhishixian)
                         } else {
                             playZhishixian()
                         }
@@ -323,9 +333,9 @@ class PlayerAnimation {
         let playNode = actionParams.playNode
         // 这里说明上一次出框已经完成, 可能会让原来的待机显现, 保险起见, 再发一次隐藏的消息
         // 判断上次的动作是否播放完成.
-        if (!this.anni.nodes.includes(playNode)) {
+        if (!this.getAnni(playNode.player).nodes.includes(playNode)) {
             playNode.skeleton.completed = true
-            let playedSprite = this.anni.playSpine(playNode.actionParams)
+            let playedSprite = this.getAnni(playNode.player).playSpine(playNode.actionParams)
             playedSprite.player = player
             playedSprite.actionParams = actionParams
             actionParams.playNode = playedSprite
@@ -392,7 +402,7 @@ class PlayerAnimation {
             actionParams.showTime = actionInfo.showTime
             actionParams.action = actionInfo.action
         }
-        let playedSprite = this.anni.playSpine(actionParams)
+        let playedSprite = this.getAnni(player).playSpine(actionParams)
         playedSprite.player = player
         playedSprite.actionParams = actionParams
         actionParams.playNode = playedSprite
@@ -776,7 +786,7 @@ function completePlayerParams(avatarPlayer, action) {
             // 只支持假动皮攻击出框, 其他动作和待机相同, 不允许出框
             if (action === 'GongJi') {
                 // 查找待机动作的默认动作标签, 并缓存
-                let results = playerAnimation.anni.getSpineActions(daijiName)
+                let results = playerAnimation.getAnni(avatarPlayer).getSpineActions(daijiName)
                 if (results && results.length > 0) {
                     // 检查是否有GongJi标签, 如果有那是真动皮
                     if (actionParams.fakeDynamic) {
@@ -833,7 +843,7 @@ function completePlayerParams(avatarPlayer, action) {
                 }
                 avatarPlayer.actionState[action] = false
             }  else if (action === 'chuchang') {
-                let results = playerAnimation.anni.getSpineActions(daijiName)
+                let results = playerAnimation.getAnni(avatarPlayer).getSpineActions(daijiName)
                 if (results && results.length > 0) {
                     for (let r of results) {
                         if (r.name === actionParams.action) {
@@ -860,7 +870,7 @@ function completePlayerParams(avatarPlayer, action) {
             avatarPlayer.actionState[action] = false
         } else {
             // 查找骨骼与正确的标签
-            let results = playerAnimation.anni.getSpineActions(actionParams.name)
+            let results = playerAnimation.getAnni(avatarPlayer).getSpineActions(actionParams.name)
             let isArray = Array.isArray(actionParams.action)
             let states = []
             if (results && results.length > 0) {
@@ -1021,6 +1031,7 @@ function isChuKuang(data) {
         qhlxBigAvatar: primaryPlayer && primaryPlayer.qhlxBigAvatar
     })
 }
+
 
 function chukuangStart(data) {
     playerAnimation.playAction(data)

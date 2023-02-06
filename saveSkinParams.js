@@ -89,6 +89,17 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 0,
                 -0.06
             ]
+        },
+        "脂车香姝": {
+            "scale": 1,
+            "x": [
+                -50,
+                1.02
+            ],
+            "y": [
+                0,
+                0.4
+            ]
         }
     },
     "xushao": {
@@ -280,9 +291,15 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
     "caojinyu": {
         "测试骨骼": {
             "beijing": {
-                scale: 0.35,
-                x: [-50, 0.5],
-                y: [0, 0.5]
+                "scale": 0.35,
+                "x": [
+                    -50,
+                    0.5
+                ],
+                "y": [
+                    0,
+                    0.5
+                ]
             },
             "scale": 0.35,
             "x": [
@@ -292,6 +309,19 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
             "y": [
                 0,
                 0.5
+            ]
+        }
+    },
+    "tengfanglan": {
+        "脂车香姝": {
+            "scale": 1,
+            "x": [
+                -50,
+                1.07
+            ],
+            "y": [
+                0,
+                0.25
             ]
         }
     }

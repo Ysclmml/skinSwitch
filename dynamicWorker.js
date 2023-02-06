@@ -1,5 +1,5 @@
 'use strict';
-importScripts('spine.js', 'animation.js', 'settings.js');
+importScripts('spine.js', 'animation.js', 'settings.js', './spine-lib/spine_4_0_64.js');
 
 console.log('new worker...')
 
@@ -24,6 +24,11 @@ let chukuangId = 99999   // 自动出框的nodeID起始, 为了不和主线程�
 
 let isMobile = false
 
+// 重新复制老版本的方法
+spine_4.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
+spine_4.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
+spine_4.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
+spine_4.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
 
 /**
  * 获取动皮管理对象DynamicPlayer
@@ -32,7 +37,12 @@ let isMobile = false
  */
 dynamics.getById = function (id) {
 	for (let i = 0; i < this.length; i++) {
-		if (this[i].id === id) return this[i];
+		if (this[i].id === id) {
+			if (this[i].isSpine4) {
+				return this[i].spine4Dynamic
+			}
+			return this[i]
+		}
 	}
 
 	return null;
@@ -72,13 +82,28 @@ function playSkin(dynamic, data) {
 	let sprite = (typeof data.sprite == 'string') ? {name: data.sprite} : data.sprite;
 	sprite.loop = true;
 
-	let player
+	let player;
 	if (!sprite.player) {
 		sprite.player = sprite
 	}
-	player = sprite.player
+	if (sprite.clip && sprite.player.version === '4.0') {
+		return // 双将暂时不允许使用4.0版本骨骼
+	}
 
-	sprite.alpha = player.alpha
+	player = sprite.player;
+	if (player.version === '4.0') {
+		if (dynamic.spine4Dynamic) {
+			dynamic.isSpine4 = true
+			dynamic = dynamic.spine4Dynamic
+		}
+	} else {
+		if (dynamic.spineDynamic) {
+			dynamic = dynamic.spineDynamic;
+			dynamic.isSpine4 = false
+		}
+	}
+
+	sprite.alpha = player.alpha;
 
 	let initPlayerGongJi = function () {
 		if (!player.gongji) {
@@ -227,9 +252,14 @@ function startPlaySkin(data) {
 		if (sprite.clip) {
 			sprite.player.beijing.clip = sprite.clip
 		}
-
-		let node = dynamic.playSpine(sprite.player.beijing)
-		node.isbeijing = true
+		let node
+		try {
+			node = dynamic.playSpine(sprite.player.beijing)
+			node.isbeijing = true
+		} catch {
+			debugger
+			console.log('dynamic=====', dynamic, data)
+		}
 
 		// 获取所有actions
 		let chuChangLabel = ''
@@ -315,13 +345,18 @@ function getLabelIgnoreCase(node, label) {
 function create(data) {
 	if (dynamics.length >= 4) return;
 	let dynamic = new newDuilib.AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas);
+	// 同时初始化spine4播放器
+	let spine4Dynamic = new newDuilib.Spine4AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas);
 	dynamic.id = data.id;
+	dynamic.spine4Dynamic = spine4Dynamic
+	dynamic.spine4Dynamic.spineDynamic = dynamic
 	dynamics.push(dynamic);
 }
 
 function play(data) {
 	let dynamic = dynamics.getById(data.id);
 	if (!dynamic) return;
+
 	playSkin(dynamic, data)
 }
 
@@ -332,11 +367,15 @@ function stop(data) {
 	let retryStop = function (times) {
 		if (times < 0) return
 		let sprite = dynamic.stopSpine(data.sprite)
+		console.log('stop ....dynamic=========', dynamic, sprite)
 		if (!sprite) {
 			setTimeout(() => {
 				retryStop(times-1)
 			}, 100)
 		} else {
+			if (dynamic.spineDynamic) {
+				dynamic.spineDynamic.isSpine4 = false
+			}
 			if (sprite.beijingNode) {
 				dynamic.stopSpine(sprite.beijingNode)
 			}
@@ -349,6 +388,9 @@ function stop(data) {
 function stopAll(data) {
 	let dynamic = dynamics.getById(data.id);
 	if (!dynamic) return;
+	if (dynamic.spineDynamic) {
+		dynamic.spineDynamic.isSpine4 = false
+	}
 	dynamic.stopSpineAll();
 }
 

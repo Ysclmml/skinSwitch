@@ -75,6 +75,10 @@ fix: 所以需要修改动皮初始化的逻辑, 并且修改worker的stop逻辑
 
 14. 手杀原来老皮肤背景还有叫play的
 
+15. spine4.0修改骨骼透明度不能直接修改skeleton.opacity = 1来修改透明度了
+需要设置color来改变透明度 --->  skeleton.color.a = 0.5
+https://forum.cocos.org/t/topic/135360/3获取答案
+
 记录: 
 每次更新功能后需要测试的内容汇总
 1. 假动皮的播放情况

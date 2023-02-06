@@ -1130,19 +1130,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         Player.init = function (character, character2, skill) {
 
-                            let xxx = 1
-                            setTimeout(() => {
-                                xxx = 2
-                            }, 3000)
-                            let yy = () => {
-                                if (xxx === 1) {
-                                    console.log('加载结束')
-                                    requestAnimationFrame(yy)
-                                } else {
-                                    console.log('加载结束')
-                                }
-                            }
-
                             // EngEX设计的动皮露头外框, 还是比较好看的.
                             let isYh = this.getElementsByClassName("skinYh");
                             if (isYh.length > 0) {
@@ -3661,7 +3648,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             lastFrameTime = Date.now() / 1000;
 
                             stopRenderSign = null  // 加载好资源允许继续渲染, 防止错误
-                            
+
                             requestAnimationFrame(render); // Loading is done, call render every frame.
                         } else {
                             requestAnimationFrame(load);
@@ -3857,6 +3844,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         skeleton.opacity = 1
 
+
                         if (version === '4') {
                             skeleton.scaleX = document.getElementById('flipX').checked ? -1 : 1
                             skeleton.scaleY = document.getElementById('flipY').checked ? -1 : 1
@@ -3954,7 +3942,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             // 加载新的ani
             lib.init.js(skinSwitch.url, 'animation')
             lib.init.js(skinSwitch.url + 'component', 'any-touch.umd.min')
-            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64')
+            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
+            })
 
             let editBox  // 编辑动皮参数的弹窗
             let adjustPos  // 显示动画的相对位置. 这个是相对全局window, 用于辅助调试pos位置
