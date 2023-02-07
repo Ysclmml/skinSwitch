@@ -225,142 +225,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         // 拦截原来的logSkill函数, 加上如果使用非攻击技能,就播放特殊动画
 
                         // 本体1.9.117.2, 由于logSkill的trigger没有使用前就可以触发的, 所以仍然复制一份进行处理.
-                        let logSkill_117_2 = function(name,targets,nature,logv){
-                            if(get.itemtype(targets)=='player') targets=[targets];
-                            var nopop=false;
-                            var popname=name;
-                            if(Array.isArray(name)){
-                                popname=name[1];
-                                name=name[0];
-                            }
-                            var checkShow=this.checkShow(name);
-                            if(lib.translate[name]){
-                                this.trySkillAnimate(name,popname,checkShow);
-                                if(Array.isArray(targets)&&targets.length){
-                                    var str;
-                                    if(targets[0]==this){
-                                        str='#b自己';
-                                        if(targets.length>1){
-                                            str+='、';
-                                            str+=get.translation(targets.slice(1));
-                                        }
-                                    }
-                                    else str=targets;
-                                    game.log(this,'对',str,'发动了','【'+get.skillTranslation(name,this)+'】');
-                                }
-                                else{
-                                    game.log(this,'发动了','【'+get.skillTranslation(name,this)+'】');
-                                }
-                            }
-                            if(nature!=false){
-                                if(nature===undefined){
-                                    nature='green';
-                                }
-                                this.line(targets,nature);
-                            }
-                            var info=lib.skill[name];
-                            if(info&&info.ai&&info.ai.expose!=undefined&&
-                                this.logAi&&(!targets||targets.length!=1||targets[0]!=this)){
-                                this.logAi(lib.skill[name].ai.expose);
-                            }
-                            if(info&&info.round){
-                                var roundname=name+'_roundcount';
-                                this.storage[roundname]=game.roundNumber;
-                                this.syncStorage(roundname);
-                                this.markSkill(roundname);
-                            }
-                            game.trySkillAudio(name,this,true);
-                            if(game.chess){
-                                this.chessFocus();
-                            }
-                            if(logv===true){
-                                game.logv(this,name,targets,null,true);
-                            }
-                            else if(info&&info.logv!==false){
-                                game.logv(this,name,targets);
-                            }
-                            if(info){
-                                var player=this;
-                                var players=player.getSkills(null,false,false);
-                                var equips=player.getSkills('e');
-                                var global=lib.skill.global.slice(0);
-                                var logInfo={
-                                    skill:name,
-                                    targets:targets,
-                                    event:_status.event,
-                                };
-                                if(info.sourceSkill){
-                                    logInfo.sourceSkill=name;
-                                    if(global.contains(name)){
-                                        logInfo.type='global';
-                                    }
-                                    else if(players.contains(name)){
-                                        logInfo.type='player';
-                                    }
-                                    else if(equips.contains(name)){
-                                        logInfo.type='equip';
-                                    }
-                                }
-                                else{
-                                    if(global.contains(name)){
-                                        logInfo.sourceSkill=name;
-                                        logInfo.type='global';
-                                    }
-                                    else if(players.contains(name)){
-                                        logInfo.sourceSkill=name;
-                                        logInfo.type='player';
-                                    }
-                                    else if(equips.contains(name)){
-                                        logInfo.sourceSkill=name;
-                                        logInfo.type='equip';
-                                    }
-                                    else{
-                                        var bool=false;
-                                        for(var i of players){
-                                            var expand=[i];
-                                            game.expandSkills(expand);
-                                            if(expand.contains(name)){
-                                                bool=true;
-                                                logInfo.sourceSkill=i;
-                                                logInfo.type='player';
-                                                break;
-                                            }
-                                        }
-                                        if(!bool){
-                                            for(var i of players){
-                                                var expand=[i];
-                                                game.expandSkills(expand);
-                                                if(expand.contains(name)){
-                                                    logInfo.sourceSkill=i;
-                                                    logInfo.type='equip';
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                var next=game.createEvent('logSkill',false),evt=_status.event;
-                                next.player=player;
-                                next.forceDie=true;
-                                evt.next.remove(next);
-                                if(evt.logSkill) evt=evt.getParent();
-                                for(var i in logInfo){
-                                    if(i=='event') next.log_event=logInfo[i];
-                                    else next[i]=logInfo[i];
-                                }
-                                evt.after.push(next);
-                                next.setContent('emptyEvent');
-                                player.getHistory('useSkill').push(logInfo);
-                            }
-                            if(this._hookTrigger){
-                                for(var i=0;i<this._hookTrigger.length;i++){
-                                    var info=lib.skill[this._hookTrigger[i]].hookTrigger;
-                                    if(info&&info.log){
-                                        info.log(this,name,targets);
-                                    }
-                                }
-                            }
-                        }
 
                         if (lib.version >= '1.9.117.2') {
                             console.log('======== version >= 1.9.117.2===========')
@@ -2785,6 +2649,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let canvas = document.createElement('canvas')
                         canvas.className = 'chukuang-canvas'
                         canvas.style = `position: fixed; left: 0px; top: 0px; pointer-events:none; width:100%;height:100%;`
+                        // canvas.height = decadeUI.get.bodySize().height
+                        // canvas.width = decadeUI.get.bodySize().width
                         canvas.height = decadeUI.get.bodySize().height
                         canvas.width = decadeUI.get.bodySize().width
                         let div = ui.create.div('.chukuang-canvas-wraper', document.body)
@@ -2817,6 +2683,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             canvas: offsetCanvas,
                             pathPrefix: '../十周年UI/assets/dynamic/',
                             isMobile: skinSwitch.isMobile(),
+                            dpr: Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1)
                         }, [offsetCanvas]);
 
                     },
@@ -2939,7 +2806,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                         let chukuangCanvas = document.getElementById('chukuang-canvas')
-                        chukuangCanvas.style.width = '100.1%'
+                        // chukuangCanvas.style.width = '101%'
+
                         player.dynamic.renderer.postMessage({
                             message: 'hideAllNode',
                             id: dynamic.id,
@@ -2993,8 +2861,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (!dynamic.primary && !dynamic.deputy) {
                             return
                         }
-                        let chukuangCanvas = document.getElementById('chukuang-canvas')
-                        chukuangCanvas.style.width = '100%'
                         player.dynamic.renderer.postMessage({
                             message: 'recoverDaiJi',
                             id: data.id,
@@ -3028,7 +2894,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         })
                         // 将原来的置空
                         skinSwitch.rendererOnMessage.addListener(player, 'hideAllNodeEnd', function (){})
-
                     }
 
                 },
@@ -3602,7 +3467,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         document.getElementById('folders').onchange = function (e) {
                             curDir = this.options[this.selectedIndex].text
-                            // 输入框的值也改成存储的值
+                            // 输入框的值也改成存储的值, 存储之前的路径, 防止出错
                             if (!allLoadAssetType[curDir]) {
                                 requestAnimationFrame(load)
                             } else {
@@ -3645,6 +3510,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     skeletons[name] = tmpSkeletons[name]
                                 } catch (e) {
                                     console.log(`加载${curDir}骨骼${k}出错, 请检查骨骼是否正确`)
+                                    console.error(e)
                                     if (window.skinSwitchMessage) {
                                         skinSwitchMessage.show({
                                             'type': 'warning',
@@ -3656,6 +3522,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                                 tmpSkeletons[name].previewParams = {scale: 0.5, posX: 0.5, posY: 0.5}
                                 allLoadSkels[curDir] = tmpSkeletons
+                            }
+                            if (Object.keys(tmpSkeletons).length === 0) {
+                                skinSwitchMessage.show({
+                                    'type': 'warning',
+                                    'text': `当前${curDir}中无正确骨骼预览`,
+                                    'duration': 3000
+                                })
+                                return
                             }
                             setupUI();
                             lastFrameTime = Date.now() / 1000;

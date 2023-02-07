@@ -664,7 +664,17 @@ var newDuilib;
 			thisAnim.spine.assetManager.loadText(filename + '.atlas',
 				reader.ontextLoad, reader.onerror);
 		};
-		
+
+		AnimationPlayer.prototype.removeSpine = function (filename, skelType) {
+			// 移除已经加载好的spine资源, 节省内存
+			if (this.hasSpine(filename)) {
+				for (let suffix of ['.png', '.atlas', '.' + skelType]) {
+					this.spine.assetManager.remove(filename + suffix)
+				}
+				delete this.spine.assets[filename]
+			}
+		}
+
 		AnimationPlayer.prototype.prepSpine = function (filename, autoLoad) {
 			var _this = this;
 			var spineAssets = _this.spine.assets;

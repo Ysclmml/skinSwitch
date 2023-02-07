@@ -19,10 +19,6 @@ class HTMLElement {
     }
 }
 
-// let HTMLElement = function () {
-//     return 'HTMLElement';
-// }
-
 
 Array.prototype.remove = function (item) {
     var index = this.indexOf(item);
@@ -39,10 +35,16 @@ class PlayerAnimation {
 
     constructor(data) {
         this.anni = new newDuilib.AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas)
+        if (data.dpr) {
+            this.anni.dpr = data.dpr || 1;
+            this.anni.dprAdaptive = true
+        }
         this.playerAni = {}  // 这个用来管理每个角色的Id及其skinId的配置数据
 
         this.playerState = {}  // 管理每个角色出框状态, 同时保证一个角色只能有一个出框状态.
         this.isMobile = data.isMobile
+
+        this.skinNameChukuangMap = {}  // 管理所有动皮name 缓存每个攻击的信息.
     }
 
     // 提前把当前角色动皮需要用到的骨骼加载, 可能有默认的骨骼, 出场骨骼, 攻击骨骼, 特殊骨骼
@@ -51,28 +53,78 @@ class PlayerAnimation {
         if (!player) return
         let _this = this
         this.completeParams(player)
-        let pLoad = function (actionParams, times) {
-            if (actionParams) {
-                actionParams.alpha = actionParams.alpha == null ? player.alpha : actionParams.alpha
-                if (!_this.anni.hasSpine(actionParams.name)) {
-                    let skelType = actionParams.json ? 'json': 'skel'
-                    _this.anni.loadSpine(actionParams.name, skelType, function () {
-                        console.log('预加载骨骼成功', actionParams.name)
-                    }, function () {
-                        console.log('播放骨骼失败, 参数: ', actionParams, '次数: ', times)
-                        if (times < 0) {
-                            pLoad(actionParams, times + 1)
+
+        // 提前加载当前骨骼的出框参数信息
+
+        let loadedName = new Set()
+        let tasks = 0
+
+        // 将没有出框的骨骼删除
+        let checkNoChuKuang = () => {
+            tasks++
+            if (tasks < 3) return
+            for (let k of loadedName.keys()) {
+                let skinNameInfo = playerAnimation.skinNameChukuangMap[k]
+                if (skinNameInfo){
+                    let flag = false
+                    for (let t of Object.keys(skinNameInfo)) {
+                        if (t !== 'type' && skinNameInfo[t]) {
+                            flag = true
+                            break
                         }
-                    })
+                    }
+                    if (!flag) {
+                        console.log('delete ..k', k, tasks)
+                        this.anni.removeSpine(k, skinNameInfo.type)
+                    }
                 }
             }
         }
-        let arr = []
-        for (let act of [{name: player.name, json: player.json, alpha: player.alpha}, player.gongjiAction, player.teshuAction, player.chuchangAction]) {
-            if (act && !arr.includes(act.name)) {
-                arr.push(act.name)
-                pLoad(act, 0)
+
+        let pLoad = function (obj) {
+            let actionParams = obj.actionParams
+            let action = obj.action
+            if (actionParams) {
+                actionParams.alpha = actionParams.alpha == null ? player.alpha : actionParams.alpha
+                if (actionParams.name === player.name) {
+                    actionParams.json = player.json
+                }
+                let skinNameInfo = playerAnimation.skinNameChukuangMap[actionParams.name]
+                console.log('actionParams.name0000---',actionParams.name, skinNameInfo)
+                if (!skinNameInfo) {
+                    skinNameInfo = {}
+                    playerAnimation.skinNameChukuangMap[actionParams.name] = skinNameInfo
+                    skinNameInfo.type = actionParams.json ? 'json': 'skel'
+                } else {
+                    // 已经加载过的不存在的,跳过重新加载
+                    return
+                }
+                // 检查是否有出框骨骼, 如果没有, 则删除改骨骼
+                if (!_this.anni.hasSpine(actionParams.name)) {
+                    let skelType = actionParams.json ? 'json': 'skel';
+                    _this.anni.loadSpine(actionParams.name, skelType, function () {
+                        console.log('预加载骨骼成功', actionParams.name)
+                        loadedName.add(actionParams.name)
+                        skinNameInfo[action] = Boolean(completePlayerParams(player, action))
+                        checkNoChuKuang()
+                    }, function () {
+                        console.log('播放骨骼失败, 参数: ', actionParams)
+                        skinNameInfo[action] = false
+                        checkNoChuKuang()
+                    })
+                } else {
+                    skinNameInfo[action] = Boolean(completePlayerParams(player, action))
+                    checkNoChuKuang()
+                }
+            } else {
+                checkNoChuKuang()
             }
+
+        }
+        for (let act of [{actionParams: player.gongjiAction, action: 'GongJi'},
+                         {actionParams:player.teshuAction, action: 'TeShu'},
+                         {actionParams: player.chuchangAction, action: 'chuchang'}]) {
+                pLoad(act)
         }
         if (!(data.id in this.playerAni)) {
             this.playerAni[data.id] = {}
@@ -81,6 +133,7 @@ class PlayerAnimation {
             this.playerAni[data.id][data.skinId] = {}
         }
         this.playerAni[data.id][data.skinId] = player
+        console.log('this.anni====', this.anni)
     }
 
     findPlayerParams(id, skinId) {
@@ -180,10 +233,8 @@ class PlayerAnimation {
 
                     this.playerState[data.id] = false
                 }, delayTime)
-
             }
-
-        }, showTime)
+        }, showTime + 100)
         // 重新恢复攻击pose
         if (data.action === 'chuchang') {
             playNode.scaleTo(playNode.scale * 1.2, 500)
@@ -860,9 +911,9 @@ function completePlayerParams(avatarPlayer, action) {
             avatarPlayer.actionState[action] = false
         } else {
             // 查找骨骼与正确的标签
-            let results = playerAnimation.anni.getSpineActions(actionParams.name)
-            let isArray = Array.isArray(actionParams.action)
-            let states = []
+            let results = playerAnimation.anni.getSpineActions(actionParams.name);
+            let isArray = Array.isArray(actionParams.action);
+            let states = [];
             if (results && results.length > 0) {
                 if (!actionParams.action) {
                     avatarPlayer.actionState[action] = {
@@ -897,7 +948,7 @@ function completePlayerParams(avatarPlayer, action) {
                     return true
                 }
             }
-            avatarPlayer.actionState[action] = false
+            avatarPlayer.actionState[action] = false;
         }
     }
 }

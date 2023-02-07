@@ -62,9 +62,6 @@ function preLoadChuKuangSkel(dynamic, apnode) {
 
 let t = 0
 
-let loadTasks = []  // 存储所有加载spine骨骼的任务. 保证背景骨骼优先加载.
-loadTasks.isRunning = false
-
 // 播放, 稍微修改以下, 如果包含不一样的皮肤出框, 提前加载好对应的骨骼,减少下次的加载时间
 // 将这个函数改成只加载, 加载后再进行播放.
 function playSkin(dynamic, data) {
