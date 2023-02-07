@@ -992,6 +992,7 @@ var newDuilib;
 				skeleton.opacity = (sprite.renderOpacity == undefined ? 1 : sprite.renderOpacity);
 				state.hideSlots = sprite.hideSlots;
 				state.update(delta / 1000 * speed);
+				// todo: 这一个操作非常耗时, 可以适当降低渲染帧率优化
 				state.apply(skeleton);
 				skeleton.updateWorldTransform();
 				// sprite.mvp.translate(canvas.width*(-0.1), -0.1 * canvas.height, 0)

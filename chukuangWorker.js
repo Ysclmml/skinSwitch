@@ -1,5 +1,5 @@
 'use strict';
-importScripts('./spine.js', './animation.js');
+importScripts('./spine.js', './animation.js', 'settings.js');
 let window = self;
 let devicePixelRatio = 1;
 let documentZoom = 1;
@@ -53,78 +53,28 @@ class PlayerAnimation {
         if (!player) return
         let _this = this
         this.completeParams(player)
-
-        // 提前加载当前骨骼的出框参数信息
-
-        let loadedName = new Set()
-        let tasks = 0
-
-        // 将没有出框的骨骼删除
-        let checkNoChuKuang = () => {
-            tasks++
-            if (tasks < 3) return
-            for (let k of loadedName.keys()) {
-                let skinNameInfo = playerAnimation.skinNameChukuangMap[k]
-                if (skinNameInfo){
-                    let flag = false
-                    for (let t of Object.keys(skinNameInfo)) {
-                        if (t !== 'type' && skinNameInfo[t]) {
-                            flag = true
-                            break
-                        }
-                    }
-                    if (!flag) {
-                        console.log('delete ..k', k, tasks)
-                        this.anni.removeSpine(k, skinNameInfo.type)
-                    }
-                }
-            }
-        }
-
-        let pLoad = function (obj) {
-            let actionParams = obj.actionParams
-            let action = obj.action
+        let pLoad = function (actionParams, times) {
             if (actionParams) {
                 actionParams.alpha = actionParams.alpha == null ? player.alpha : actionParams.alpha
-                if (actionParams.name === player.name) {
-                    actionParams.json = player.json
-                }
-                let skinNameInfo = playerAnimation.skinNameChukuangMap[actionParams.name]
-                console.log('actionParams.name0000---',actionParams.name, skinNameInfo)
-                if (!skinNameInfo) {
-                    skinNameInfo = {}
-                    playerAnimation.skinNameChukuangMap[actionParams.name] = skinNameInfo
-                    skinNameInfo.type = actionParams.json ? 'json': 'skel'
-                } else {
-                    // 已经加载过的不存在的,跳过重新加载
-                    return
-                }
-                // 检查是否有出框骨骼, 如果没有, 则删除改骨骼
                 if (!_this.anni.hasSpine(actionParams.name)) {
-                    let skelType = actionParams.json ? 'json': 'skel';
+                    let skelType = actionParams.json ? 'json': 'skel'
                     _this.anni.loadSpine(actionParams.name, skelType, function () {
                         console.log('预加载骨骼成功', actionParams.name)
-                        loadedName.add(actionParams.name)
-                        skinNameInfo[action] = Boolean(completePlayerParams(player, action))
-                        checkNoChuKuang()
                     }, function () {
-                        console.log('播放骨骼失败, 参数: ', actionParams)
-                        skinNameInfo[action] = false
-                        checkNoChuKuang()
+                        console.log('播放骨骼失败, 参数: ', actionParams, '次数: ', times)
+                        if (times < 0) {
+                            pLoad(actionParams, times + 1)
+                        }
                     })
-                } else {
-                    skinNameInfo[action] = Boolean(completePlayerParams(player, action))
-                    checkNoChuKuang()
                 }
-            } else {
-                checkNoChuKuang()
             }
-
         }
-        for (let act of [{actionParams: player.gongjiAction, action: 'GongJi'},
-                         {actionParams:player.teshuAction, action: 'TeShu'},
-                         {actionParams: player.chuchangAction, action: 'chuchang'}]) {
-                pLoad(act)
+        let arr = []
+        for (let act of [{name: player.name, json: player.json, alpha: player.alpha}, player.gongjiAction, player.teshuAction, player.chuchangAction]) {
+            if (act && !arr.includes(act.name)) {
+                arr.push(act.name)
+                pLoad(act, 0)
+            }
         }
         if (!(data.id in this.playerAni)) {
             this.playerAni[data.id] = {}
@@ -133,7 +83,6 @@ class PlayerAnimation {
             this.playerAni[data.id][data.skinId] = {}
         }
         this.playerAni[data.id][data.skinId] = player
-        console.log('this.anni====', this.anni)
     }
 
     findPlayerParams(id, skinId) {
@@ -175,7 +124,9 @@ class PlayerAnimation {
     playChuKuangSpine(playNode, animation, data, notSetPos) {
 
         // 是否要取消连续出框
-        if (!this.playerState[data.id])  {}this.playerState[data.id] = {'time': new Date().getTime()};
+        if (!this.playerState[data.id]) {
+        }
+        this.playerState[data.id] = {'time': new Date().getTime()};
         this.playerState[data.id]['action'] = data.action
         playNode.angle = undefined
         let showTime = animation.showTime * 1000
@@ -194,7 +145,6 @@ class PlayerAnimation {
 
         } else {
             if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2
-
 
 
         }
@@ -218,10 +168,9 @@ class PlayerAnimation {
                 this.playerState[data.id] = false
                 playNode.completed = true
                 playNode.skeleton.completed = true  // 这里一定要标记为true, 不然下次skeleton对象会一直重复实例化
-            }
-            else {
+            } else {
                 playNode.moveTo(data.player.x, data.player.y, delayTime);
-                playNode.actionParams.moveToTimeout = setTimeout(()=> {
+                playNode.actionParams.moveToTimeout = setTimeout(() => {
                     playNode.actionParams.playNode = null
                     playNode.opacity = 0
                     playNode.completed = true
@@ -238,6 +187,14 @@ class PlayerAnimation {
         // 重新恢复攻击pose
         if (data.action === 'chuchang') {
             playNode.scaleTo(playNode.scale * 1.2, 500)
+        }
+        // 设置是否翻转
+        if (!data.me) {
+            if (playNode.player.atkFlipX || isAttackFlipX) {
+                if (data.direction.isLeft) {
+                    playNode.flipX = playNode.flipX == null ? true : !playNode.flipX
+                }
+            }
         }
         if (!notSetPos) {
             setPos(playNode, data);
@@ -383,7 +340,6 @@ class PlayerAnimation {
             return this.playChuKuangSpine(playedSprite, {showTime: actionParams.showTime}, data)
         }
 
-        console.log('连续出框spine...', actionParams.playNode.skeleton.state)
         let state = actionParams.playNode.skeleton.state
         let entry = state.tracks[0]
         let lastTime = entry.animationEnd
@@ -729,7 +685,8 @@ function setPos(apnode, data) {
         }
         apnode.x = actionParams.x
         apnode.y = actionParams.y
-        data.player.y += 100
+        data.player.y += data.player.height * 0.8
+        data.player.x += data.player.width * 0.4
     } else {
         if (data.action === 'chuchang') {
             apnode.x = data.player.x + data.player.width / 2

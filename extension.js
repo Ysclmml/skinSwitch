@@ -726,44 +726,27 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             },
                             forced: true,
                             filter: function (event, player) {
-                                return get.mode() !== 'guozhan' && !player.isUnseen(0) && !player.isUnseen(1) && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
+                                return get.mode() !== 'guozhan' && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && player === game.me
                             },
                             content: function () {
                                 for (let p of game.players) {
-                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
+                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) continue
+
                                     let isYh = p.getElementsByClassName("skinYh")
 
-                                    if (isYh.length > 0) {
-                                        let yh = isYh[0]
-                                        let splits = (yh.src || '').split('/')
-                                        let sub = splits[splits.length - 1]
-                                        let curGroup = sub.split('.')[0]
-                                        if (curGroup !== p.group) {
-                                            isYh[0].remove()
-                                            yh = skinSwitch.createYH(p.group)
-                                            p.append(yh)
+                                    if (p.name === 'unknown' && p.name1) {
+                                        let hide = lib.character[p.name1][4];
+                                        let isHide;
+                                        if (hide && hide.length > 0 && hide[0] === "hiddenSkill") {
+                                            isHide = true;
                                         }
-                                    } else {
-                                        let yh = skinSwitch.createYH(p.group)
-                                        p.append(yh)
+                                        if (isHide) {
+                                            if (isYh.length > 0) {
+                                                isYh[0].remove();
+                                            }
+                                            continue
+                                        }
                                     }
-                                }
-
-                            }
-                        }
-
-                        lib.skill._fix_yh = {
-                            trigger: {
-                                global: 'gameStart'
-                            },
-                            forced: true,
-                            filter: function (event, player) {
-                                return get.mode() !== 'guozhan' && !player.isUnseen(0) && !player.isUnseen(1) && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
-                            },
-                            content: function () {
-                                for (let p of game.players) {
-                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
-                                    let isYh = p.getElementsByClassName("skinYh")
 
                                     if (isYh.length > 0) {
                                         let yh = isYh[0]
@@ -794,24 +777,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 return get.mode() !== 'guozhan' && !player.isUnseen(0) && !player.isUnseen(1) && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
                             },
                             content: function () {
-                                for (let p of game.players) {
-                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
-                                    let isYh = p.getElementsByClassName("skinYh")
+                                let p = player
+                                if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
+                                let isYh = p.getElementsByClassName("skinYh")
 
-                                    if (isYh.length > 0) {
-                                        let yh = isYh[0]
-                                        let splits = (yh.src || '').split('/')
-                                        let sub = splits[splits.length - 1]
-                                        let curGroup = sub.split('.')[0]
-                                        if (curGroup !== p.group) {
-                                            isYh[0].remove()
-                                            yh = skinSwitch.createYH(p.group)
-                                            p.append(yh)
-                                        }
-                                    } else {
-                                        let yh = skinSwitch.createYH(p.group)
+                                if (isYh.length > 0) {
+                                    let yh = isYh[0]
+                                    let splits = (yh.src || '').split('/')
+                                    let sub = splits[splits.length - 1]
+                                    let curGroup = sub.split('.')[0]
+                                    if (curGroup !== p.group) {
+                                        isYh[0].remove()
+                                        yh = skinSwitch.createYH(p.group)
                                         p.append(yh)
                                     }
+                                } else {
+                                    let yh = skinSwitch.createYH(p.group)
+                                    p.append(yh)
                                 }
 
                             }
@@ -994,19 +976,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         Player.init = function (character, character2, skill) {
 
-                            let xxx = 1
-                            setTimeout(() => {
-                                xxx = 2
-                            }, 3000)
-                            let yy = () => {
-                                if (xxx === 1) {
-                                    console.log('加载结束')
-                                    requestAnimationFrame(yy)
-                                } else {
-                                    console.log('加载结束')
-                                }
-                            }
-
                             // EngEX设计的动皮露头外框, 还是比较好看的.
                             let isYh = this.getElementsByClassName("skinYh");
                             if (isYh.length > 0) {
@@ -1045,6 +1014,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 let avatars = this.doubleAvatar ? [character, character2] : [character];
                                 let dskins = decadeUI.dynamicSkin;
                                 let increased;
+                                let hasHideWuJiang = false
 
                                 for (let i = 0; i < avatars.length; i++) {
 
@@ -1093,6 +1063,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     let isHide;
                                     if (hide.length > 0 && hide[0] === "hiddenSkill") {
                                         isHide = true;
+                                        hasHideWuJiang = true
                                     }
                                     // 是否有副将
                                     if (get.mode() === "guozhan" || isHide) skin.deputy = true;
@@ -1120,10 +1091,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     }
 
                                 }
-                                if (this.doubleAvatar) {
+                                if ((this.doubleAvatar && (get.mode() === "guozhan")) || hasHideWuJiang) {
                                     let e = this.getElementsByClassName("dynamic-wrap");
                                     if (e.length > 0) {
-                                        if (get.mode() === "guozhan") e[0].style.display = "none";
+                                        e[0].style.display = "none";
                                         e[0].style.height = "100%";
                                         e[0].style.borderRadius = "0";
                                     }
@@ -1131,7 +1102,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                                 if (lib.character[character]) {
                                     var forces = lib.character[character][1];
-                                    if (/*!this.doubleAvatar*/get.mode() !== 'guozhan' && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && this.getElementsByClassName("skinYh").length < 1 && y /*&& forces != "shen"*/) {
+                                    if (/*!this.doubleAvatar*/get.mode() !== 'guozhan' && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && this.getElementsByClassName("skinYh").length < 1 && y && !hasHideWuJiang/*&& forces != "shen"*/) {
                                         var yh = skinSwitch.createYH(forces);
                                         this.appendChild(yh);
                                     }
@@ -1559,6 +1530,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     return res;
                 },
                 createYH: function (group) {
+                    console.log('createYhhhhh', group)
                     var yh = document.createElement("img");
                     let imgurl = skinSwitch.url + "/images/border/" + group + ".png"
                     yh.src = imgurl;
@@ -2804,9 +2776,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (_status.currentPhase !== player && data.action === 'TeShu' && !avatar.player.shizhounian) {
                             return
                         }
-
-                        let chukuangCanvas = document.getElementById('chukuang-canvas')
-                        // chukuangCanvas.style.width = '101%'
 
                         player.dynamic.renderer.postMessage({
                             message: 'hideAllNode',
@@ -4987,5 +4956,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  2. 骨骼预览图层关闭bug
  3. 手杀骨骼连续出框抽搐抖动问题
  4. 修复ani文件修改导致位置偏移bug
+
+ */
+
+/** 1.12版本更新
+ 1. 更新4.0骨骼预览
+ 2. 修复晋武将会显示的bug
+ 3. 添加ai攻击翻转参数, 根据当前是否在屏幕中央的左侧, 是就就行翻转
+ 4. 修复出框模糊问题 (添加dpr适配就行)
+ 5. 手机预览骨骼时稍微增加下间隙.
 
  */
