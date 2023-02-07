@@ -1098,7 +1098,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         e[0].style.height = "100%";
                                         e[0].style.borderRadius = "0";
                                     }
-
                                 }
                                 if (lib.character[character]) {
                                     var forces = lib.character[character][1];
@@ -1346,6 +1345,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'closeXYPosAdjust': 'extension_皮肤切换_closeXYPosAdjust',  // 是否显示坐标微调
                     'hideHuanFu': 'extension_皮肤切换_hideHuanFu',  // 关闭隐藏换肤按钮
                     'useDynamic': 'extension_皮肤切换_useDynamic',  // 使用皮肤切换携带的出框功能
+                    'isAttackFlipX': 'extension_皮肤切换_isAttackFlipX',  //
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -2655,7 +2655,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             canvas: offsetCanvas,
                             pathPrefix: '../十周年UI/assets/dynamic/',
                             isMobile: skinSwitch.isMobile(),
-                            dpr: Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1)
+                            dpr: Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1),
+                            isAttackFlipX: lib.config[skinSwitch.configKey.isAttackFlipX]
                         }, [offsetCanvas]);
 
                     },
@@ -4828,6 +4829,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 name: "使用出框功能",
                 "init": true,
                 "intro": "如果设备不支持离屏渲染或者使用EngEx或D扩展出框, 请关闭此出框功能",
+            },
+            'isAttackFlipX': {
+                name: "AI出框是否翻转X轴",
+                "init": false,
+                "intro": "AI在屏幕左侧(中央往左小于50%)出框是否翻转X轴",
             },
         },
         help:{},

@@ -43,6 +43,7 @@ class PlayerAnimation {
 
         this.playerState = {}  // 管理每个角色出框状态, 同时保证一个角色只能有一个出框状态.
         this.isMobile = data.isMobile
+        this.isAttackFlipX = data.isAttackFlipX  // 是否攻击出框翻转.
 
         this.skinNameChukuangMap = {}  // 管理所有动皮name 缓存每个攻击的信息.
     }
@@ -190,7 +191,7 @@ class PlayerAnimation {
         }
         // 设置是否翻转
         if (!data.me) {
-            if (playNode.player.atkFlipX || isAttackFlipX) {
+            if (playNode.player.atkFlipX || this.isAttackFlipX) {
                 if (data.direction.isLeft) {
                     playNode.flipX = playNode.flipX == null ? true : !playNode.flipX
                 }
