@@ -1,5 +1,5 @@
 'use strict';
-importScripts('./spine.js', './animation.js', './spine-lib/spine_4_0_64.js');
+importScripts('spine.js', './spine-lib/spine_4_0_64.js', './spine-lib/spine_3_8.js', 'animation.js', 'settings.js', 'animations.js' );
 let window = self;
 let devicePixelRatio = 1;
 let documentZoom = 1;
@@ -19,12 +19,6 @@ class HTMLElement {
     }
 }
 
-// 重新复制老版本的方法
-spine_4.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
-spine_4.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
-spine_4.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
-spine_4.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
-
 
 Array.prototype.remove = function (item) {
     var index = this.indexOf(item);
@@ -40,17 +34,16 @@ let chukuangId = 99999   // 自动出框的nodeID起始, 为了不和主线程�
 class PlayerAnimation {
 
     constructor(data) {
-        this.anni = new newDuilib.AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas)
-        this.spnie4Anni = new newDuilib.Spine4AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas)
+
+        this.animationManager = new AnimationManager(data.pathPrefix, data.canvas, 989898, {dpr: data.dpr})
         this.playerAni = {}  // 这个用来管理每个角色的Id及其skinId的配置数据
 
         this.playerState = {}  // 管理每个角色出框状态, 同时保证一个角色只能有一个出框状态.
         this.isMobile = data.isMobile
-
     }
 
     getAnni(player) {
-        return player.version === '4.0' ? this.spnie4Anni : this.anni
+        return this.animationManager.getAnimation(player.version)
     }
 
     // 提前把当前角色动皮需要用到的骨骼加载, 可能有默认的骨骼, 出场骨骼, 攻击骨骼, 特殊骨骼
@@ -132,7 +125,9 @@ class PlayerAnimation {
     playChuKuangSpine(playNode, animation, data, notSetPos) {
 
         // 是否要取消连续出框
-        if (!this.playerState[data.id])  {}this.playerState[data.id] = {'time': new Date().getTime()};
+        if (!this.playerState[data.id]) {
+        }
+        this.playerState[data.id] = {'time': new Date().getTime()};
         this.playerState[data.id]['action'] = data.action
         playNode.angle = undefined
         let showTime = animation.showTime * 1000
@@ -145,13 +140,13 @@ class PlayerAnimation {
                 delayTime = 300
             }
             showTime -= delayTime
+            showTime += showTimeBefore
 
             // 暂时还是开启动画播放速度默认调为1.2, 默认为1太慢了
             if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2
 
         } else {
             if (playNode.speed == null || playNode.speed === 1) playNode.speed = 1.2
-
 
 
         }
@@ -170,33 +165,40 @@ class PlayerAnimation {
                 postMessage({
                     'message': 'recoverDaiJi',
                     'id': data.id,
+                    'skinId': data.skinId,
                     qhlxBigAvatar: playNode.player.qhlxBigAvatar,
                 })
                 this.playerState[data.id] = false
                 playNode.completed = true
                 playNode.skeleton.completed = true  // 这里一定要标记为true, 不然下次skeleton对象会一直重复实例化
-            }
-            else {
+            } else {
                 playNode.moveTo(data.player.x, data.player.y, delayTime);
-                playNode.actionParams.moveToTimeout = setTimeout(()=> {
+                playNode.actionParams.moveToTimeout = setTimeout(() => {
                     playNode.actionParams.playNode = null
                     playNode.opacity = 0
                     playNode.completed = true
                     playNode.skeleton.completed = true
                     postMessage({
                         'message': 'recoverDaiJi',
-                        'id': data.id
+                        'id': data.id,
+                        'skinId': data.skinId,
                     })
 
                     this.playerState[data.id] = false
-                }, delayTime)
-
+                }, delayTime - showTimeBefore)
             }
-
         }, showTime)
         // 重新恢复攻击pose
         if (data.action === 'chuchang') {
             playNode.scaleTo(playNode.scale * 1.2, 500)
+        }
+        // 设置是否翻转
+        if (!data.me) {
+            if (playNode.player.atkFlipX || this.isAttackFlipX) {
+                if (data.direction.isLeft) {
+                    playNode.flipX = playNode.flipX == null ? true : !playNode.flipX
+                }
+            }
         }
         if (!notSetPos) {
             setPos(playNode, data);
@@ -237,13 +239,13 @@ class PlayerAnimation {
 
                             // 计算当前角色和其他角色的角度. 参考十周年ui的指示线
                             for (let p of attackArgs.targets) {
-                                let x2 = p.x
-                                let y2 = p.y
+                                let x2 = p.boundRect.left + p.boundRect.width / 2
+                                let y2 = p.boundRect.bottom - p.boundRect.height / 2
 
                                 let sprite = Object.assign({}, dy)
 
                                 let x1, y1
-                                // 获取当前攻击角色到被攻击角色的角度, 然后进行偏移
+
                                 if (Array.isArray(playNode.x)) {
                                     x1 = attackArgs.bodySize.bodyWidth * playNode.x[1] + playNode.x[0]
                                 } else {
@@ -259,9 +261,13 @@ class PlayerAnimation {
                                 let angle = Math.round(Math.atan2(y1 - y2, x1 - x2) / Math.PI * 180)
 
                                 sprite.angle = (dy.angle || 0) + 180 - angle
+                                if (data.me && !data.direction.isLeft) {
+                                    x1 -= 50
+                                }
 
                                 let startX = x1
                                 let startY = y1
+
 
                                 let endX = x2
                                 let endY = attackArgs.bodySize.bodyHeight - y2
@@ -277,28 +283,29 @@ class PlayerAnimation {
                                         return k * x + b
                                     }
                                 }
-                                // sprite.x = endX
-                                // sprite.y = endY
-
 
                                 let dis = getDis(startX, x2, startY, y2)
                                 if (dis < attackArgs.bodySize.bodyHeight / 2) {
-                                    // let f = getLineFunc(startX, x2, startY, y2)
-                                    // let newX = endX + (endX < startX ? -1 : 1) * attackArgs.bodySize.bodyHeight / 6
-                                    // let newY = f(newX)
-                                    // console.log('new...', newX, newY)
                                     sprite.scale = (sprite.scale || 1) * 0.6
-
-                                    // sprite.x = newX
-                                    // sprite.y = attackArgs.bodySize.bodyHeight - newY
                                 }
                                 let referNode = new HTMLElement(p.boundRect, attackArgs.bodySize)
-                                let node = this.getAnni(playNode.player).playSpine(sprite, {referNode: referNode})
+                                // let node = this.getAnni(playNode.player).playSpine(sprite, {referNode: referNode})
+                                console.log('zhixian  data====', data)
+
+
+                                let node = this.getAnni(playNode.player).playSpine(sprite, {x: startX, y:  attackArgs.bodySize.bodyHeight - startY})
+                                // let nodeY = node.skeleton.bounds.size.y * (sprite.scale || 1) * 0.5
+                                // let nodeX = node.skeleton.bounds.size.x * (sprite.scale || 1) * 0.5
+                                // node.x -= nodeX
+                                // node.y += nodeY
+
+
                                 if (!zhishixianTime) {
                                     let ani = node.skeleton.data.animations[0]
                                     zhishixianTime = ani.duration
                                 }
-                                // node.moveTo(endX, endY, zhishixianTime * 1000)
+                                // node.moveTo(endX, endY, zhishixianTime * 1000 * 100)
+                                node.moveTo(endX, endY, zhishixianTime * 1000 * (sprite.factor || 0.5))
 
                             }
 
@@ -342,7 +349,6 @@ class PlayerAnimation {
             return this.playChuKuangSpine(playedSprite, {showTime: actionParams.showTime}, data)
         }
 
-        console.log('连续出框spine...', actionParams.playNode.skeleton.state)
         let state = actionParams.playNode.skeleton.state
         let entry = state.tracks[0]
         let lastTime = entry.animationEnd
@@ -367,9 +373,6 @@ class PlayerAnimation {
                 console.log('不重置------', curTime/lastTime, curTime)
             }
         }
-        // if (!(actionParams.attackArgs && actionParams.multiZhiShi)) {
-        //     playNode.skeleton.state.setAnimation(0, playNode.action, false);
-        // }
 
         playNode.completed = false
         playNode.skeleton.completed = true
@@ -688,7 +691,8 @@ function setPos(apnode, data) {
         }
         apnode.x = actionParams.x
         apnode.y = actionParams.y
-        data.player.y += 100
+        data.player.y += data.player.height * 0.8
+        data.player.x += data.player.width * 0.4
     } else {
         if (data.action === 'chuchang') {
             apnode.x = data.player.x + data.player.width / 2
@@ -873,6 +877,7 @@ function completePlayerParams(avatarPlayer, action) {
             let results = playerAnimation.getAnni(avatarPlayer).getSpineActions(actionParams.name)
             let isArray = Array.isArray(actionParams.action)
             let states = []
+
             if (results && results.length > 0) {
                 if (!actionParams.action) {
                     avatarPlayer.actionState[action] = {
@@ -907,7 +912,7 @@ function completePlayerParams(avatarPlayer, action) {
                     return true
                 }
             }
-            avatarPlayer.actionState[action] = false
+            avatarPlayer.actionState[action] = false;
         }
     }
 }
@@ -1038,14 +1043,7 @@ function chukuangStart(data) {
 }
 
 function update(data) {
-    let dynamic = playerAnimation.anni
-    dynamic.resized = false;
-    if (data.dpr != null) dynamic.dpr = data.dpr;
-    if (data.dprAdaptive != null) dynamic.dprAdaptive = data.dprAdaptive;
-    if (data.outcropMask != null) dynamic.outcropMask = data.outcropMask;
-    if (data.useMipMaps != null) dynamic.useMipMaps = data.useMipMaps;
-    if (data.width != null) dynamic.width = data.width;
-    if (data.height != null) dynamic.height = data.height;
+    playerAnimation.animationManager.updateSpineAll(data)
 }
 
 function adjust(data) {

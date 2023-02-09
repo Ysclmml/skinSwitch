@@ -99,7 +99,18 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
             "y": [
                 0,
                 0.4
-            ]
+            ],
+            "beijing": {
+                "scale": 0.6,
+                "x": [
+                    0,
+                    0.25
+                ],
+                "y": [
+                    0,
+                    0.48
+                ]
+            }
         }
     },
     "xushao": {
@@ -323,6 +334,32 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 0,
                 0.25
             ]
+        }
+    },
+    "tenggongzhu": {
+        "菡萏慕卿": {
+            "scale": 1,
+            "x": [
+                0,
+                0.53
+            ],
+            "y": [
+                0,
+                0.4
+            ],
+            "angle": 0
+        },
+        "test3_8": {
+            "scale": 0.5,
+            "x": [
+                0,
+                0.61
+            ],
+            "y": [
+                0,
+                -0.45
+            ],
+            "angle": 0
         }
     }
 }

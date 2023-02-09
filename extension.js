@@ -225,142 +225,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         // 拦截原来的logSkill函数, 加上如果使用非攻击技能,就播放特殊动画
 
                         // 本体1.9.117.2, 由于logSkill的trigger没有使用前就可以触发的, 所以仍然复制一份进行处理.
-                        let logSkill_117_2 = function(name,targets,nature,logv){
-                            if(get.itemtype(targets)=='player') targets=[targets];
-                            var nopop=false;
-                            var popname=name;
-                            if(Array.isArray(name)){
-                                popname=name[1];
-                                name=name[0];
-                            }
-                            var checkShow=this.checkShow(name);
-                            if(lib.translate[name]){
-                                this.trySkillAnimate(name,popname,checkShow);
-                                if(Array.isArray(targets)&&targets.length){
-                                    var str;
-                                    if(targets[0]==this){
-                                        str='#b自己';
-                                        if(targets.length>1){
-                                            str+='、';
-                                            str+=get.translation(targets.slice(1));
-                                        }
-                                    }
-                                    else str=targets;
-                                    game.log(this,'对',str,'发动了','【'+get.skillTranslation(name,this)+'】');
-                                }
-                                else{
-                                    game.log(this,'发动了','【'+get.skillTranslation(name,this)+'】');
-                                }
-                            }
-                            if(nature!=false){
-                                if(nature===undefined){
-                                    nature='green';
-                                }
-                                this.line(targets,nature);
-                            }
-                            var info=lib.skill[name];
-                            if(info&&info.ai&&info.ai.expose!=undefined&&
-                                this.logAi&&(!targets||targets.length!=1||targets[0]!=this)){
-                                this.logAi(lib.skill[name].ai.expose);
-                            }
-                            if(info&&info.round){
-                                var roundname=name+'_roundcount';
-                                this.storage[roundname]=game.roundNumber;
-                                this.syncStorage(roundname);
-                                this.markSkill(roundname);
-                            }
-                            game.trySkillAudio(name,this,true);
-                            if(game.chess){
-                                this.chessFocus();
-                            }
-                            if(logv===true){
-                                game.logv(this,name,targets,null,true);
-                            }
-                            else if(info&&info.logv!==false){
-                                game.logv(this,name,targets);
-                            }
-                            if(info){
-                                var player=this;
-                                var players=player.getSkills(null,false,false);
-                                var equips=player.getSkills('e');
-                                var global=lib.skill.global.slice(0);
-                                var logInfo={
-                                    skill:name,
-                                    targets:targets,
-                                    event:_status.event,
-                                };
-                                if(info.sourceSkill){
-                                    logInfo.sourceSkill=name;
-                                    if(global.contains(name)){
-                                        logInfo.type='global';
-                                    }
-                                    else if(players.contains(name)){
-                                        logInfo.type='player';
-                                    }
-                                    else if(equips.contains(name)){
-                                        logInfo.type='equip';
-                                    }
-                                }
-                                else{
-                                    if(global.contains(name)){
-                                        logInfo.sourceSkill=name;
-                                        logInfo.type='global';
-                                    }
-                                    else if(players.contains(name)){
-                                        logInfo.sourceSkill=name;
-                                        logInfo.type='player';
-                                    }
-                                    else if(equips.contains(name)){
-                                        logInfo.sourceSkill=name;
-                                        logInfo.type='equip';
-                                    }
-                                    else{
-                                        var bool=false;
-                                        for(var i of players){
-                                            var expand=[i];
-                                            game.expandSkills(expand);
-                                            if(expand.contains(name)){
-                                                bool=true;
-                                                logInfo.sourceSkill=i;
-                                                logInfo.type='player';
-                                                break;
-                                            }
-                                        }
-                                        if(!bool){
-                                            for(var i of players){
-                                                var expand=[i];
-                                                game.expandSkills(expand);
-                                                if(expand.contains(name)){
-                                                    logInfo.sourceSkill=i;
-                                                    logInfo.type='equip';
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                var next=game.createEvent('logSkill',false),evt=_status.event;
-                                next.player=player;
-                                next.forceDie=true;
-                                evt.next.remove(next);
-                                if(evt.logSkill) evt=evt.getParent();
-                                for(var i in logInfo){
-                                    if(i=='event') next.log_event=logInfo[i];
-                                    else next[i]=logInfo[i];
-                                }
-                                evt.after.push(next);
-                                next.setContent('emptyEvent');
-                                player.getHistory('useSkill').push(logInfo);
-                            }
-                            if(this._hookTrigger){
-                                for(var i=0;i<this._hookTrigger.length;i++){
-                                    var info=lib.skill[this._hookTrigger[i]].hookTrigger;
-                                    if(info&&info.log){
-                                        info.log(this,name,targets);
-                                    }
-                                }
-                            }
-                        }
 
                         if (lib.version >= '1.9.117.2') {
                             console.log('======== version >= 1.9.117.2===========')
@@ -599,15 +463,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         // 计算当前角色和其他角色的角度. 参考十周年ui的指示线
                                         for (let p of event._trigger.targets) {
                                             p.checkBoundsCache(true);
-                                            let x2 = p.cacheLeft + p.cacheWidth / 2 + rect.width / 32 * 12;
-                                            let y2 = p.cacheTop + p.cacheHeight / 2 + rect.height / 32 * 12;
-                                            if (isPhone) {
-                                                y2 = p.cacheTop + p.cacheHeight / 2 ;
-                                            }
                                             args.targets.push({
-                                                x: x2,
-                                                y: y2,
-                                                boundRect: p.getBoundingClientRect()
+                                                boundRect: p.getBoundingClientRect(),
                                             })
                                         }
                                     }
@@ -625,7 +482,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                 return
                                             }
                                         }
-                                        console.log('出框111', 'event', event, 'delta', timeDelta)
                                         skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', args ? {attackArgs: args, triggername: event.triggername} : {});
                                         player.__lastGongji = {
                                             t: new Date().getTime(),
@@ -636,7 +492,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             if (event._trigger.targets.length <= player.__lastGongji.tLen) {
                                                 return
                                             }
-                                            console.log('出框2222', 'event', event, 'delta', timeDelta)
                                             skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', {attackArgs: args, triggername: event.triggername})
                                             player.__lastGongji = {
                                                 t: new Date().getTime(),
@@ -862,44 +717,27 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             },
                             forced: true,
                             filter: function (event, player) {
-                                return get.mode() !== 'guozhan' && !player.isUnseen(0) && !player.isUnseen(1) && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
+                                return get.mode() !== 'guozhan' && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && player === game.me
                             },
                             content: function () {
                                 for (let p of game.players) {
-                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
+                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) continue
+
                                     let isYh = p.getElementsByClassName("skinYh")
 
-                                    if (isYh.length > 0) {
-                                        let yh = isYh[0]
-                                        let splits = (yh.src || '').split('/')
-                                        let sub = splits[splits.length - 1]
-                                        let curGroup = sub.split('.')[0]
-                                        if (curGroup !== p.group) {
-                                            isYh[0].remove()
-                                            yh = skinSwitch.createYH(p.group)
-                                            p.append(yh)
+                                    if (p.name === 'unknown' && p.name1) {
+                                        let hide = lib.character[p.name1][4];
+                                        let isHide;
+                                        if (hide && hide.length > 0 && hide[0] === "hiddenSkill") {
+                                            isHide = true;
                                         }
-                                    } else {
-                                        let yh = skinSwitch.createYH(p.group)
-                                        p.append(yh)
+                                        if (isHide) {
+                                            if (isYh.length > 0) {
+                                                isYh[0].remove();
+                                            }
+                                            continue
+                                        }
                                     }
-                                }
-
-                            }
-                        }
-
-                        lib.skill._fix_yh = {
-                            trigger: {
-                                global: 'gameStart'
-                            },
-                            forced: true,
-                            filter: function (event, player) {
-                                return get.mode() !== 'guozhan' && !player.isUnseen(0) && !player.isUnseen(1) && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
-                            },
-                            content: function () {
-                                for (let p of game.players) {
-                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
-                                    let isYh = p.getElementsByClassName("skinYh")
 
                                     if (isYh.length > 0) {
                                         let yh = isYh[0]
@@ -930,24 +768,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 return get.mode() !== 'guozhan' && !player.isUnseen(0) && !player.isUnseen(1) && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
                             },
                             content: function () {
-                                for (let p of game.players) {
-                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
-                                    let isYh = p.getElementsByClassName("skinYh")
+                                let p = player
+                                if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
+                                let isYh = p.getElementsByClassName("skinYh")
 
-                                    if (isYh.length > 0) {
-                                        let yh = isYh[0]
-                                        let splits = (yh.src || '').split('/')
-                                        let sub = splits[splits.length - 1]
-                                        let curGroup = sub.split('.')[0]
-                                        if (curGroup !== p.group) {
-                                            isYh[0].remove()
-                                            yh = skinSwitch.createYH(p.group)
-                                            p.append(yh)
-                                        }
-                                    } else {
-                                        let yh = skinSwitch.createYH(p.group)
+                                if (isYh.length > 0) {
+                                    let yh = isYh[0]
+                                    let splits = (yh.src || '').split('/')
+                                    let sub = splits[splits.length - 1]
+                                    let curGroup = sub.split('.')[0]
+                                    if (curGroup !== p.group) {
+                                        isYh[0].remove()
+                                        yh = skinSwitch.createYH(p.group)
                                         p.append(yh)
                                     }
+                                } else {
+                                    let yh = skinSwitch.createYH(p.group)
+                                    p.append(yh)
                                 }
 
                             }
@@ -1168,6 +1005,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 let avatars = this.doubleAvatar ? [character, character2] : [character];
                                 let dskins = decadeUI.dynamicSkin;
                                 let increased;
+                                let hasHideWuJiang = false
 
                                 for (let i = 0; i < avatars.length; i++) {
 
@@ -1216,6 +1054,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     let isHide;
                                     if (hide.length > 0 && hide[0] === "hiddenSkill") {
                                         isHide = true;
+                                        hasHideWuJiang = true
                                     }
                                     // 是否有副将
                                     if (get.mode() === "guozhan" || isHide) skin.deputy = true;
@@ -1243,18 +1082,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     }
 
                                 }
-                                if (this.doubleAvatar) {
+                                if ((this.doubleAvatar && (get.mode() === "guozhan")) || hasHideWuJiang) {
                                     let e = this.getElementsByClassName("dynamic-wrap");
                                     if (e.length > 0) {
-                                        if (get.mode() === "guozhan") e[0].style.display = "none";
+                                        e[0].style.display = "none";
                                         e[0].style.height = "100%";
                                         e[0].style.borderRadius = "0";
                                     }
-
                                 }
                                 if (lib.character[character]) {
                                     var forces = lib.character[character][1];
-                                    if (/*!this.doubleAvatar*/get.mode() !== 'guozhan' && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && this.getElementsByClassName("skinYh").length < 1 && y /*&& forces != "shen"*/) {
+                                    if (/*!this.doubleAvatar*/get.mode() !== 'guozhan' && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && this.getElementsByClassName("skinYh").length < 1 && y && !hasHideWuJiang/*&& forces != "shen"*/) {
                                         var yh = skinSwitch.createYH(forces);
                                         this.appendChild(yh);
                                     }
@@ -1498,6 +1336,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'closeXYPosAdjust': 'extension_皮肤切换_closeXYPosAdjust',  // 是否显示坐标微调
                     'hideHuanFu': 'extension_皮肤切换_hideHuanFu',  // 关闭隐藏换肤按钮
                     'useDynamic': 'extension_皮肤切换_useDynamic',  // 使用皮肤切换携带的出框功能
+                    'isAttackFlipX': 'extension_皮肤切换_isAttackFlipX',  //
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -1682,6 +1521,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     return res;
                 },
                 createYH: function (group) {
+                    console.log('createYhhhhh', group)
                     var yh = document.createElement("img");
                     let imgurl = skinSwitch.url + "/images/border/" + group + ".png"
                     yh.src = imgurl;
@@ -2772,6 +2612,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let canvas = document.createElement('canvas')
                         canvas.className = 'chukuang-canvas'
                         canvas.style = `position: fixed; left: 0px; top: 0px; pointer-events:none; width:100%;height:100%;`
+                        // canvas.height = decadeUI.get.bodySize().height
+                        // canvas.width = decadeUI.get.bodySize().width
                         canvas.height = decadeUI.get.bodySize().height
                         canvas.width = decadeUI.get.bodySize().width
                         let div = ui.create.div('.chukuang-canvas-wraper', document.body)
@@ -2804,6 +2646,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             canvas: offsetCanvas,
                             pathPrefix: '../十周年UI/assets/dynamic/',
                             isMobile: skinSwitch.isMobile(),
+                            dpr: Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1),
+                            isAttackFlipX: lib.config[skinSwitch.configKey.isAttackFlipX]
                         }, [offsetCanvas]);
 
                     },
@@ -2925,8 +2769,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             return
                         }
 
-                        let chukuangCanvas = document.getElementById('chukuang-canvas')
-                        chukuangCanvas.style.width = '100.1%'
                         player.dynamic.renderer.postMessage({
                             message: 'hideAllNode',
                             id: dynamic.id,
@@ -2980,11 +2822,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (!dynamic.primary && !dynamic.deputy) {
                             return
                         }
-                        let chukuangCanvas = document.getElementById('chukuang-canvas')
-                        chukuangCanvas.style.width = '100%'
                         player.dynamic.renderer.postMessage({
                             message: 'recoverDaiJi',
                             id: data.id,
+                            skinId: data.skinId,
                         })
                         player.GongJi = false
                     },
@@ -3015,7 +2856,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         })
                         // 将原来的置空
                         skinSwitch.rendererOnMessage.addListener(player, 'hideAllNodeEnd', function (){})
-
                     }
 
                 },
@@ -3142,11 +2982,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <span style="font-weight: bold">spine动画预览窗口</span>
                         <span>版本:</span><select id="spineVersion">
                             <option label="3.6"  value="3.6" selected></option>
+                            <option label="3.8"  value="3.8"></option>
                             <option label="4.0"  value="4"></option>
                         </select>
                         <span>目录:</span><select id="folders"></select>
                         <span>骨骼:</span><select id="skeletonList"></select>
                         <span>动画标签:</span><select id="animationList"></select>
+                        <span>皮肤:</span><select id="skinList"></select>
                         <span>Debug:</span><input type="checkbox" id="debug">
                         <span>α预乘:</span><input type="checkbox" id="premultipliedAlpha">
                         <span>flipX:</span><input type="checkbox" id="flipX">
@@ -3209,7 +3051,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             webGlSpine.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
                             webGlSpine.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
                             webGlSpine.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
-
+                        } else if (version === '3.8') {
+                            assetsPath = 'assets_3_8'
+                            spineLib = spine3_8
+                            webGlSpine = spine3_8.webgl
+                            webGlSpine.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
+                            webGlSpine.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
+                            webGlSpine.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
+                            webGlSpine.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
                         }
 
                         mvp = new webGlSpine.Matrix4();
@@ -3589,7 +3438,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         document.getElementById('folders').onchange = function (e) {
                             curDir = this.options[this.selectedIndex].text
-                            // 输入框的值也改成存储的值
+                            // 输入框的值也改成存储的值, 存储之前的路径, 防止出错
                             if (!allLoadAssetType[curDir]) {
                                 requestAnimationFrame(load)
                             } else {
@@ -3632,6 +3481,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     skeletons[name] = tmpSkeletons[name]
                                 } catch (e) {
                                     console.log(`加载${curDir}骨骼${k}出错, 请检查骨骼是否正确`)
+                                    console.error(e)
                                     if (window.skinSwitchMessage) {
                                         skinSwitchMessage.show({
                                             'type': 'warning',
@@ -3643,6 +3493,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                                 tmpSkeletons[name].previewParams = {scale: 0.5, posX: 0.5, posY: 0.5}
                                 allLoadSkels[curDir] = tmpSkeletons
+                            }
+                            if (Object.keys(tmpSkeletons).length === 0) {
+                                skinSwitchMessage.show({
+                                    'type': 'warning',
+                                    'text': `当前${curDir}中无正确骨骼预览`,
+                                    'duration': 3000
+                                })
+                                return
                             }
                             setupUI();
                             lastFrameTime = Date.now() / 1000;
@@ -3798,7 +3656,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let render = function () {
                         if (isClosed) return
                         if (stopRenderSign) {
-                            console.log('stopRenderSign===')
                             return requestAnimationFrame(render);
                         }
 
@@ -3943,6 +3800,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             lib.init.js(skinSwitch.url, 'animation')
             lib.init.js(skinSwitch.url + 'component', 'any-touch.umd.min')
             lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
+            })
+            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {
             })
 
             let editBox  // 编辑动皮参数的弹窗
@@ -4975,6 +4834,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 "init": true,
                 "intro": "如果设备不支持离屏渲染或者使用EngEx或D扩展出框, 请关闭此出框功能",
             },
+            'isAttackFlipX': {
+                name: "AI出框是否翻转X轴",
+                "init": false,
+                "intro": "AI在屏幕左侧(中央往左小于50%)出框是否翻转X轴",
+            },
         },
         help:{},
         package:{
@@ -5102,5 +4966,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  2. 骨骼预览图层关闭bug
  3. 手杀骨骼连续出框抽搐抖动问题
  4. 修复ani文件修改导致位置偏移bug
+
+ */
+
+/** 1.12版本更新
+ 1. 更新4.0骨骼预览
+ 2. 修复晋武将会显示的bug
+ 3. 添加ai攻击翻转参数, 根据当前是否在屏幕中央的左侧, 是就就行翻转
+ 4. 修复出框模糊问题 (添加dpr适配就行)
+ 5. 手机预览骨骼时稍微增加下间隙.
 
  */

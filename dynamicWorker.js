@@ -1,5 +1,5 @@
 'use strict';
-importScripts('spine.js', 'animation.js', 'settings.js', './spine-lib/spine_4_0_64.js');
+importScripts('spine.js', './spine-lib/spine_4_0_64.js', './spine-lib/spine_3_8.js', 'animation.js', 'settings.js', 'animations.js' );
 
 console.log('new worker...')
 
@@ -18,7 +18,7 @@ var HTMLCanvasElement = function () {
 var HTMLElement = function () {
 	return 'HTMLElement';
 };
-var dynamics = [];
+var animationManagers = [];
 
 let chukuangId = 99999   // 自动出框的nodeID起始, 为了不和主线程传过去的skinId重复
 
@@ -33,18 +33,14 @@ spine_4.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
 /**
  * 获取动皮管理对象DynamicPlayer
  * @param id  DynamicPlayer对象的id
- * @returns {AnimationPlayer|null}
+ * @returns {AnimationManager}
  */
-dynamics.getById = function (id) {
+animationManagers.getById = function (id) {
 	for (let i = 0; i < this.length; i++) {
 		if (this[i].id === id) {
-			if (this[i].isSpine4) {
-				return this[i].spine4Dynamic
-			}
 			return this[i]
 		}
 	}
-
 	return null;
 }
 
@@ -70,39 +66,25 @@ function preLoadChuKuangSkel(dynamic, apnode) {
 	}
 }
 
-let t = 0
-
-let loadTasks = []  // 存储所有加载spine骨骼的任务. 保证背景骨骼优先加载.
-loadTasks.isRunning = false
 
 // 播放, 稍微修改以下, 如果包含不一样的皮肤出框, 提前加载好对应的骨骼,减少下次的加载时间
 // 将这个函数改成只加载, 加载后再进行播放.
-function playSkin(dynamic, data) {
-	update(dynamic, data);
+function playSkin(am, data) {
+
 	let sprite = (typeof data.sprite == 'string') ? {name: data.sprite} : data.sprite;
+	
+	// 获取正确的ani
+	let dynamic = am.getAnimation(sprite.player.version)
+	update(am, data);
+	
 	sprite.loop = true;
 
 	let player;
 	if (!sprite.player) {
 		sprite.player = sprite
 	}
-	if (sprite.clip && sprite.player.version === '4.0') {
-		return // 双将暂时不允许使用4.0版本骨骼
-	}
 
 	player = sprite.player;
-	if (player.version === '4.0') {
-		if (dynamic.spine4Dynamic) {
-			dynamic.isSpine4 = true
-			dynamic = dynamic.spine4Dynamic
-		}
-	} else {
-		if (dynamic.spineDynamic) {
-			dynamic = dynamic.spineDynamic;
-			dynamic.isSpine4 = false
-		}
-	}
-
 	sprite.alpha = player.alpha;
 
 	let initPlayerGongJi = function () {
@@ -182,7 +164,13 @@ function playSkin(dynamic, data) {
 				postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
 			} else {
 				dynamic.loadSpine(sprite.name, skelType, () => {
+					console.log('data load success========', data, sprite)
 					postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
+				}, (path, errMsg) => {
+					if (errMsg) {
+						console.error(errMsg)
+					}
+					console.log('加载骨骼失败', sprite)
 				})
 			}
 		}
@@ -203,13 +191,65 @@ function playSkin(dynamic, data) {
 	loadAllSkels()
 }
 
+
+// 返回0-a-1中的随机整数
+function randomInt(a) {
+	return Math.floor(Math.random() * a)
+}
+
+// 返回数组中的随机一个值, 如果数组为空则放回undefined
+function randomChoice(arr) {
+	if (!arr || arr.length === 0) return undefined
+	return arr[randomInt(arr.length)]
+}
+
+// 获取骨骼的所有action标签
+function getAllActionLabels(node) {
+	// 获取所有actions
+	let animations = node.skeleton.data.animations;
+	let res = []
+	for (let ani of animations) {
+		res.push(ani.name)
+	}
+	return res
+}
+
+// 获取标签, 忽略大小写
+function getLabelIgnoreCase(node, label) {
+	if (!label) return ''
+	let animations = node.skeleton.data.animations;
+	let lowerCaseLabel = label.toLowerCase()
+	for (let ani of animations) {
+		if (ani.name.toLowerCase() === lowerCaseLabel) {
+			return ani.name
+		}
+	}
+	return ''
+}
+
+/*************** 每个函数处理worker消息 start ***************/
+
+function create(data) {
+	if (animationManagers.length >= 4) return;
+	let am = new AnimationManager(data.pathPrefix,  data.canvas, data.id);
+	animationManagers.push(am);
+}
+
+function play(data) {
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+
+	playSkin(am, data)
+}
+
 // 骨骼加载后真正开始播放
 function startPlaySkin(data) {
 	data = data.data
-	let dynamic = dynamics.getById(data.id);
+	let am = animationManagers.getById(data.id);
 
-	if (!dynamic) return;
+	if (!am) return;
 	let sprite = data.sprite
+	let dynamic = am.getAnimation(sprite.player.version)
 
 	let run = function (beijingNode) {
 		let t = dynamic.playSpine(sprite)
@@ -256,8 +296,9 @@ function startPlaySkin(data) {
 		try {
 			node = dynamic.playSpine(sprite.player.beijing)
 			node.isbeijing = true
-		} catch {
-			debugger
+		} catch (e) {
+			console.error(e)
+			// debugger
 			console.log('dynamic=====', dynamic, data)
 		}
 
@@ -304,65 +345,11 @@ function startPlaySkin(data) {
 	}
 }
 
-
-// 返回0-a-1中的随机整数
-function randomInt(a) {
-	return Math.floor(Math.random() * a)
-}
-
-// 返回数组中的随机一个值, 如果数组为空则放回undefined
-function randomChoice(arr) {
-	if (!arr || arr.length === 0) return undefined
-	return arr[randomInt(arr.length)]
-}
-
-// 获取骨骼的所有action标签
-function getAllActionLabels(node) {
-	// 获取所有actions
-	let animations = node.skeleton.data.animations;
-	let res = []
-	for (let ani of animations) {
-		res.push(ani.name)
-	}
-	return res
-}
-
-// 获取标签, 忽略大小写
-function getLabelIgnoreCase(node, label) {
-	if (!label) return ''
-	let animations = node.skeleton.data.animations;
-	let lowerCaseLabel = label.toLowerCase()
-	for (let ani of animations) {
-		if (ani.name.toLowerCase() === lowerCaseLabel) {
-			return ani.name
-		}
-	}
-	return ''
-}
-
-/*************** 每个函数处理worker消息 start ***************/
-
-function create(data) {
-	if (dynamics.length >= 4) return;
-	let dynamic = new newDuilib.AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas);
-	// 同时初始化spine4播放器
-	let spine4Dynamic = new newDuilib.Spine4AnimationPlayer(data.pathPrefix, 'offscreen', data.canvas);
-	dynamic.id = data.id;
-	dynamic.spine4Dynamic = spine4Dynamic
-	dynamic.spine4Dynamic.spineDynamic = dynamic
-	dynamics.push(dynamic);
-}
-
-function play(data) {
-	let dynamic = dynamics.getById(data.id);
-	if (!dynamic) return;
-
-	playSkin(dynamic, data)
-}
-
 function stop(data) {
-	let dynamic = dynamics.getById(data.id);
-	if (!dynamic) return;
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let sprite = data.sprite
+	let dynamic = am.getAnimationBySkinId(sprite.id)
 	// 为了解决删除节点失败的问题, 只能多尝试删除几次
 	let retryStop = function (times) {
 		if (times < 0) return
@@ -373,9 +360,6 @@ function stop(data) {
 				retryStop(times-1)
 			}, 100)
 		} else {
-			if (dynamic.spineDynamic) {
-				dynamic.spineDynamic.isSpine4 = false
-			}
 			if (sprite.beijingNode) {
 				dynamic.stopSpine(sprite.beijingNode)
 			}
@@ -386,26 +370,22 @@ function stop(data) {
 }
 
 function stopAll(data) {
-	let dynamic = dynamics.getById(data.id);
-	if (!dynamic) return;
-	if (dynamic.spineDynamic) {
-		dynamic.spineDynamic.isSpine4 = false
-	}
-	dynamic.stopSpineAll();
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	am.stopSpineAll();
 }
 
 function msgUpdate(data) {
-	let dynamic = dynamics.getById(data.id);
-	if (!dynamic) return;
-
-	update(dynamic, data);
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	update(am, data);
 }
 
 function action(data) {
-	let dynamic = dynamics.getById(data.id);
-	if (!dynamic) return
-	let apnode = getDynamic(dynamic, data.skinID);
-
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let dynamic = am.getAnimationBySkinId(data.skinID)
+	let apnode = am.getNodeBySkinId(data.skinID);
 	if (!apnode) return
 	let animation
 	// 这里只是单纯的和雷修原来自带的手杀大页播放的功能兼容,保留.
@@ -731,7 +711,7 @@ function action(data) {
 		} else {
 
 			if (!dynamic.hasSpine(actionParams.name)) {
-				dynamic.loadSpine(actionParams.name, "skel", function () {
+				dynamic.loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', function () {
 					playChukuang(actionParams)
 				}, errPlaySpine)
 			} else {
@@ -751,22 +731,6 @@ function action(data) {
 				postMessage({id: data.id, type: 'teshuChuKuang', 'chukuang': false})
 			}
 		}
-		// else {
-		// 	// 当特殊动作需要出框的时候, 只有在自己回合才可以出框
-		// 	if (!data.selfPhase) {
-		// 		return
-		// 	}
-		// 	if (!dynamic.hasSpine(actionParams.name)) {
-		// 		dynamic.loadSpine(actionParams.name, "skel", function () {
-		// 			postMessage({id: data.id, type: 'teshuChuKuang', 'chukuang': true})
-		// 			playChukuang(actionParams)
-		// 		}, errPlaySpine)
-		// 	} else {
-		// 		postMessage({id: data.id, type: 'teshuChuKuang', 'chukuang': true})
-		// 		playChukuang(actionParams)
-		// 	}
-		// }
-
 	} else if (data.action === 'chuchang') {
 		// 暂时只让不同皮肤出框.
 
@@ -782,7 +746,7 @@ function action(data) {
 			playChuKuangSpine(apnode, animation)
 		} else {
 			if (!dynamic.hasSpine(actionParams.name)) {
-				dynamic.loadSpine(actionParams.name, "skel", function () {
+				dynamic.loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', function () {
 					playChukuang(actionParams)
 				}, errPlaySpine)
 			} else {
@@ -800,10 +764,11 @@ function action(data) {
 }
 
 function position(data) {
-	let dynamic = dynamics.getById(data.id);
-	if (!dynamic) return;
-	let apnode = getDynamic(dynamic, data.skinID);
-	if (!apnode) return;
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let dynamic = am.getAnimationBySkinId(data.skinID)
+	let apnode = am.getNodeBySkinId(data.skinID);
+	if (!apnode) return
 	completeParams(apnode)
 
 	if (data.mode === 'daiji') {
@@ -827,10 +792,12 @@ function position(data) {
 }
 
 function debug(data) {
-	let dynamic = dynamics.getById(data.id);
-	if (!dynamic) return;
-	let apnode = getDynamic(dynamic, data.skinID);
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let dynamic = am.getAnimationBySkinId(data.skinID)
+	let apnode = am.getNodeBySkinId(data.skinID);
 	if (!apnode) return
+	console.log('dynamic', am, 'post data --> ', data)
 	completeParams(apnode)
 
 	// 循环播放动皮动作. 然后接受准备
@@ -961,7 +928,7 @@ function debug(data) {
 				}
 
 				if (!dynamic.hasSpine(actionParams.name)) {
-					dynamic.loadSpine(actionParams.name, "skel", playChukuang, errPlaySpine)
+					dynamic.loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', playChukuang, errPlaySpine)
 				} else {
 					playChukuang()
 				}
@@ -983,10 +950,11 @@ function debug(data) {
 
 // 调整动皮的位置
 function adjust(data) {
-	let dynamic = dynamics.getById(data.id);
-	if (!dynamic) return;
-	let apnode = getDynamic(dynamic, data.skinID)
-	if (!apnode) return;
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let dynamic = am.getAnimationBySkinId(data.skinID)
+	let apnode = am.getNodeBySkinId(data.skinID);
+	if (!apnode) return
 	completeParams(apnode)
 
 	if (data.mode === 'daiji') {
@@ -1084,38 +1052,22 @@ function adjust(data) {
 	}
 }
 
-function hide1(data) {
-	let d = dynamics.getById(data.id);
-	let apnode = getDynamic(d, data.skinID);
-
-	if (apnode.skeleton.data.findAnimation(data.action)) {
-		apnode.opacity = 0;
-		window.postMessage(true)
-	} else window.postMessage(false)
-
-}
-
-function hide2(data) {
-	let d = dynamics.getById(data.id);
-	let apnode = getDynamic(d, data.skinID);
-	let hideNode = getHideDynamic(d, apnode);
-	apnode.opacity = 0;
-	if (hideNode) hideNode.opacity = 0;
-
-	window.postMessage(true);
-}
-
 function find(data) {
-	let d = dynamics.getById(data.id);
-	let apnode = getDynamic(d, data.skinID);
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let dynamic = am.getAnimationBySkinId(data.skinID)
+	let apnode = am.getNodeBySkinId(data.skinID);
+	if (!apnode) return
 	let animation = apnode.skeleton.data.findAnimation(data.action);
 	window.postMessage((animation != null && apnode.opacity == 1));
 }
 
 function show(data) {
-	let dynamic = dynamics.getById(data.id)
-	if (!dynamic) return
-	let apnode = getDynamic(dynamic, data.skinID);
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	console.log('am-----', am)
+	let dynamic = am.getAnimationBySkinId(data.skinID)
+	let apnode = am.getNodeBySkinId(data.skinID);
 	if (!apnode) return
 	apnode.opacity = 1
 	apnode.speed = 1
@@ -1123,8 +1075,9 @@ function show(data) {
 }
 
 function hideAllNode(data) {
-	let dynamic = dynamics.getById(data.id)
-	if (!dynamic) return
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let dynamic = am.getAnimationBySkinId(data.skinId)
 	for (let node of dynamic.nodes) {
 		// if (node.isbeijing) {
 		// 	continue
@@ -1142,8 +1095,9 @@ function hideAllNode(data) {
 }
 
 function recoverDaiJi(data) {
-	let dynamic = dynamics.getById(data.id)
-	if (!dynamic) return
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let dynamic = am.getAnimationBySkinId(data.skinId)
 	let chukuangNode
 	for (let node of dynamic.nodes) {
 		if (node.chukuangNode) chukuangNode = node.chukuangNode
@@ -1218,25 +1172,8 @@ onmessage = function (e) {
 	}
 }
 
-function update(dynamic, data) {
-	dynamic.resized = false;
-	if (data.dpr != null) dynamic.dpr = data.dpr;
-	if (data.dprAdaptive != null) dynamic.dprAdaptive = data.dprAdaptive;
-	if (data.outcropMask != null) dynamic.outcropMask = data.outcropMask;
-	if (data.useMipMaps != null) dynamic.useMipMaps = data.useMipMaps;
-	if (data.width != null) dynamic.width = data.width;
-	if (data.height != null) dynamic.height = data.height;
-}
-
-function getDynamic(dynamics, id) {
-	if (dynamics.nodes.length > 1) {
-		for (let i = 0; i < dynamics.nodes.length; i++) {
-			let temp = dynamics.nodes[i];
-			if (temp.id === id) {
-				return temp;
-			}
-		}
-	} else return dynamics.nodes[0];
+function update(animationManager, data) {
+	animationManager.updateSpineAll(data)
 }
 
 // 获取需要隐藏的apnode

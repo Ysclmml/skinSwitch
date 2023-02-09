@@ -683,7 +683,17 @@ var newDuilib;
 			thisAnim.spine.assetManager.loadText(filename + '.atlas',
 				reader.ontextLoad, reader.onerror);
 		};
-		
+
+		AnimationPlayer.prototype.removeSpine = function (filename, skelType) {
+			// 移除已经加载好的spine资源, 节省内存
+			if (this.hasSpine(filename)) {
+				for (let suffix of ['.png', '.atlas', '.' + skelType]) {
+					this.spine.assetManager.remove(filename + suffix)
+				}
+				delete this.spine.assets[filename]
+			}
+		}
+
 		AnimationPlayer.prototype.prepSpine = function (filename, autoLoad) {
 			var _this = this;
 			var spineAssets = _this.spine.assets;
@@ -1001,6 +1011,7 @@ var newDuilib;
 				skeleton.opacity = (sprite.renderOpacity == undefined ? 1 : sprite.renderOpacity);
 				state.hideSlots = sprite.hideSlots;
 				state.update(delta / 1000 * speed);
+				// todo: 这一个操作非常耗时, 可以适当降低渲染帧率优化
 				state.apply(skeleton);
 				skeleton.updateWorldTransform();
 				// sprite.mvp.translate(canvas.width*(-0.1), -0.1 * canvas.height, 0)
@@ -1633,7 +1644,9 @@ var newDuilib;
 			this.height = 180;
 			this.dprAdaptive = false;
 			this.BUILT_ID = 0;  // 管理当前对象的动图spriteId, 每个sprite是动皮的播放参数
-			
+			this.BUILT_4_0_ID = 40000 //  版本4.0以上的动皮起始id, 和默认的3.6版本区分
+			this.BUILT_3_8_ID = 50000 //  版本4.0以上的动皮起始id, 和默认的3.6版本区分
+
 			var offscreen = self.OffscreenCanvas != undefined;
 			if (offscreen) {
 				offscreen = false;
@@ -1694,9 +1707,21 @@ var newDuilib;
 		// sprite是动皮的播放参数, 如果传的只是一个动皮名字, 那么sprite会组装成默认的动画播放参数
 		DynamicPlayer.prototype.play = function (sprite) {
 			var sprite = (typeof sprite == 'string') ? { name: sprite } : sprite;
-			sprite.id = this.BUILT_ID++;
 			sprite.loop = true;
-
+			if (sprite.player && sprite.player.version) {
+				switch (sprite.player.version) {
+					case '4.0':
+						sprite.id = this.BUILT_4_0_ID++
+						break
+					case '3.8':
+						sprite.id = this.BUILT_3_8_ID++
+						break
+					default:
+						sprite.id = this.BUILT_ID++;
+				}
+			} else {
+				sprite.id = this.BUILT_ID++;
+			}
 			// 离屏渲染播放的方式
 			if (this.offscreen) {
 				if (!this.initialized) {
