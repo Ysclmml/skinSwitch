@@ -953,16 +953,21 @@ class Animation3_6 extends BaseAnimation {
         var gl = this.gl;
         gl.viewport(0, 0, canvas.width, canvas.height);
 
-        if (erase) {
+        // 因为有多个program公用一个gl上下文, 所以不能直接清除. 得控制让只有一个ani来执行.
+        if (gl.renderAni == null) {
+            gl.renderAni = this
+        }
+
+        if (erase && gl.renderAni === this) {
             gl.clearColor(0, 0, 0, 0);
             gl.clear(gl.COLOR_BUFFER_BIT);
         }
 
-        if (nodes.length == 0) {
+        if (nodes.length === 0) {
             this.frameTime = void 0;
             this.requestId = void 0;
             this.running = false;
-            if (!offscreen) this.canvas.style.visibility = 'hidden';
+            gl.renderAni = null
             return;
         }
 
@@ -1059,7 +1064,6 @@ class Animation4_0 extends BaseAnimation{
             this.spine = { assets: {} };
             console.error('当前设备不支持 WebGL.');
         }
-
         this.gl = gl;
         this.canvas = canvas;
         this.BUILT_ID = Ani4StartId;  // 4.0的id从40000开始
@@ -1313,7 +1317,11 @@ class Animation4_0 extends BaseAnimation{
         let gl = this.gl;
         gl.viewport(0, 0, canvas.width, canvas.height);
 
-        if (erase) {
+        if (gl.renderAni == null) {
+            gl.renderAni = this
+        }
+
+        if (erase && gl.renderAni === this) {
             gl.clearColor(0, 0, 0, 0);
             gl.clear(gl.COLOR_BUFFER_BIT);
         }
@@ -1322,6 +1330,7 @@ class Animation4_0 extends BaseAnimation{
             this.frameTime = void 0;
             this.requestId = void 0;
             this.running = false;
+            gl.renderAni = null
             return;
         }
 
@@ -1751,16 +1760,20 @@ class Animation3_8 extends BaseAnimation {
         var gl = this.gl;
         gl.viewport(0, 0, canvas.width, canvas.height);
 
-        if (erase) {
+        if (gl.renderAni == null) {
+            gl.renderAni = this
+        }
+
+        if (erase && gl.renderAni === this) {
             gl.clearColor(0, 0, 0, 0);
             gl.clear(gl.COLOR_BUFFER_BIT);
         }
 
-        if (nodes.length == 0) {
+        if (nodes.length === 0) {
             this.frameTime = void 0;
             this.requestId = void 0;
             this.running = false;
-            if (!offscreen) this.canvas.style.visibility = 'hidden';
+            gl.renderAni = null
             return;
         }
 

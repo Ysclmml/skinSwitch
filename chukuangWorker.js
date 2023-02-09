@@ -257,18 +257,17 @@ class PlayerAnimation {
                                 } else {
                                     y1 = attackArgs.bodySize.bodyHeight - playNode.y
                                 }
+                                if (!data.direction.isLeft) {
+                                    x1 -= 50
+                                } else {
+                                    x1 += 50
+                                }
 
                                 let angle = Math.round(Math.atan2(y1 - y2, x1 - x2) / Math.PI * 180)
-
                                 sprite.angle = (dy.angle || 0) + 180 - angle
-                                if (data.me && !data.direction.isLeft) {
-                                    x1 -= 50
-                                }
 
                                 let startX = x1
                                 let startY = y1
-
-
                                 let endX = x2
                                 let endY = attackArgs.bodySize.bodyHeight - y2
                                 let getDis = (x1, x2, y1, y2) => {
@@ -290,15 +289,8 @@ class PlayerAnimation {
                                 }
                                 let referNode = new HTMLElement(p.boundRect, attackArgs.bodySize)
                                 // let node = this.getAnni(playNode.player).playSpine(sprite, {referNode: referNode})
-                                console.log('zhixian  data====', data)
-
 
                                 let node = this.getAnni(playNode.player).playSpine(sprite, {x: startX, y:  attackArgs.bodySize.bodyHeight - startY})
-                                // let nodeY = node.skeleton.bounds.size.y * (sprite.scale || 1) * 0.5
-                                // let nodeX = node.skeleton.bounds.size.x * (sprite.scale || 1) * 0.5
-                                // node.x -= nodeX
-                                // node.y += nodeY
-
 
                                 if (!zhishixianTime) {
                                     let ani = node.skeleton.data.animations[0]

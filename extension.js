@@ -2989,7 +2989,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <span>骨骼:</span><select id="skeletonList"></select>
                         <span>动画标签:</span><select id="animationList"></select>
                         <span>皮肤:</span><select id="skinList"></select>
-                        <span>Debug:</span><input type="checkbox" id="debug">
+<!--                        <span>Debug:</span><input type="checkbox" id="debug">-->
                         <span>α预乘:</span><input type="checkbox" id="premultipliedAlpha">
                         <span>flipX:</span><input type="checkbox" id="flipX">
                         <span>flipY:</span><input type="checkbox" id="flipY">
@@ -3330,14 +3330,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         assetManager = new webGlSpine.AssetManager(gl, skinSwitch.url + assetsPath + '/');
 
                         // Create a debug renderer and the ShapeRenderer it needs to render lines.
-                        debugRenderer = new webGlSpine.SkeletonDebugRenderer(gl);
-                        debugRenderer.drawRegionAttachments = true;
-                        debugRenderer.drawBoundingBoxes = true;
-                        debugRenderer.drawMeshHull = true;
-                        debugRenderer.drawMeshTriangles = true;
-                        debugRenderer.drawPaths = true;
-                        debugShader = webGlSpine.Shader.newColored(gl);
-                        shapes = new webGlSpine.ShapeRenderer(gl);
+                        // debugRenderer = new webGlSpine.SkeletonDebugRenderer(gl);
+                        // debugRenderer.drawRegionAttachments = true;
+                        // debugRenderer.drawBoundingBoxes = true;
+                        // debugRenderer.drawMeshHull = true;
+                        // debugRenderer.drawMeshTriangles = true;
+                        // debugRenderer.drawPaths = true;
+                        // debugShader = webGlSpine.Shader.newColored(gl);
+                        // shapes = new webGlSpine.ShapeRenderer(gl);
 
                         // Tell AssetManager to load the resources for each skeleton, including the exported .skel file, the .atlas file and the .png
                         // file for the atlas. We then wait until all resources are loaded in the load() method.
@@ -3630,6 +3630,36 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                         }
 
+                        let setupSkinUI = function () {
+                            let skinList = document.getElementById('skinList')
+                            skinList.options.length = 0
+                            if (!activeSkeleton) {
+                                return
+                            }
+                            let skeleton = skeletons[activeSkeleton].skeleton;
+                            let skins = skeleton.data.skins
+                            console.log('skins====', skins)
+
+                            for (let i = 0; i < skins.length; i++) {
+                                let name = skins[i].name;
+                                let option = document.createElement('option')
+                                option.setAttribute('value', name)
+                                option.text = name
+                                if (i === 0) {
+                                    option.setAttribute('selected', 'selected')
+                                    document.getElementById('aniTime').innerText = Number(skeleton.data.animations[i].duration).toFixed(1)
+                                }
+                                skinList.options.add(option)
+                            }
+
+                            skinList.onchange = function() {
+                                let skeleton = skeletons[activeSkeleton].skeleton;
+                                let skinName = skinList.options[skinList.selectedIndex].text
+                                skeleton.setSkinByName(skinName);
+                                skeleton.setSlotsToSetupPose();
+                            }
+                        }
+
                         let initInputVal = () => {
                             document.getElementById('scale').value = skeletons[activeSkeleton].previewParams.scale
                             scale = skeletons[activeSkeleton].previewParams.scale
@@ -3648,8 +3678,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             // 输入框的值也改成存储的值
                             initInputVal()
                             setupAnimationUI();
+                            setupSkinUI()
                         }
                         setupAnimationUI();
+                        setupSkinUI()
                     }
 
                     // spine动画本质就是不断的调用render函数重新渲染. 根据每一次的delta差值计算出当前帧应该渲染什么画面
@@ -3713,20 +3745,19 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         // skeletonRenderer.premultipliedAlpha = true;
                         skeletonRenderer.draw(batcher, skeleton);
                         batcher.end();
-
                         shader.unbind();
 
                         // Draw debug information.
-                        let debug = document.getElementById('debug').checked
-                        if (debug) {
-                            debugShader.bind();
-                            debugShader.setUniform4x4f(webGlSpine.Shader.MVP_MATRIX, mvp.values);
-                            // debugRenderer.premultipliedAlpha = premultipliedAlpha;
-                            shapes.begin(debugShader);
-                            debugRenderer.draw(shapes, skeleton);
-                            shapes.end();
-                            debugShader.unbind();
-                        }
+                        // let debug = document.getElementById('debug').checked
+                        // if (debug) {
+                        //     debugShader.bind();
+                        //     debugShader.setUniform4x4f(webGlSpine.Shader.MVP_MATRIX, mvp.values);
+                        //     // debugRenderer.premultipliedAlpha = premultipliedAlpha;
+                        //     shapes.begin(debugShader);
+                        //     debugRenderer.draw(shapes, skeleton);
+                        //     shapes.end();
+                        //     debugShader.unbind();
+                        // }
                         gl.disable(gl.SCISSOR_TEST);
                         requestAnimationFrame(render);
                     }
