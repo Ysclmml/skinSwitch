@@ -1219,6 +1219,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 dynamic.dprAdaptive = true;
                                 this.dynamic = dynamic;
                                 this.$dynamicWrap.appendChild(dynamic.canvas)
+                                skinSwitch.rendererOnMessage.addListener(this, 'logMessage', function (data) {
+                                    console.log('dyWorker', data)
+                                })
 
                             }
 
@@ -2593,6 +2596,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     },
                     startPlay: function (player, data) {
                         if (!player.dynamic) return
+                        skinSwitch.rendererOnMessage.addListener(player, 'logMessage', function (data) {
+                            console.log('dyWorker', data)
+                        })
 
                         player.dynamic.renderer.postMessage({
                             message: 'StartPlay',
@@ -3734,7 +3740,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         skeleton.opacity = 1
 
 
-                        if (version === '4') {
+                        if (version === '4' || version === '3.8') {
                             skeleton.scaleX = document.getElementById('flipX').checked ? -1 : 1
                             skeleton.scaleY = document.getElementById('flipY').checked ? -1 : 1
                         } else {
@@ -5006,5 +5012,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  3. 添加ai攻击翻转参数, 根据当前是否在屏幕中央的左侧, 是就就行翻转
  4. 修复出框模糊问题 (添加dpr适配就行)
  5. 手机预览骨骼时稍微增加下间隙.
+
+ */
+
+/** 1.13版本更新
+ 1. 增加了3.8和4.0骨骼在游戏内的支持
+ 2. 预览同步更新了3.8骨骼的预览
+ 3. 指示线攻击方式稍微做了修改.
 
  */

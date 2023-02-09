@@ -161,7 +161,8 @@ var spine_4 = (() => {
     VertexAttribute: () => VertexAttribute,
     VertexAttributeType: () => VertexAttributeType,
     WebGLBlendModeConverter: () => WebGLBlendModeConverter,
-    WindowedMean: () => WindowedMean
+    WindowedMean: () => WindowedMean,
+    TextureAtlasReader: () => TextureAtlasReader,
   });
 
   // spine-core/src/Utils.ts

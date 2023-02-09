@@ -24,12 +24,6 @@ let chukuangId = 99999   // 自动出框的nodeID起始, 为了不和主线程�
 
 let isMobile = false
 
-// 重新复制老版本的方法
-spine_4.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
-spine_4.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
-spine_4.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
-spine_4.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
-
 /**
  * 获取动皮管理对象DynamicPlayer
  * @param id  DynamicPlayer对象的id
@@ -76,6 +70,9 @@ function playSkin(am, data) {
 	// 获取正确的ani
 	let dynamic = am.getAnimation(sprite.player.version)
 	update(am, data);
+	if (dynamic instanceof Animation3_8)  {
+		postMessage({id: data.id, type: 'logMessage', dynamic: true})
+	}
 	
 	sprite.loop = true;
 
@@ -160,18 +157,31 @@ function playSkin(am, data) {
 	let loadAllSkels = () => {
 		let loadDaiJi = () => {
 			let skelType = sprite.player.json ? 'json': 'skel'
-			if (dynamic.hasSpine(sprite.name)) {
-				postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
-			} else {
-				dynamic.loadSpine(sprite.name, skelType, () => {
-					console.log('data load success========', data, sprite)
+			postMessage({id: data.id, type: 'logMessage', msg: {first: '1111', sprite}})
+			try {
+				if (dynamic.hasSpine(sprite.name)) {
 					postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
-				}, (path, errMsg) => {
-					if (errMsg) {
-						console.error(errMsg)
+				} else {
+					try {
+						dynamic.loadSpine(sprite.name, skelType, () => {
+							console.log('data load success========', data, sprite)
+							postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
+						}, (errMsg) => {
+							if (errMsg) {
+								console.error(errMsg)
+								postMessage({id: data.id, type: 'logMessage', msg: {errMsg: errMsg}})
+							}
+							console.log('加载骨骼失败', sprite)
+						})
+					} catch (e) {
+						postMessage({id: data.id, type: 'logMessage', msg: {errMsg: e.toString()}})
 					}
-					console.log('加载骨骼失败', sprite)
-				})
+
+				}
+			} catch (e) {
+				postMessage({id: data.id, type: 'logMessage', msg: {errMsg: e.toString()}})
+			} finally {
+				postMessage({id: data.id, type: 'logMessage', msg: {finally: 'load finish?????'}})
 			}
 		}
 

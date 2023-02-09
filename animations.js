@@ -7,44 +7,21 @@ if (self.spine_4 && self.spine) {
     spine_4.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
     spine_4.Matrix4.prototype.originTranslate = spine_4.Matrix4.prototype.translate
     spine_4.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
-}
 
-if (self.spine3_8 && self.spine) {
-    // 给4.0的mvp添加新的方法.
-    spine3_8.webgl.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
-    spine3_8.webgl.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
-    spine3_8.webgl.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
-    spine3_8.webgl.Matrix4.prototype.originTranslate = spine_4.Matrix4.prototype.translate
-    spine3_8.webgl.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
-
-    //
-    // 	spine3_8.TextureAtlasReader = TextureAtlasReader;
-
-    // 4.0loadTexture兼容了webworker的场景, 而3.8的官方库没有考虑webworker所以, 需要进行改造
-    spine3_8.webgl.AssetManager.prototype.loadTexture = function (path, success, error){
-        path = this.pathPrefix + path;
-        this.toLoad++;
+    // 4.0 loadTexture在无名杀手机上莫名其妙不能加载需要改造... 花了我好长时间排错找
+    spine_4.AssetManager.prototype.loadTexture =  function loadTexture(path, success = null, error = null) {
+        path = this.start(path);
         let isBrowser = !!(typeof window !== "undefined" && typeof navigator !== "undefined" && window.document);
         let isWebWorker = !isBrowser;
+        let _this = this
         if (isWebWorker) {
-            fetch(path, { mode: "cors" }).then((response) => {
-                if (response.ok)
-                    return response.blob();
-                this.error(error, path, `Couldn't load image: ${path}`);
-                return null;
-            }).then((blob) => {
-                return blob ? createImageBitmap(blob, { premultiplyAlpha: "none", colorSpaceConversion: "none" }) : null;
-            }).then((bitmap) => {
-                if (bitmap) {
-                    let texture = this.textureLoader(bitmap)
-                    this.assets[path] = texture;
-                    this.toLoad--;
-                    this.loaded++;
-                    if (success)
-                        success(path, texture);
-                }
-
-            });
+            this.downloadImageBitmap(path, function (imageBitmap) {
+                spine.lodedAssets[path] = imageBitmap;
+                let texture = _this.textureLoader(imageBitmap);
+                _this.success(success, path, texture);
+            }, function (status, response) {
+                _this.error(error, path, `Couldn't load image: ${path}`);
+            })
         } else {
             let image = new Image();
             image.crossOrigin = "anonymous";
@@ -59,6 +36,23 @@ if (self.spine3_8 && self.spine) {
             image.src = path;
         }
     }
+    spine_4.AssetManager.prototype.downloadImageBitmap = spine.webgl.AssetManager.prototype.downloadImageBitmap
+}
+
+if (self.spine3_8 && self.spine) {
+    // 给4.0的mvp添加新的方法.
+    spine3_8.webgl.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
+    spine3_8.webgl.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
+    spine3_8.webgl.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
+    spine3_8.webgl.Matrix4.prototype.originTranslate = spine_4.Matrix4.prototype.translate
+    spine3_8.webgl.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
+
+    //
+    // 	spine3_8.TextureAtlasReader = TextureAtlasReader;
+
+    spine3_8.webgl.AssetManager.prototype.loadTexture = spine.webgl.AssetManager.prototype.loadTexture
+    spine3_8.webgl.AssetManager.prototype.downloadImageBitmap = spine.webgl.AssetManager.prototype.downloadImageBitmap
+
 }
 
 const Ani4StartId = 40000  // 4.0spine内部维护的起始id
@@ -601,7 +595,7 @@ class BaseAnimation {
 class Animation3_6 extends BaseAnimation {
     constructor (pathPrefix, canvas, dpr) {
         super()
-        if (!window.spine) return console.error('spine 未定义.');
+        if (!self.spine) return console.error('spine 未定义.');
 
         let config = { alpha: true };
         let gl = canvas.getContext('webgl2', config);
@@ -910,7 +904,7 @@ class Animation3_6 extends BaseAnimation {
             if (offscreen)
                 dpr = this.dpr != null ? this.dpr : 1;
             else
-                dpr = Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1);
+                dpr = Math.max(self.devicePixelRatio * (self.documentZoom ? self.documentZoom : 1), 1);
         }
         var delta = timestamp - ((this.frameTime == null) ? timestamp : this.frameTime);
         this.frameTime = timestamp;
@@ -1040,7 +1034,7 @@ class Animation4_0 extends BaseAnimation{
 
     constructor (pathPrefix, canvas, dpr) {
         super()
-        if (!window.spine_4) return console.error('spine4 未定义.');
+        if (!self.spine_4) return console.error('spine4 未定义.');
         let config = { alpha: true };
         let gl = canvas.getContext('webgl2', config);
         if (gl == null) {
@@ -1107,6 +1101,47 @@ class Animation4_0 extends BaseAnimation{
         region.renderObject = region;
 
         return region;
+    }
+
+    loadTexture(path, success = null, error = null) {
+
+        path = this.start(path);
+        let isBrowser = !!(typeof window !== "undefined" && typeof navigator !== "undefined" && window.document);
+        let isWebWorker = !isBrowser;
+        let _this = this
+        if (isWebWorker) {
+            this.downloadImageBitmap(path, function (imageBitmap) {
+                spine.lodedAssets[path] = imageBitmap;
+                let texture = _this.textureLoader(imageBitmap);
+                _this.success(success, path, texture);
+            }, function (status, response) {
+                _this.error(error, path, `Couldn't load image: ${path}`);
+            })
+
+            // fetch(path, { mode: "cors" }).then((response) => {
+            //     if (response.ok)
+            //         return response.blob();
+            //     this.error(error, path, `Couldn't load image: ${path}`);
+            //     return null;
+            // }).then((blob) => {
+            //     return blob ? createImageBitmap(blob, { premultiplyAlpha: "none", colorSpaceConversion: "none" }) : null;
+            // }).then((bitmap) => {
+            //     if (bitmap)
+            //         this.success(success, path, this.textureLoader(bitmap));
+            // });
+        } else {
+            let image = new Image();
+            image.crossOrigin = "anonymous";
+            image.onload = () => {
+                this.success(success, path, this.textureLoader(image));
+            };
+            image.onerror = () => {
+                this.error(error, path, `Couldn't load image: ${path}`);
+            };
+            if (this.downloader.rawDataUris[path])
+                path = this.downloader.rawDataUris[path];
+            image.src = path;
+        }
     }
 
     loadSpine(filename, skelType, onload, onerror) {
@@ -1273,7 +1308,7 @@ class Animation4_0 extends BaseAnimation{
             if (offscreen)
                 dpr = this.dpr !== undefined ? this.dpr : 1;
             else
-                dpr = Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1);
+                dpr = Math.max(self.devicePixelRatio * (self.documentZoom ? self.documentZoom : 1), 1);
         }
         let delta = timestamp - ((this.frameTime == undefined) ? timestamp : this.frameTime);
         this.frameTime = timestamp;
@@ -1407,7 +1442,7 @@ class Animation4_0 extends BaseAnimation{
 class Animation3_8 extends BaseAnimation {
     constructor (pathPrefix, canvas, dpr) {
         super()
-        if (!window.spine) return console.error('spine 未定义.');
+        if (!self.spine) return console.error('spine 未定义.');
 
         let config = { alpha: true };
         let gl = canvas.getContext('webgl2', config);
@@ -1553,7 +1588,6 @@ class Animation3_8 extends BaseAnimation {
 
         thisAnim.spine.assetManager.loadText(filename + '.atlas',
             reader.ontextLoad, reader.onerror);
-
     };
 
     prepSpine(filename, autoLoad) {
@@ -1717,7 +1751,7 @@ class Animation3_8 extends BaseAnimation {
             if (offscreen)
                 dpr = this.dpr != null ? this.dpr : 1;
             else
-                dpr = Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1);
+                dpr = Math.max(self.devicePixelRatio * (self.documentZoom ? self.documentZoom : 1), 1);
         }
         var delta = timestamp - ((this.frameTime == null) ? timestamp : this.frameTime);
         this.frameTime = timestamp;
