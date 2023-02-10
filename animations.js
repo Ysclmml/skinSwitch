@@ -1393,8 +1393,10 @@ class Animation4_0 extends BaseAnimation{
             skeleton = sprite.skeleton;
             state = skeleton.state;
             speed = sprite.speed == null ? 1 : sprite.speed;
-            skeleton.flipX = sprite.flipX;
-            skeleton.flipY = sprite.flipY
+            // skeleton.flipX = sprite.flipX;
+            // skeleton.flipY = sprite.flipY
+            skeleton.scaleX = sprite.flipX ? -1 : 1
+            skeleton.scaleY = sprite.flipY ? -1 : 1
 
             // 4.0的修改透明度方法变了, 需要使用下面这种方法.
             skeleton.color.a = (sprite.renderOpacity == null ? 1 : sprite.renderOpacity);
@@ -1832,13 +1834,17 @@ class Animation3_8 extends BaseAnimation {
                 gl.clipping = sprite.renderClip;
                 gl.scissor(gl.clipping.x, gl.clipping.y, gl.clipping.width, gl.clipping.height);
             }
-
             skeleton = sprite.skeleton;
             state = skeleton.state;
             speed = sprite.speed == null ? 1 : sprite.speed;
-            skeleton.flipX = sprite.flipX;
-            skeleton.flipY = sprite.flipY
+
+            // skeleton.flipX = sprite.flipX;
+            // skeleton.flipY = sprite.flipY
+            skeleton.scaleX = sprite.flipX ? -1 : 1
+            skeleton.scaleY = sprite.flipY ? -1 : 1
+            skeleton.color.a = (sprite.renderOpacity == null ? 1 : sprite.renderOpacity);
             skeleton.opacity = (sprite.renderOpacity == null ? 1 : sprite.renderOpacity);
+
             state.hideSlots = sprite.hideSlots;
             state.update(delta / 1000 * speed);
             state.apply(skeleton);

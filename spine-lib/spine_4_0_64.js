@@ -10733,6 +10733,59 @@ var spine_4 = (() => {
         this.vertexSize += 4;
       this.vertices = Utils.newFloatArray(this.vertexSize * 1024);
     }
+
+    getSlotsMask () {
+      var scale = this.outcropScale;
+      var angle = this.outcropAngle;
+      var gl = this.gl;
+
+      var ox = gl.canvas.width  / 2;
+      var oy = gl.canvas.height / 2;
+      var x = this.outcropX;
+      var y = this.outcropY;
+      if (x == null)
+        x = ox;
+      if (y == null)
+        y = oy;
+
+      var offsetX = ox - x;
+      var offsetY = oy - y;
+      var t = offsetY + oy - (gl.canvas.height * 0.1);
+      var r = offsetX + ox;
+      var b = offsetY - oy;
+      var l = offsetX - ox;
+
+      t /= scale;
+      r /= scale;
+      b /= scale;
+      l /= scale;
+
+      let slotsMask = this.slotsMask;
+      if (slotsMask == null) {
+        slotsMask = this.slotsMask = new ClippingAttachment('outcrop');
+        slotsMask.vertices = new Array(8);
+        slotsMask.worldVerticesLength = slotsMask.vertices.length;
+      }
+
+      var verts = slotsMask.vertices;
+      verts[0] = l; verts[1] = t;
+      verts[2] = l; verts[3] = b;
+      verts[4] = r; verts[5] = b;
+      verts[6] = r; verts[7] = t;
+      if (angle) {
+        angle = angle / 180 * Math.PI;
+        var cosA = Math.cos(angle);
+        var sinA = Math.sin(angle);
+        var dx, dy;
+        for (var i = 0; i < 8; i += 2) {
+          dx = verts[i];
+          dy = verts[i + 1];
+          verts[i] = dx * cosA + dy * sinA;
+          verts[i + 1] = dy * cosA - dx * sinA;
+        }
+      }
+      return slotsMask;
+    }
     draw(batcher, skeleton, slotRangeStart = -1, slotRangeEnd = -1) {
       let clipper = this.clipper;
       let premultipliedAlpha = this.premultipliedAlpha;
@@ -10752,6 +10805,24 @@ var spine_4 = (() => {
       let inRange = false;
       if (slotRangeStart == -1)
         inRange = true;
+
+      var hideSlots = this.hideSlots;
+      if (hideSlots && !Array.isArray(hideSlots))
+        hideSlots = [hideSlots];
+
+      var slotName;
+      var clipSlots;
+      var slotsMask;
+      if (this.outcropMask) {
+        clipSlots = this.clipSlots;
+        if (clipSlots) {
+          if (!Array.isArray(clipSlots))
+            clipSlots = [clipSlots];
+
+          slotsMask = this.getSlotsMask();
+        }
+      }
+
       for (let i = 0, n = drawOrder.length; i < n; i++) {
         let clippedVertexSize = clipper.isClipping() ? 2 : vertexSize;
         let slot = drawOrder[i];
@@ -10770,6 +10841,24 @@ var spine_4 = (() => {
           inRange = false;
         }
         let attachment = slot.getAttachment();
+        if (attachment && hideSlots) {
+          slotName = attachment.name;
+          if (slotName && hideSlots.indexOf(slotName) != -1) {
+            clipper.clipEndWithSlot(slot);
+            continue;
+          }
+        }
+
+        if (attachment && clipSlots) {
+          slotName = attachment.name;
+          if (slotName && clipSlots.indexOf(slotName) != -1) {
+            if (clipper.clipAttachment != slotsMask)
+              clipper.clipStart(false, slotsMask);
+          } else if (clipper.clipAttachment == slotsMask) {
+            clipper.clipEnd();
+          }
+        }
+
         let texture = null;
         if (attachment instanceof RegionAttachment) {
           let region = attachment;
