@@ -527,6 +527,7 @@ class PlayerAnimation {
                     y: [0, 0.5],
                     scale: player.scale,  //
                     action: player.gongji,
+                    posAuto: true
                 }
             }
             // 如果是简单的设置为true, 那么说明当前动皮是静态皮肤, 也想出框, 那么和上面一样, 播放当前待机动作到中央
@@ -537,6 +538,7 @@ class PlayerAnimation {
                     y: [0, 0.5],
                     scale: player.scale,  //
                     fakeDynamic: true,
+                    posAuto: true
                 }
             } else if (gongjiType === 'object') {
                 gongjiAction = gongji
@@ -608,7 +610,8 @@ class PlayerAnimation {
                     x: [0, 0.5],
                     y: [0, 0.5],
                     scale: player.scale,
-                    action: 'TeShu'  // 寻找默认的攻击动画标签名称
+                    action: 'TeShu',  // 寻找默认的攻击动画标签名称
+                    posAuto: true
                 }
             }
         }
@@ -1071,6 +1074,7 @@ onmessage = function (e) {
             createChuKuang(data)
             break
         case 'UPDATE':
+            console.log('update====', data)
             update(data)
             break
         case 'PRELOAD':

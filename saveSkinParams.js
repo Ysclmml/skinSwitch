@@ -361,6 +361,21 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
             ],
             "angle": 0
         }
+    },
+    "qinghegongzhu": {
+        "瑞雪芳梅": {
+            "gongji": {
+                "scale": 0.7,
+                "x": [
+                    0,
+                    0.85
+                ],
+                "y": [
+                    0,
+                    0.24
+                ]
+            }
+        }
     }
 }
 }

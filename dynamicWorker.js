@@ -70,10 +70,7 @@ function playSkin(am, data) {
 	// 获取正确的ani
 	let dynamic = am.getAnimation(sprite.player.version)
 	update(am, data);
-	if (dynamic instanceof Animation3_8)  {
-		postMessage({id: data.id, type: 'logMessage', dynamic: true})
-	}
-	
+
 	sprite.loop = true;
 
 	let player;
@@ -157,14 +154,12 @@ function playSkin(am, data) {
 	let loadAllSkels = () => {
 		let loadDaiJi = () => {
 			let skelType = sprite.player.json ? 'json': 'skel'
-			postMessage({id: data.id, type: 'logMessage', msg: {first: '1111', sprite}})
 			try {
 				if (dynamic.hasSpine(sprite.name)) {
 					postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
 				} else {
 					try {
 						dynamic.loadSpine(sprite.name, skelType, () => {
-							console.log('data load success========', data, sprite)
 							postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
 						}, (errMsg) => {
 							if (errMsg) {
@@ -180,8 +175,6 @@ function playSkin(am, data) {
 				}
 			} catch (e) {
 				postMessage({id: data.id, type: 'logMessage', msg: {errMsg: e.toString()}})
-			} finally {
-				postMessage({id: data.id, type: 'logMessage', msg: {finally: 'load finish?????'}})
 			}
 		}
 
@@ -301,6 +294,13 @@ function startPlaySkin(data) {
 		// 如果是双将的话, 复制裁剪.
 		if (sprite.clip) {
 			sprite.player.beijing.clip = sprite.clip
+		}
+		sprite.player.beijing.clip = {
+			x: 0,
+			y: 0,
+			width: [0, 1],
+			height: [0, 0.9],
+			clipParent: true
 		}
 		let node
 		try {
@@ -1116,6 +1116,14 @@ function recoverDaiJi(data) {
 	}
 }
 
+//
+function destroy(data) {
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	animationManagers.remove(am)
+	am.canvas = null
+}
+
 
 /*************** 每个函数处理worker消息 end ***************/
 
@@ -1178,6 +1186,8 @@ onmessage = function (e) {
 		case 'recoverDaiJi':
 			recoverDaiJi(data)
 			break
+		case 'DESTROY':
+			destroy(data)
 
 	}
 }

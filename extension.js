@@ -1494,6 +1494,24 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         })
                     }
                 },
+
+                genDynamicSkin: function () {
+                    if (window.pfqhUtils) {
+                        if (decadeUI.dynamicSkin) {
+                            let str = pfqhUtils.transformDdyskins(decadeUI.dynamicSkin)
+                            // 写入文件中
+                            game.writeFile(str, skinSwitch.path, '转换后_dynamicSkin.js', function () {
+                                console.log('写入saveSkinParams.js成功')
+                                skinSwitchMessage.show({
+                                    type: 'success',
+                                    text: '转换成功',
+                                    duration: 1500,    // 显示时间
+                                    closeable: false, // 可手动关闭
+                                })
+                            })
+                        }
+                    }
+                },
                 addProgress: function (obj, value, total) {
                     var progress = Math.floor(value / total * 100);
                     obj.style.backgroundSize = progress + "% 100%";
@@ -3838,8 +3856,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             lib.init.js(skinSwitch.url + 'component', 'any-touch.umd.min')
             lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
             })
-            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {
-            })
+            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {})
+            lib.init.js(skinSwitch.url, 'pfqhUtils', function () {})
 
             let editBox  // 编辑动皮参数的弹窗
             let adjustPos  // 显示动画的相对位置. 这个是相对全局window, 用于辅助调试pos位置
@@ -4862,9 +4880,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 "intro": "将预览动态皮肤参数界面加入顶部菜单栏",
             },
             "hideHuanFu": {
-                name: "更换动皮",
+                name: "隐藏更换动皮按钮",
                 "init": false,
-                "intro": "如果安装了千幻雷修,可以关闭更换动皮功能",
+                "intro": "如果安装了千幻雷修,可以隐藏更换动皮按钮",
             },
             'useDynamic': {
                 name: "使用出框功能",
@@ -4876,6 +4894,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 "init": false,
                 "intro": "AI在屏幕左侧(中央往左小于50%)出框是否翻转X轴",
             },
+            'genDynamicSkin': {
+                name: "<div><button onclick='skinSwitch.genDynamicSkin()'>转换D动态参数(生成的新文件在扩展文件夹下)</button></div>",
+                clear: true
+            }
         },
         help:{},
         package:{
@@ -5019,5 +5041,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  1. 增加了3.8和4.0骨骼在游戏内的支持
  2. 预览同步更新了3.8骨骼的预览
  3. 指示线攻击方式稍微做了修改.
+
+ */
+
+/** 1.14版本更新
+ 1. 增加d动态皮肤参数转化
+ 2. 修复4.0和3.8无法clip和hide slots的问题. 模仿3.6的做法
 
  */

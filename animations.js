@@ -590,6 +590,17 @@ class BaseAnimation {
 
     render(timestamp) {}
 
+    update(data) {
+        if (!data) data = {}
+        this.resized = false
+        if (data.dpr != null) this.dpr = data.dpr;
+        if (data.dprAdaptive != null) this.dprAdaptive = data.dprAdaptive;
+        if (data.outcropMask != null) this.outcropMask = data.outcropMask;
+        if (data.useMipMaps != null) this.useMipMaps = data.useMipMaps;
+        if (data.width != null) this.width = data.width;
+        if (data.height != null) this.height = data.height;
+    }
+
 }
 
 class Animation3_6 extends BaseAnimation {
@@ -1063,6 +1074,7 @@ class Animation4_0 extends BaseAnimation{
         this.BUILT_ID = Ani4StartId;  // 4.0的id从40000开始
         this.dpr = dpr
         this.dprAdaptive = true
+
     }
 
     // 不知道下面这个函数的作用, 保留, 出错再修改...
@@ -1895,6 +1907,8 @@ class AnimationManager {
             this.dpr = params.dpr
             this.dprAdaptive = true
         }
+        this.width = undefined
+        this.height = undefined
     }
 
     /**
@@ -1910,21 +1924,25 @@ class AnimationManager {
             case SupportSpineVersion.v3_6:
                 if (!this.animations[version]) {
                     this.animations[version] = new Animation3_6(this.pathPrefix, this.canvas, this.dpr)
+                    this.animations[version].update({width: this.width, height: this.height})
                 }
                 break
             case SupportSpineVersion.v4_0:
                 if (!this.animations[version]) {
                     this.animations[version] = new Animation4_0(this.pathPrefix, this.canvas, this.dpr)
+                    this.animations[version].update({width: this.width, height: this.height})
                 }
                 break
             case SupportSpineVersion.v3_8:
                 if (!this.animations[version]) {
                     this.animations[version] = new Animation3_8(this.pathPrefix, this.canvas, this.dpr)
+                    this.animations[version].update({width: this.width, height: this.height})
                 }
                 break
             default:
                 if (!this.animations[SupportSpineVersion.v3_6]) {
                     this.animations[SupportSpineVersion.v3_6] = new Animation3_6(this.pathPrefix, this.canvas, this.dpr)
+                    this.animations[version].update({width: this.width, height: this.height})
                 }
                 return this.animations[SupportSpineVersion.v3_6]
         }
@@ -1980,16 +1998,16 @@ class AnimationManager {
 
     // 更新所有版本播放器的相关数据
     updateSpineAll(data) {
+        if (data.width) {
+            this.width = data.width
+        }
+        if (data.height) {
+            this.height = data.height
+        }
         for (let k in this.animations) {
             if (this.animations[k]) {
                 let dynamic = this.animations[k]
-                dynamic.resized = false
-                if (data.dpr != null) dynamic.dpr = data.dpr;
-                if (data.dprAdaptive != null) dynamic.dprAdaptive = data.dprAdaptive;
-                if (data.outcropMask != null) dynamic.outcropMask = data.outcropMask;
-                if (data.useMipMaps != null) dynamic.useMipMaps = data.useMipMaps;
-                if (data.width != null) dynamic.width = data.width;
-                if (data.height != null) dynamic.height = data.height;
+                dynamic.update(data)
             }
         }
     }
