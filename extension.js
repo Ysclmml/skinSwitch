@@ -417,62 +417,53 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 else {
                                     // 添加指示线功能, 加载攻击指示线骨骼, 直接使用十周年ani来进行播放
                                     let dy = (player.dynamic.primary && player.dynamic.primary.player && player.dynamic.primary.player.zhishixian) || (player.dynamic.deputy && player.dynamic.deputy.player && player.dynamic.deputy.player.zhishixian)
-                                    let rect = player.getBoundingClientRect()
                                     let args = null
 
-                                    if (dy != null) {
-                                        if (event.triggername !== 'useCardBefore' && event._trigger.targets.length < 2) {
-                                            return
-                                        }
-                                        let hand = dui.boundsCaches.hand;
-                                        let x1, y1
-
-                                        let isPhone = skinSwitch.isMobile()
-
-                                        args = {
-                                            hand: null,  // 手牌区域
-                                            attack: {},  // 攻击方坐标
-                                            targets: [],  // 攻击目标坐标
-                                            bodySize: {
-                                                bodyWidth: decadeUI.get.bodySize().width,
-                                                bodyHeight: decadeUI.get.bodySize().height
+                                    let getArgs = (filterPlayers = []) => {
+                                        if (dy != null) {
+                                            if (event.triggername !== 'useCardBefore' && event._trigger.targets.length < 2) {
+                                                return
                                             }
-                                        }
+                                            let hand = dui.boundsCaches.hand;
+                                            let x1, y1
 
-                                        player.checkBoundsCache(true);
-                                        if (player === game.me) {
-                                            hand.check();
-                                            x1 = hand.x + hand.width / 2;
-                                            y1 = hand.y;
-                                            args.hand = {
-                                                x1: x1,
-                                                y1: y1
+                                            args = {
+                                                hand: null,  // 手牌区域
+                                                attack: {},  // 攻击方坐标
+                                                targets: [],  // 攻击目标坐标
+                                                bodySize: {
+                                                    bodyWidth: decadeUI.get.bodySize().width,
+                                                    bodyHeight: decadeUI.get.bodySize().height
+                                                }
                                             }
-                                        } else {
-                                            x1 = player.cacheLeft + player.cacheWidth / 2 + rect.width / 32 * 12;
-                                            y1 = player.cacheTop + player.cacheHeight / 2 + rect.height / 32 * 12 ;
-                                            if (isPhone) {
-                                                y1 = player.cacheTop + player.cacheHeight / 2 ;
-                                            }
-                                            args.attack = {
-                                                x: x1,
-                                                y: y1
-                                            }
-                                        }
 
-                                        // 计算当前角色和其他角色的角度. 参考十周年ui的指示线
-                                        for (let p of event._trigger.targets) {
-                                            p.checkBoundsCache(true);
-                                            args.targets.push({
-                                                boundRect: p.getBoundingClientRect(),
-                                            })
+                                            player.checkBoundsCache(true);
+                                            if (player === game.me) {
+                                                hand.check();
+                                                x1 = hand.x + hand.width / 2;
+                                                y1 = hand.y;
+                                                args.hand = {
+                                                    x1: x1,
+                                                    y1: y1
+                                                }
+                                            }
+                                            // 攻击方的位置
+                                            args.attack = player.getBoundingClientRect()
+
+                                            // 计算当前角色和其他角色的角度. 参考十周年ui的指示线
+                                            for (let p of event._trigger.targets) {
+                                                if (filterPlayers.includes(p)) continue
+                                                p.checkBoundsCache(true);
+                                                args.targets.push({
+                                                    boundRect: p.getBoundingClientRect(),
+                                                })
+                                            }
                                         }
                                     }
 
                                     // 记忆上次的攻击事件, useCard, useCard1, useCard2,会短时间内连续触发. 这样先过滤掉
 
                                     let timeDelta = player.__lastGongji ? new Date().getTime() - player.__lastGongji.t : 10000
-
                                     // 间隔极短的连续攻击忽略不计
                                     if (timeDelta < 20) return
 
@@ -482,104 +473,27 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                 return
                                             }
                                         }
+                                        getArgs()
                                         skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', args ? {attackArgs: args, triggername: event.triggername} : {});
                                         player.__lastGongji = {
                                             t: new Date().getTime(),
-                                            tLen: event._trigger.targets.length
+                                            tLen: event._trigger.targets.length,
                                         }
                                     } else {
-                                        if (args && event.triggername !== 'useCardBefore') {
+                                        if (event.triggername !== 'useCardBefore') {
                                             if (event._trigger.targets.length <= player.__lastGongji.tLen) {
                                                 return
                                             }
-                                            skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', {attackArgs: args, triggername: event.triggername})
-                                            player.__lastGongji = {
-                                                t: new Date().getTime(),
-                                                tLen: event._trigger.targets.length
+                                            getArgs()
+                                            if (args) {
+                                                skinSwitch.chukuangWorkerApi.chukuangAction(player, 'GongJi', {attackArgs: args, triggername: event.triggername})
+                                                player.__lastGongji = {
+                                                    t: new Date().getTime(),
+                                                    tLen: event._trigger.targets.length,
+                                                }
                                             }
                                         }
                                     }
-                                    // 放弃使用十周年ui的dcdAni
-                                    // if (dy != null) {
-                                    //     // 加载骨骼
-                                    //     if (!dy.name.startsWith("..")) {
-                                    //         dy.name = '../dynamic/' + dy.name
-                                    //     }
-                                    //
-                                    //     let playBaoZha = () => {
-                                    //         if (event.triggername !== 'useCardBefore' && event._trigger.targets.length < 2) {
-                                    //             return
-                                    //         }
-                                    //         for (let p of event._trigger.targets) {
-                                    //             dcdAnim.playSpine(dy.effect,
-                                    //                 { parent: p, scale: dy.effect.scale}
-                                    //             )
-                                    //         }
-                                    //     }
-                                    //
-                                    //     let playZhishixian = () => {
-                                    //
-                                    //         if (event.triggername !== 'useCardBefore' && event._trigger.targets.length < 2) {
-                                    //             return
-                                    //         }
-                                    //
-                                    //         // 同时指向每个被攻击的目标
-                                    //         let hand = dui.boundsCaches.hand;
-                                    //         let x1, y1
-                                    //         player.checkBoundsCache(true);
-                                    //         if (player === game.me) {
-                                    //             hand.check();
-                                    //             x1 = hand.x + hand.width / 2;
-                                    //             y1 = hand.y;
-                                    //         } else {
-                                    //             x1 = player.cacheLeft + player.cacheWidth / 2;
-                                    //             y1 = player.cacheTop + player.cacheHeight / 2;
-                                    //         }
-                                    //
-                                    //         let zhishixianTime = 0
-                                    //
-                                    //         // 计算当前角色和其他角色的角度. 参考十周年ui的指示线
-                                    //         for (let p of event._trigger.targets) {
-                                    //             p.checkBoundsCache(true);
-                                    //             let x2 = p.cacheLeft + p.cacheWidth / 2;
-                                    //             let y2 = p.cacheTop + p.cacheHeight / 2;
-                                    //
-                                    //             // 获取当前攻击角色到被攻击角色的角度, 然后进行偏移
-                                    //
-                                    //             let angle = Math.round(Math.atan2(y1 - y2, x1 - x2) / Math.PI * 180)
-                                    //
-                                    //             let node = dcdAnim.playSpine(dy,
-                                    //                 { parent: p, angle: (dy.angle || 0) + 180 - angle, scale: dy.scale}
-                                    //             )
-                                    //             let ani = node.skeleton.data.animations[0]
-                                    //             zhishixianTime = ani.duration
-                                    //         }
-                                    //
-                                    //
-                                    //         // 加载指示线后面的爆炸特效
-                                    //         if (dy.effect) {
-                                    //             // 获取指示线的动画时间, 在到达武将框后播放
-                                    //             setTimeout(() => {
-                                    //                 // 加载骨骼
-                                    //                 if (!dy.effect.name.startsWith("..")) {
-                                    //                     dy.effect.name = '../dynamic/' + dy.effect.name
-                                    //                 }
-                                    //                 if (!dcdAnim.hasSpine(dy.effect.name)) {
-                                    //                     dcdAnim.loadSpine(dy.effect.name, 'skel', playBaoZha)
-                                    //                 } else {
-                                    //                     playBaoZha()
-                                    //                 }
-                                    //             }, zhishixianTime  * 1000 - 200)
-                                    //         }
-                                    //     }
-                                    //
-                                    //     if (!dcdAnim.hasSpine(dy.name)) {
-                                    //         dcdAnim.loadSpine(dy.name, 'skel', playZhishixian)
-                                    //     } else {
-                                    //         playZhishixian()
-                                    //     }
-                                    //
-                                    // }
 
 
                                 }
@@ -1224,6 +1138,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 })
 
                             }
+                            let isCutBg = lib.config[skinSwitch.configKey.cugDynamicBg] &&  ui.arena.dataset.dynamicSkinOutcrop === 'on' && (ui.arena.dataset.newDecadeStyle === 'on')
 
                             if (typeof animation == 'string') animation = { name: animation };
                             if (this.doubleAvatar) {
@@ -1245,6 +1160,25 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     width: [0, 0.5],
                                     height: [0, 1],
                                     clipParent: true
+                                }
+                                if (animation.player && animation.player.beijing && isCutBg) {
+                                    animation.player.beijing.clip = {
+                                        x: [0, deputy ? 0.5 : 0],
+                                        y: 0,
+                                        width: [0, 0.5],
+                                        height: [0, 0.9],
+                                        clipParent: true
+                                    }
+                                }
+                            } else {
+                                if (animation.player && animation.player.beijing && isCutBg) {
+                                    animation.player.beijing.clip = {
+                                        x: 0,
+                                        y: 0,
+                                        width: [0, 1],
+                                        height: [0, 0.9],
+                                        clipParent: true
+                                    }
                                 }
                             }
                             if (this.$dynamicWrap.parentNode != this) this.appendChild(this.$dynamicWrap);
@@ -1340,6 +1274,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'hideHuanFu': 'extension_皮肤切换_hideHuanFu',  // 关闭隐藏换肤按钮
                     'useDynamic': 'extension_皮肤切换_useDynamic',  // 使用皮肤切换携带的出框功能
                     'isAttackFlipX': 'extension_皮肤切换_isAttackFlipX',  //
+                    'cugDynamicBg': 'extension_皮肤切换_cugDynamicBg',  // 是否裁剪动态背景
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -2726,6 +2661,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             return
                         }
                         skinSwitch.chukuangWorkerInit()
+
                         // 添加如果当前是国战模式隐藏状态下, 不允许出框
                         skinSwitch.chukuangWorker.postMessage({
                             message: 'isChuKuang',
@@ -2861,6 +2797,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let dynamic = player.dynamic
                         if (!dynamic.primary && !dynamic.deputy) {
                             return
+                        }
+                        if (data.action === 'GongJi') {
+                            // 如果参数直接指明包含不出框的话, 那么直接请求待机worker
+                            debugger
+                            if (dynamic.primary) {
+                                let playerP = dynamic.primary.player;
+                                if (playerP.gongji && playerP.gongji.ck === false) {
+                                    return skinSwitch.postMsgApi.action(player, playerP.gongji.action, dynamic.primary)
+                                }
+                            }
+                            if (dynamic.deputy) {
+                                let playerP = dynamic.deputy.player
+                                if (playerP.gongji && playerP.gongji.ck === false) {
+                                    return skinSwitch.postMsgApi.action(player, playerP.gongji.action, dynamic.deputy)
+                                }
+                            }
                         }
                         if (data.action === 'TeShu') {
                             skinSwitch.postMsgApi.actionTeShu(player)
@@ -4892,7 +4844,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             'isAttackFlipX': {
                 name: "AI出框是否翻转X轴",
                 "init": false,
-                "intro": "AI在屏幕左侧(中央往左小于50%)出框是否翻转X轴",
+                "intro": "AI在屏幕左侧(中央往左小于50%)出框是否翻转X轴, 也可以在动皮参数处添加参数控制单个动皮的出框翻转",
+            },
+            'cugDynamicBg': {
+                name: "是否裁剪动态背景",
+                "init": false,
+                "intro": "为了更好的适配动皮露头, 在待机处可以裁剪动态背景",
             },
             'genDynamicSkin': {
                 name: "<div><button onclick='skinSwitch.genDynamicSkin()'>转换D动态参数(生成的新文件在扩展文件夹下)</button></div>",

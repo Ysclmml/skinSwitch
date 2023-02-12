@@ -259,6 +259,17 @@ function startPlaySkin(data) {
 		t.opacity = 0
 		t.beijingNode = beijingNode
 
+		let skins = t.skeleton.data.skins
+		if (sprite.player.skin) {
+			for (let i = 0; i < skins.length; i++) {
+				if (skins[i].name === sprite.player.skin) {
+					// 设置skin
+					t.skeleton.setSkinByName(skins[i].name);
+					t.skeleton.setSlotsToSetupPose();
+				}
+			}
+		}
+
 		let labels = getAllActionLabels(t)
 		if (labels.includes('ChuChang')) {
 			// 清空原来的state状态, 添加出场
@@ -292,15 +303,8 @@ function startPlaySkin(data) {
 			sprite.player.beijing.alpha = sprite.player.alpha
 
 		// 如果是双将的话, 复制裁剪.
-		if (sprite.clip) {
+		if (!sprite.player.beijing.clip && sprite.clip) {
 			sprite.player.beijing.clip = sprite.clip
-		}
-		sprite.player.beijing.clip = {
-			x: 0,
-			y: 0,
-			width: [0, 1],
-			height: [0, 0.9],
-			clipParent: true
 		}
 		let node
 		try {
@@ -1116,10 +1120,19 @@ function recoverDaiJi(data) {
 	}
 }
 
-//
 function destroy(data) {
 	let am = animationManagers.getById(data.id);
 	if (!am) return;
+	// 删除动皮所带的canvas
+	for (let k in am.animations) {
+		if (am.animations[k]) {
+			am.animations[k].nodes = []
+			let webglExt = am.animations[k].gl.getExtension('WEBGL_lose_context')
+			if (webglExt) {
+				webglExt.loseContext()
+			}
+		}
+	}
 	animationManagers.remove(am)
 	am.canvas = null
 }

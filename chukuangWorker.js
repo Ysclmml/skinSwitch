@@ -42,7 +42,10 @@ class PlayerAnimation {
         this.isMobile = data.isMobile
     }
 
-    getAnni(player) {
+    getAnni(player, version) {
+        if (version) {
+            return this.animationManager.getAnimation(version)
+        }
         return this.animationManager.getAnimation(player.version)
     }
 
@@ -194,7 +197,7 @@ class PlayerAnimation {
         }
         // 设置是否翻转
         if (!data.me) {
-            if (playNode.player.atkFlipX || this.isAttackFlipX) {
+            if (playNode.player.atkFlipX || this.atkFlipX) {
                 if (data.direction.isLeft) {
                     playNode.flipX = playNode.flipX == null ? true : !playNode.flipX
                 }
@@ -204,38 +207,82 @@ class PlayerAnimation {
             setPos(playNode, data);
         }
         playNode.opacity = 1
-        this.playZhiShiXian(playNode, data, animation)
+        this.playZhiShiXianWithPlayNode(playNode, animation, data)
+    }
+
+    playZhiShiXianWithPlayNode(playNode, animation, data) {
+        let dy = playNode.player.zhishixian
+        if (dy) {
+            let delay = dy.delay
+            if (animation.playRate && delay) {
+                delay = delay - animation.playRate
+                if (delay < 0) {
+                    delay = 0
+                }
+            }
+            this.playZhiShiXian(playNode.player, playNode.actionParams.attackArgs,  data, animation.showTime * (delay * 1000 || 0), playNode)
+        }
+
     }
 
     // 播放指示线
-    playZhiShiXian(playNode, data, animation) {
+    playZhiShiXian(player, attackArgs, data, zhishixianDelay, playNode) {
         // 攻击动作播放指示线动画
         if (data.action === 'GongJi') {
-            if (playNode.actionParams.attackArgs) {
-                let attackArgs = playNode.actionParams.attackArgs
-                let dy = playNode.player.zhishixian
+            if (player && attackArgs) {
+                let dy = player.zhishixian
                 if (dy != null) {
-                    let delay = dy.delay
-                    if (animation.playRate && delay) {
-                        delay = delay - animation.playRate
-                        if (delay < 0) {
-                            delay = 0
-                        }
-                    }
                     setTimeout(() => {
+
                         let playBaoZha = () => {
                             for (let p of attackArgs.targets) {
                                 let sprite = Object.assign({}, dy.effect)
                                 // sprite.x = p.x
                                 // sprite.y = attackArgs.bodySize.bodyHeight - p.y
                                 let referNode = new HTMLElement(p.boundRect, attackArgs.bodySize)
-                                this.getAnni(playNode.player).playSpine(sprite, {referNode: referNode})
+                                this.getAnni(player, sprite.version).playSpine(sprite, {referNode: referNode})
                             }
                         }
 
                         let playZhishixian = () => {
 
                             let zhishixianTime = 0
+                            console.log('attackArgs --> ', attackArgs)
+
+                            // 获取攻击起始点
+                            let getStartXY = () => {
+                                let x1, y1
+
+                                if (playNode && (dy.start !== 'attack')) {
+                                    if (Array.isArray(playNode.x)) {
+                                        x1 = attackArgs.bodySize.bodyWidth * playNode.x[1] + playNode.x[0]
+                                    } else {
+                                        x1 = playNode.x
+                                    }
+
+                                    if (Array.isArray(playNode.y)) {
+                                        y1 = attackArgs.bodySize.bodyHeight - attackArgs.bodySize.bodyHeight * playNode.y[1] - playNode.y[0]
+                                    } else {
+                                        y1 = attackArgs.bodySize.bodyHeight - playNode.y
+                                    }
+                                    if (!data.direction.isLeft) {
+                                        x1 -= 50
+                                    } else {
+                                        x1 += 50
+                                    }
+                                    return {
+                                        x1:  x1,
+                                        y1:  y1
+                                    }
+
+                                } else {
+                                    // 起始点从攻击方的卡牌位置开始
+                                    return {
+                                        x1: attackArgs.attack.x,
+                                        y1: attackArgs.attack.y + attackArgs.attack.height / 2
+                                    }
+                                }
+                            }
 
                             // 计算当前角色和其他角色的角度. 参考十周年ui的指示线
                             for (let p of attackArgs.targets) {
@@ -244,24 +291,7 @@ class PlayerAnimation {
 
                                 let sprite = Object.assign({}, dy)
 
-                                let x1, y1
-
-                                if (Array.isArray(playNode.x)) {
-                                    x1 = attackArgs.bodySize.bodyWidth * playNode.x[1] + playNode.x[0]
-                                } else {
-                                    x1 = playNode.x
-                                }
-
-                                if (Array.isArray(playNode.y)) {
-                                    y1 = attackArgs.bodySize.bodyHeight - attackArgs.bodySize.bodyHeight * playNode.y[1] - playNode.y[0]
-                                } else {
-                                    y1 = attackArgs.bodySize.bodyHeight - playNode.y
-                                }
-                                if (!data.direction.isLeft) {
-                                    x1 -= 50
-                                } else {
-                                    x1 += 50
-                                }
+                                let {x1, y1} = getStartXY()
 
                                 let angle = Math.round(Math.atan2(y1 - y2, x1 - x2) / Math.PI * 180)
                                 sprite.angle = (dy.angle || 0) + 180 - angle
@@ -270,6 +300,7 @@ class PlayerAnimation {
                                 let startY = y1
                                 let endX = x2
                                 let endY = attackArgs.bodySize.bodyHeight - y2
+
                                 let getDis = (x1, x2, y1, y2) => {
                                     return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
                                 }
@@ -290,7 +321,7 @@ class PlayerAnimation {
                                 let referNode = new HTMLElement(p.boundRect, attackArgs.bodySize)
                                 // let node = this.getAnni(playNode.player).playSpine(sprite, {referNode: referNode})
 
-                                let node = this.getAnni(playNode.player).playSpine(sprite, {x: startX, y:  attackArgs.bodySize.bodyHeight - startY})
+                                let node = this.getAnni(player, dy.version).playSpine(sprite, {x: startX, y:  attackArgs.bodySize.bodyHeight - startY})
 
                                 if (!zhishixianTime) {
                                     let ani = node.skeleton.data.animations[0]
@@ -305,8 +336,8 @@ class PlayerAnimation {
                             if (dy.effect) {
                                 // 获取指示线的动画时间, 在到达武将框后播放
                                 setTimeout(() => {
-                                    if (!this.getAnni(playNode.player).hasSpine(dy.effect.name)) {
-                                        this.getAnni(playNode.player).loadSpine(dy.effect.name, dy.effect.json ? 'json': 'skel', playBaoZha)
+                                    if (!this.getAnni(player, dy.effect.version).hasSpine(dy.effect.name)) {
+                                        this.getAnni(player, dy.effect.version).loadSpine(dy.effect.name, dy.effect.json ? 'json': 'skel', playBaoZha)
                                     } else {
                                         playBaoZha()
                                     }
@@ -314,13 +345,13 @@ class PlayerAnimation {
                             }
                         }
 
-                        if (!this.getAnni(playNode.player).hasSpine(dy.name)) {
-                            this.getAnni(playNode.player).loadSpine(dy.name, dy.json ? 'json': 'skel', playZhishixian)
+                        if (!this.getAnni(player, dy.version).hasSpine(dy.name)) {
+                            this.getAnni(player, dy.version).loadSpine(dy.name, dy.json ? 'json': 'skel', playZhishixian)
                         } else {
                             playZhishixian()
                         }
-                    }, animation.showTime * (delay * 1000 || 0))
-
+                    }, zhishixianDelay)
+                    // }, animation.showTime * (delay * 1000 || 0))
                 }
             }
         }
@@ -954,6 +985,38 @@ function isChuKuang(data) {
 
     let extraParams = data.extraParams
 
+    // 检查是否是主动不出框
+    let checkNoChukuang = (player) => {
+        if (!player) return
+        let actionParams
+        if (data.action === 'GongJi') actionParams = player.gongjiAction
+        else if (data.action === 'chukuang') actionParams = player.chuchangAction
+        else if (data.action === 'TeShu') actionParams = player.teshuAction
+        else actionParams = player[data.action + 'Action']
+        if (extraParams) {
+            if (actionParams) {
+                for (let k in extraParams) {
+                    actionParams[k] = extraParams[k]
+                }
+            }
+        }
+        if (actionParams && actionParams.ck === false) {
+            if (player.zhishixian && extraParams) {
+                playerAnimation.playZhiShiXian(player, extraParams.attackArgs, data, (player.zhishixian.delay * 1000) || 0)
+            }
+            postMessage({
+                id: data.id,
+                message: 'noActionChuKuang',
+                action: data.action,
+                qhlxBigAvatar: player && player.qhlxBigAvatar
+            })
+            return true
+        }
+    }
+    if (checkNoChukuang(primaryPlayer)) {
+        return
+    }
+
     if (completePlayerParams(primaryPlayer, data.action)) {
         if (!playerState) {
             playerAnimation.playerState[data.id] = {time: new Date().getTime(), lastAction: data.action};
@@ -990,6 +1053,9 @@ function isChuKuang(data) {
     }
   
     let deputyPlayer = playerAnimation.findPlayerParams(data.id, deputySkinId)
+    if (checkNoChukuang(deputyPlayer)) {
+        return
+    }
     if (completePlayerParams(deputyPlayer, data.action)) {
 
         if (!playerState) {
@@ -1022,6 +1088,14 @@ function isChuKuang(data) {
             isPrimary: false,
             qhlxBigAvatar: deputyPlayer.qhlxBigAvatar
         })
+    }
+
+    // 如果填写了指示线, 那么从指示线进行攻击
+    if (primaryPlayer && primaryPlayer.zhishixian && extraParams) {
+        return playerAnimation.playZhiShiXian(primaryPlayer, extraParams.attackArgs, data, (primaryPlayer.zhishixian.delay * 1000) || 0)
+    }
+    if (deputyPlayer && deputyPlayer.zhishixian && extraParams) {
+        return playerAnimation.playZhiShiXian(deputyPlayer, extraParams.attackArgs, data, (primaryPlayer.zhishixian.delay * 1000) || 0)
     }
 
     postMessage({

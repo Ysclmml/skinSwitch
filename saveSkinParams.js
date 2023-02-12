@@ -111,6 +111,17 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     0.48
                 ]
             }
+        },
+        "test_skin_gongji": {
+            "scale": 0.35,
+            "x": [
+                0,
+                0.36
+            ],
+            "y": [
+                0,
+                -0.17
+            ]
         }
     },
     "xushao": {
