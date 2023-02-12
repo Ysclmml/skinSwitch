@@ -40,6 +40,7 @@ class PlayerAnimation {
 
         this.playerState = {}  // 管理每个角色出框状态, 同时保证一个角色只能有一个出框状态.
         this.isMobile = data.isMobile
+        this.isAttackFlipX = data.isAttackFlipX
     }
 
     getAnni(player, version) {
@@ -197,7 +198,7 @@ class PlayerAnimation {
         }
         // 设置是否翻转
         if (!data.me) {
-            if (playNode.player.atkFlipX || this.atkFlipX) {
+            if (playNode.player.atkFlipX || this.isAttackFlipX) {
                 if (data.direction.isLeft) {
                     playNode.flipX = playNode.flipX == null ? true : !playNode.flipX
                 }
@@ -357,6 +358,20 @@ class PlayerAnimation {
         }
     }
 
+    setSkin(actionParams, node) {
+        let skins = node.skeleton.data.skins
+        if (actionParams && actionParams.skin) {
+            for (let i = 0; i < skins.length; i++) {
+                if (skins[i].name === actionParams.skin) {
+                    // 设置skin
+                    node.skeleton.setSkinByName(skins[i].name);
+                    node.skeleton.setSlotsToSetupPose();
+
+                }
+            }
+        }
+    }
+
     // 手杀触发连续攻击不会马上回框, 而是会在原地重置攻击动作, 当回到框内, 则重新出框
     lianxuChuKuang(player, actionParams, data) {
         // 重置播放动作与回框倒计时.
@@ -366,6 +381,7 @@ class PlayerAnimation {
         if (!this.getAnni(playNode.player).nodes.includes(playNode)) {
             playNode.skeleton.completed = true
             let playedSprite = this.getAnni(playNode.player).playSpine(playNode.actionParams)
+            this.setSkin(actionParams, playedSprite)
             playedSprite.player = player
             playedSprite.actionParams = actionParams
             actionParams.playNode = playedSprite
@@ -431,6 +447,7 @@ class PlayerAnimation {
         let playedSprite = this.getAnni(player).playSpine(actionParams)
         playedSprite.player = player
         playedSprite.actionParams = actionParams
+        this.setSkin(actionParams, playedSprite)
         actionParams.playNode = playedSprite
 
         this.playChuKuangSpine(playedSprite, {showTime: actionParams.showTime}, data);
