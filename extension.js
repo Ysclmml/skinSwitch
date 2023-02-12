@@ -1252,9 +1252,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             updateDecadeDynamicSkin()
             modifyDecadeUIContent()
             // 提前加载换肤的骨骼
-            if (window.dcdAnim) {
-                dcdAnim.loadSpine(skinSwitch.huanfu.name, 'skel')
-            }
         },
         precontent:function() {
             window.skinSwitch = {
@@ -3807,8 +3804,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             lib.init.js(skinSwitch.url, 'animation')
             lib.init.js(skinSwitch.url + 'component', 'any-touch.umd.min')
             lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
+                lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {
+                    lib.init.js(skinSwitch.url, 'animations', function () {
+                        console.log('dcdAni======', window.dcdAnim)
+                        let replace = () => {
+                            if (window.dcdAnim) {
+                                window.dcdAnim = decadeUI.animation = new DecadeAnimationProxy(window.dcdAnim, '', lib)
+                                console.log('替换结束')
+                            } else {
+                                requestAnimationFrame(replace)
+                            }
+                        }
+                        replace()
+                    })
+
+                })
             })
-            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {})
+
             lib.init.js(skinSwitch.url, 'pfqhUtils', function () {})
 
             let editBox  // 编辑动皮参数的弹窗

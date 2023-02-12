@@ -26,7 +26,7 @@ Array.prototype.remove = function (item) {
     return item;
 }
 
-
+/** @type {PlayerAnimation} */
 let playerAnimation
 let chukuangId = 99999   // 自动出框的nodeID起始, 为了不和主线程传过去的skinId重复
 
@@ -1112,7 +1112,10 @@ function chukuangStart(data) {
 }
 
 function update(data) {
-    playerAnimation.animationManager.updateSpineAll(data)
+    if (playerAnimation) playerAnimation.animationManager.updateSpineAll(data)
+    if (decadeUIAni) {
+        decadeUIAni.updateSpineAll(data)
+    }
 }
 
 function adjust(data) {
@@ -1141,6 +1144,186 @@ function adjust(data) {
     actionParams.posAuto = false
 }
 
+
+/** @type {AnimationManager} */
+let decadeUIAni
+function createDecadeAni(data) {
+    decadeUIAni = new AnimationManager(data.pathPrefix, data.canvas,  null,{dpr: data.dpr})
+}
+
+// 调用十周年专用的ani播放函数
+function decadeAniFunc(data) {
+    console.log('decadeAniFunc===>', data)
+    let f = data.funcName
+    let eventId = data.eventId
+    let args = data.args
+    switch (f) {
+        case 'createTextureRegion':
+            break
+        case 'hasSpine':
+            break
+        case 'loadSpine':
+            (() => {
+                let filename = args[0]
+                let skelType = args[1]
+                let version = args[2]
+                if (filename in decadeUIAni.aniVersionMap) {
+                    postMessage({
+                        eventId: eventId,
+                        success: true
+                    })
+                }
+                let dynamic = decadeUIAni.getAnimation(version)
+                dynamic.loadSpine(filename, skelType || 'skel', () => {
+                    if (version != null && version !== '3.6' && !(version in decadeUIAni.aniVersionMap)) {
+                        decadeUIAni.aniVersionMap[filename] = version
+                    }
+                    postMessage({
+                        eventId: eventId,
+                        success: true
+                    })
+                }, () => {
+                    postMessage({
+                        eventId: eventId,
+                        error: true,
+                        errMsg: 'error'
+                    })
+                })
+            })()
+            break
+        case 'prepSpine':
+            break
+        case 'playSpine':
+            (() => {
+                let sprite = args[0]
+                let position = args[1]
+                if (typeof sprite === "string") {
+                    sprite = {name: sprite}
+                }
+                if (position && position.parent) {
+                    position.referNode = new HTMLElement(position.parent.boundRect, position.parent.bodySize)
+                    position.parent = null
+                }
+                let dynamic = decadeUIAni.getAnimation(sprite.version)
+
+                if (dynamic.hasSpine(sprite.name)) {
+                    dynamic.playSpine(sprite, position);
+                } else {
+                    dynamic.loadSpine(sprite.name, sprite.json ? 'json' : 'skel', () => {
+                        if (sprite.version != null && sprite.version !== '3.6' && !(sprite.version in decadeUIAni.aniVersionMap)) {
+                            decadeUIAni.aniVersionMap[sprite.name] = sprite.version
+                        }
+                        dynamic.playSpine(sprite, position)
+                    }, () => {
+                        console.log('err')
+                    });
+                }
+            })()
+            break
+        case 'loopSpine':
+            (() => {
+                let sprite = args[0]
+                let position = args[1]
+                if (typeof sprite === "string") {
+                    sprite = {name: sprite, loop: true}
+                } else {
+                    sprite.loop = true;
+                }
+                if (position && position.parent) {
+                    position.parent = new HTMLElement(position.parent.boundRect, position.parent.bodySize)
+                }
+                let dynamic = decadeUIAni.getAnimation(sprite.version)
+                if (dynamic.hasSpine(sprite.name)) {
+                    dynamic.playSpine(sprite, position)
+                } else {
+                    dynamic.loadSpine(sprite.name, sprite.json ? 'json' : 'skel', () => {
+                        if (sprite.version != null && sprite.version !== '3.6' && !(sprite.version in decadeUIAni.aniVersionMap)) {
+                            decadeUIAni.aniVersionMap[sprite.name] = sprite.version
+                        }
+                        dynamic.playSpine(sprite, position)
+                    }, () => {
+                        console.log('err')
+                    })
+                }
+            })()
+            break
+        case 'stopSpine':
+            (() => {
+                let sprite = args[0]
+                if (typeof sprite === "string") {
+                    sprite = {name: sprite, loop: true}
+                } else {
+                    sprite.loop = true;
+                }
+                let dynamic = decadeUIAni.getAnimation(sprite.version)
+                dynamic.stopSpine(sprite)
+
+            })()
+            break
+        case 'stopSpineAll':
+            decadeUIAni.stopSpineAll()
+            break
+        case 'getSpineActions':
+            (() => {
+                let filename = args[0]
+                let type = args[1]
+                let version = decadeUIAni.aniVersionMap[filename]
+                let dynamic = decadeUIAni.getAnimation(version)
+
+                if (dynamic.hasSpine(filename)) {
+                    let actions = dynamic.getSpineActions(filename)
+                    postMessage({
+                        eventId: eventId,
+                        actions: actions
+                    })
+                } else {
+                    dynamic.loadSpine(filename, type || 'skel', () => {
+                        let actions = dynamic.getSpineActions(filename)
+                        postMessage({
+                            eventId: eventId,
+                            actions: actions
+                        })
+                    }, () => {
+                        postMessage({
+                            error: true,
+                            errMsg: 'error'
+                        })
+                    })
+                }
+            })()
+            break
+        case 'getSpineBounds':
+            (() => {
+                let filename = args[0]
+                let type = args[1]
+                let version = decadeUIAni.aniVersionMap[filename]
+                let dynamic = decadeUIAni.getAnimation(version)
+
+                if (dynamic.hasSpine(filename)) {
+                    let bounds = dynamic.getSpineBounds(filename)
+                    postMessage({
+                        eventId: eventId,
+                        bounds: bounds
+                    })
+                } else {
+                    dynamic.loadSpine(filename, type || 'skel', () => {
+                        let bounds = dynamic.getSpineBounds(filename)
+                        postMessage({
+                            eventId: eventId,
+                            bounds: bounds
+                        })
+                    }, () => {
+                        postMessage({
+                            error: true,
+                            errMsg: 'error'
+                        })
+                    })
+                }
+            })()
+            break
+    }
+}
+
 onmessage = function (e) {
     let data = e.data
     switch (data.message) {
@@ -1148,7 +1331,6 @@ onmessage = function (e) {
             createChuKuang(data)
             break
         case 'UPDATE':
-            console.log('update====', data)
             update(data)
             break
         case 'PRELOAD':
@@ -1163,6 +1345,13 @@ onmessage = function (e) {
         case 'ADJUST':
             adjust(data)
             break
+        case 'CREATE_DECADE_ANI':
+            createDecadeAni(data)
+            break
+        case 'DECADE_ANI_FUNC':
+            decadeAniFunc(data)
+            break
+
     }
 
 }

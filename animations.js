@@ -556,17 +556,6 @@ class BaseAnimation {
     getSpineBounds(filename) {
         if (!this.hasSpine(filename)) return console.error('getSpineBounds: [' + filename + '] 骨骼没有加载');
 
-        if (!this.resized) {
-            let dpr = 1;
-            if (this.dprAdaptive === true)
-                dpr = Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1);
-
-            canvas.elementHeight = canvas.clientHeight;
-            canvas.elementWidth = canvas.clientWidth;
-            canvas.height = canvas.elementHeight * dpr;
-            canvas.width = canvas.elementWidth * dpr;
-        }
-
         let skeleton;
         let skeletons = this.spine.skeletons;
         for (let i = 0; i < skeletons.length; i++) {
@@ -1909,6 +1898,7 @@ class AnimationManager {
         }
         this.width = undefined
         this.height = undefined
+        this.aniVersionMap = {}
     }
 
     /**
@@ -2004,6 +1994,9 @@ class AnimationManager {
         if (data.height) {
             this.height = data.height
         }
+        if (data.dpr) {
+            this.dpr = data.dpr
+        }
         for (let k in this.animations) {
             if (this.animations[k]) {
                 let dynamic = this.animations[k]
@@ -2011,5 +2004,286 @@ class AnimationManager {
             }
         }
     }
+}
+
+
+// todo: 代理十周年ui原来非离屏渲染的动画, 功能暂时有问题, 有些是异步返回的, 需要修改的有点多
+class DecadeAnimationOffscreenProxy {
+
+    constructor(animation, pathPrefix, lib) {
+        if (!animation) return
+
+        let destroyOldCanvas = () => {
+            let webglExt = animation.gl.getExtension('WEBGL_lose_context')
+            if (webglExt) {
+                webglExt.loseContext()
+            }
+            delete animation.canvas
+            document.getElementById('decadeUI-canvas').remove()
+        }
+        destroyOldCanvas()
+
+        let canvas = document.createElement('canvas');
+        canvas.className = 'animation-player';
+        canvas.id = 'decadeUI-canvas'
+        document.body.appendChild(canvas);
+
+        let offsetCanvas = canvas.transferControlToOffscreen()
+        this.worker = new Worker(skinSwitch.url +'chukuangWorker.js')
+        // 监听屏幕大小变化, 重新更新canvas大小
+        if (self.ResizeObserver) {
+            let ro = new ResizeObserver(entries => {
+                for (let entry of entries) {
+                    const cr = entry.contentRect
+                    this.worker.postMessage({
+                        message: 'UPDATE',
+                        width: cr.width,
+                        height: cr.height,
+                    })
+                }
+            });
+            ro.observe(document.body);
+        }
+        this.worker.onmessage = this.onmessage.bind(this)
+        this.eventId = 33333  // 管理每个eventId请求id
+        this.eventMap = {}  // 处理所以的回调
+        this.worker.postMessage({
+            message: 'CREATE_DECADE_ANI',
+            canvas: offsetCanvas,
+            pathPrefix: '../十周年UI/assets/animation/',
+            isMobile: skinSwitch.isMobile(),
+        }, [offsetCanvas])
+        // this.cap = {
+        //     playSpineTo: (element, animation, position) => {
+        //         return this.playSpine(animation, position)
+        //     },
+        //     loadSpine: (filename, skelType, onload, onerror) => {
+        //         return this.loadSpine(filename, skelType, onload, onerror)
+        //     }
+        // }
+        let _this = this
+        lib.arenaReady.push(function () {
+            _this.worker.postMessage({
+                message: 'UPDATE',
+                width: decadeUI.get.bodySize().width,
+                height: decadeUI.get.bodySize().height,
+                dpr: Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1)
+            })
+            // 提前加载
+            for (let item of fileList) {
+                _this.loadSpine(item.name, item.fileType ? item.fileType : 'skel', null, () => {
+                    console.log('骨骼加载失败', item.name)
+                }, '3.6')
+            }
+        });
+        this.cap = animation.cap
+
+        var skillAnimation = (function(){
+            var defines = {
+                skill:{
+                    bagua_skill: { skill: 'bagua_skill', name: 'effect_baguazhen', scale: 0.6 },
+                    baiyin_skill: { skill: 'baiyin_skill', name: 'effect_baiyinshizi', scale: 0.5 },
+                    bazhen_bagua: { skill: 'bazhen_bagua', name: 'effect_baguazhen', scale: 0.6 },
+                    cixiong_skill: { skill: 'cixiong_skill', name: 'effect_cixiongshuanggujian', scale: 0.5 },
+                    fangtian_skill: { skill: 'fangtian_skill', name: 'effect_fangtianhuaji', scale: 0.7 },
+                    guanshi_skill: { skill: 'guanshi_skill', name: 'effect_guanshifu', scale: 0.7 },
+                    guding_skill: { skill: 'guding_skill', name: 'effect_gudingdao', scale: 0.6, x: [0, 0.4], y: [0, 0.05] },
+                    hanbing_skill: { skill: 'hanbing_skill', name: 'effect_hanbingjian', scale: 0.5 },
+                    linglong_bagua: { skill: 'linglong_bagua', name: 'effect_baguazhen', scale: 0.5 },
+                    qilin_skill: { skill: 'qilin_skill', name: 'effect_qilingong', scale: 0.5 },
+                    qinggang_skill: { skill: 'qinggang_skill', name: 'effect_qinggangjian', scale: 0.7 },
+                    qinglong_skill: { skill: 'qinglong_skill', name: 'effect_qinglongyanyuedao', scale: 0.6 },
+                    renwang_skill: { skill: 'renwang_skill', name: 'effect_renwangdun', scale: 0.5 },
+                    tengjia1: { skill: 'tengjia1', name: 'effect_tengjiafangyu', scale: 0.6 },
+                    tengjia2: { skill: 'tengjia2', name: 'effect_tengjiaranshao', scale: 0.6 },
+                    tengjia3: { skill: 'tengjia3', name: 'effect_tengjiafangyu', scale: 0.6 },
+                    zhangba_skill: { skill: 'zhangba_skill', name: 'effect_zhangbashemao', scale: 0.7 },
+                    zhuge_skill: { skill: 'zhuge_skill', name: 'effect_zhugeliannu', scale: 0.5 },
+                    zhuque_skill: { skill: 'zhuque_skill', name: 'effect_zhuqueyushan', scale: 0.6 },
+                    jinhe_lose: { skill: 'jinhe_lose', name: 'effect_jinhe',scale: 0.4 },
+                    numa: { skill: 'numa', name: 'effect_numa', scale: 0.4 },
+                    nvzhuang: { skill: 'nvzhuang', name: 'effect_nvzhuang', scale: 0.5 },
+                    wufengjian_skill: { skill: 'wufengjian_skill', name: 'effect_wufengjian', scale: 0.4 },
+                    yajiaoqiang_skill: { skill: 'yajiaoqiang_skill', name: 'effect_yajiaoqiang', scale: 0.5 },
+                    yinfengjia_skill: { skill: 'yinfengjia_skill', name: 'effect_yinfengjia', scale: 0.5 },
+                    zheji: { skill: 'zheji', name: 'effect_zheji', scale: 0.35 },
+                    lebu: { skill: 'lebu', name: 'effect_lebusishu', scale: 0.7 },
+                    bingliang: { skill: 'bingliang', name: 'effect_bingliangcunduan', scale: 0.7 },
+                    shandian: { skill: 'shandian', name: 'effect_shandian', scale: 0.7 },
+                },
+                card: {
+                    nanman: { card: 'nanman', name: 'effect_nanmanruqin', scale: 0.6, y: [0, 0.4] },
+                    wanjian: { card: 'wanjian', name: 'effect_wanjianqifa_full', scale: 1.5},
+                    taoyuan: { card: 'taoyuan', name: 'effect_taoyuanjieyi'},
+                }
+            }
+
+            var cardAnimate = function(card){
+                var anim = defines.card[card.name];
+                if (!anim) return console.error('cardAnimate:' + card.name);
+                _this.playSpine(anim.name, { x: anim.x, y: anim.y, scale: anim.scale });
+            };
+
+            for (var key in defines.card) {
+                lib.animate.card[defines.card[key].card] = cardAnimate;
+            }
+
+            var skillAnimate = function (name) {
+                var anim = defines.skill[name];
+                if (!anim) return console.error('skillAnimate:' + name);
+                _this.playSpine(anim.name, { x: anim.x, y: anim.y, scale: anim.scale, parent:this });
+            };
+
+            for (var key in defines.skill) {
+                lib.animate.skill[defines.skill[key].skill] = skillAnimate;
+            }
+
+        })();
+
+        var fileList = [
+            { name: 'effect_youxikaishi' },
+            { name: 'effect_youxikaishi_shousha' },
+            { name: 'effect_baguazhen' },
+            { name: 'effect_baiyinshizi' },
+            { name: 'effect_cixiongshuanggujian' },
+            { name: 'effect_fangtianhuaji' },
+            { name: 'effect_guanshifu' },
+            { name: 'effect_gudingdao' },
+            { name: 'effect_hanbingjian' },
+            { name: 'effect_qilingong' },
+            { name: 'effect_qinggangjian' },
+            { name: 'effect_qinglongyanyuedao' },
+            { name: 'effect_renwangdun' },
+            { name: 'effect_shoujidonghua' },
+            { name: 'effect_tengjiafangyu' },
+            { name: 'effect_tengjiaranshao' },
+            { name: 'effect_zhangbashemao' },
+            { name: 'effect_zhiliao' },
+            { name: 'effect_zhugeliannu' },
+            { name: 'effect_zhuqueyushan' },
+            { name: 'effect_jinhe' },
+            { name: 'effect_numa' },
+            { name: 'effect_nvzhuang' },
+            { name: 'effect_wufengjian' },
+            { name: 'effect_yajiaoqiang' },
+            { name: 'effect_yinfengjia' },
+            { name: 'effect_zheji' },
+            { name: 'effect_jisha1' },
+            { name: 'effect_zhenwang' },
+            { name: 'effect_lebusishu' },
+            { name: 'effect_bingliangcunduan' },
+            { name: 'effect_nanmanruqin'},
+            { name: 'effect_taoyuanjieyi'},
+            { name: 'effect_shandian' },
+            { name: 'effect_wanjianqifa_full'},
+            { name: 'effect_xianding', fileType: 'json' },
+            { name: 'huanfu'},//国战亮将
+            { name: 'SSZBB_PJN_junling'},//军令翻牌特效
+        ]
+    }
+
+    onmessage(data) {
+        if (data && data.data) {
+            let eventId = data.data.eventId
+            if (eventId in this.eventMap) {
+                this.eventMap[eventId](data.data)
+                delete this.eventMap[eventId]
+                console.log('this.eventMap', this.eventMap)
+            }
+        }
+
+    }
+
+    postFuncMsg(funcName, args, callback) {
+        let eventId = this.eventId++
+        this.worker.postMessage({
+            message: 'DECADE_ANI_FUNC',
+            funcName: funcName,
+            args: args,
+            eventId: eventId
+        })
+        if (callback) {
+            this.eventMap[eventId] = callback
+        }
+
+    }
+
+    createTextureRegion(image, name) {
+       this.postFuncMsg('createTextureRegion', [image, name])
+    };
+
+    hasSpine(filename) {
+        return true
+        this.postFuncMsg('hasSpine', [filename])
+    };
+
+    loadSpine(filename, skelType, onload, onerror, version) {
+        this.postFuncMsg('loadSpine', [filename, skelType, version], data => {
+            console.log('data0000', data)
+            if (data.success && onload) {
+                onload()
+            } else if (data.error && onerror) {
+                onerror()
+            }
+        })
+    }
+
+    prepSpine(filename, autoLoad) {
+        this.postFuncMsg('prepSpine', [filename, autoLoad])
+    };
+
+    playSpine(sprite, position){
+        if (position && position.parent) {
+            position.parent = {
+                boundRect: position.parent.getBoundingClientRect(),
+                bodySize: {
+                    bodyWidth: decadeUI.get.bodySize().width,
+                    bodyHeight: decadeUI.get.bodySize().height
+                }
+            }
+        }
+        this.postFuncMsg('playSpine', [sprite, position])
+    };
+
+    loopSpine(sprite, position) {
+        if (position && position.parent) {
+            position.parent = {
+                boundRect: position.parent.getBoundingClientRect(),
+                bodySize: {
+                    bodyWidth: decadeUI.get.bodySize().width,
+                    bodyHeight: decadeUI.get.bodySize().height
+                }
+            }
+        }
+        this.postFuncMsg('loopSpine', [sprite, position])
+    };
+
+    stopSpine(sprite) {
+        this.postFuncMsg('stopSpine', [sprite])
+    };
+
+    stopSpineAll() {
+        this.postFuncMsg('stopSpineAll', [])
+    };
+
+    getSpineActions(filename, callback) {
+        this.postFuncMsg('getSpineActions', [filename], (data) => {
+            console.log('响应消息, data======', data)
+        })
+    };
+
+    getSpineBounds(filename, callback) {
+        this.postFuncMsg('getSpineBounds', [filename], (data) => {
+            if (callback) {
+                console.log('---> bounds', data)
+                callback(data.data)
+            }
+        })
+    };
+
+}
+
+if (self.window) {
+    window.DecadeAnimationProxy = DecadeAnimationOffscreenProxy
 }
 
