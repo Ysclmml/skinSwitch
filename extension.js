@@ -245,25 +245,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
 
 
-                            // lib.skill._pfqh_logskill = {
-                            //     trigger: {player: 'logSkill'},
-                            //     forced: true,
-                            //     filter: function (event, player) {
-                            //         let name = event.skill
-                            //         if (game.phaseNumber > 0) {
-                            //             if (name.indexOf("_") !== 0 && skinSwitch.filterSkills.indexOf(name) === -1 || player.skills.indexOf(name) !== -1) {
-                            //                 if (player.isAlive() && player.dynamic && !player.GongJi) {
-                            //                     return true
-                            //                 }
-                            //             }
-                            //         }
-                            //         return false
-                            //     },
-                            //     content: function () {
-                            //         console.log('使用技能_logSkill....')
-                            //         skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu')
-                            //     }
-                            // }
                         } else {
                             lib.element.player.logSkill = function (name, targets, nature, logv) {
                                 // 播放角色使用非攻击技能的特殊动画
@@ -552,6 +533,25 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             },
                             content: function () {
                                 skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu')
+                            }
+                        }
+
+                        lib.skill._changeSkelSkin = {
+                            trigger: {
+                                global: 'gameStart'
+                            },
+                            forced: true,
+                            filter: function (event, player) {
+                                return player.dynamic
+                            },
+                            content: function () {
+                                // 添加监听按压角色框, 更换皮肤事件
+
+                                player._at = new AnyTouch(player)
+                                player._at.on('press', (e) => {
+                                    skinSwitch.postMsgApi.changeSkelSkin(player)
+                                })
+
                             }
                         }
 
@@ -2562,6 +2562,15 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                         })
                     },
+                    changeSkelSkin: function (player) {
+                        if (!player.dynamic || !player.dynamic.primary) return
+
+                        player.dynamic.renderer.postMessage({
+                            message: 'changeSkelSkin',
+                            id: player.dynamic.id,
+                            skinId: player.dynamic.primary.id
+                        })
+                    }
                 },
                 chukuangWorkerApi: {
                     create: function () {
@@ -2797,7 +2806,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                         if (data.action === 'GongJi') {
                             // 如果参数直接指明包含不出框的话, 那么直接请求待机worker
-                            debugger
                             if (dynamic.primary) {
                                 let playerP = dynamic.primary.player;
                                 if (playerP.gongji && playerP.gongji.ck === false) {
@@ -5016,5 +5024,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 /** 1.14版本更新
  1. 增加d动态皮肤参数转化
  2. 修复4.0和3.8无法clip和hide slots的问题. 模仿3.6的做法
-
+ 3. 添加长按骨骼更换骨骼皮肤.
+ 4. 指示线增加非攻击角色也可以添加
+ 5. 可以主动攻击不出框
+ 6. 添加待机可以指定骨骼的皮肤, 出框也可以指定.
  */

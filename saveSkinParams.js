@@ -334,19 +334,6 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
             ]
         }
     },
-    "tengfanglan": {
-        "脂车香姝": {
-            "scale": 1,
-            "x": [
-                -50,
-                1.07
-            ],
-            "y": [
-                0,
-                0.25
-            ]
-        }
-    },
     "tenggongzhu": {
         "菡萏慕卿": {
             "scale": 1,

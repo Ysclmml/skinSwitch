@@ -5123,10 +5123,18 @@ var spine3_8;
 		SkeletonClipping.prototype.clipStart = function (slot, clip) {
 			if (this.clipAttachment != null)
 				return 0;
+
+			this.clipSlot = slot;
 			this.clipAttachment = clip;
-			var n = clip.worldVerticesLength;
-			var vertices = spine3_8.Utils.setArraySize(this.clippingPolygon, n);
-			clip.computeWorldVertices(slot, 0, n, vertices, 0, 2);
+
+			if (slot) {
+				let n = clip.worldVerticesLength;
+				let vertices = Utils.setArraySize(this.clippingPolygon, n);
+				clip.computeWorldVertices(slot, 0, n, vertices, 0, 2);
+			} else {
+				this.clippingPolygon = clip.vertices.concat();
+			}
+
 			var clippingPolygon = this.clippingPolygon;
 			SkeletonClipping.makeClockwise(clippingPolygon);
 			var clippingPolygons = this.clippingPolygons = this.triangulator.decompose(clippingPolygon, this.triangulator.triangulate(clippingPolygon));
@@ -10426,6 +10434,13 @@ var spine3_8;
 				this.temp3 = new spine3_8.Color();
 				this.temp4 = new spine3_8.Color();
 				this.twoColorTint = twoColorTint;
+
+				if (context instanceof spine3_8.webgl.ManagedWebGLRenderingContext) {
+					this.gl = context.gl;
+				} else {
+					this.gl = context;
+				}
+
 				if (twoColorTint)
 					this.vertexSize += 4;
 				this.vertices = spine3_8.Utils.newFloatArray(this.vertexSize * 1024);
@@ -10524,7 +10539,6 @@ var spine3_8;
 				}
 
 				for (var i = 0, n = drawOrder.length; i < n; i++) {
-					var clippedVertexSize = clipper.isClipping() ? 2 : vertexSize;
 					var slot = drawOrder[i];
 					if (!slot.bone.active) {
 						clipper.clipEndWithSlot(slot);
@@ -10561,6 +10575,7 @@ var spine3_8;
 					}
 
 					var texture = null;
+					var clippedVertexSize = clipper.isClipping() ? 2 : vertexSize;
 					if (attachment instanceof spine3_8.RegionAttachment) {
 						var region = attachment;
 						renderable.vertices = this.vertices;
@@ -10588,7 +10603,9 @@ var spine3_8;
 					}
 					else if (attachment instanceof spine3_8.ClippingAttachment) {
 						var clip = (attachment);
-						clipper.clipStart(slot, clip);
+						if (!this.disableMask && !this.outcropMask) {
+							clipper.clipStart(slot, clip);
+						}
 						continue;
 					}
 					else {

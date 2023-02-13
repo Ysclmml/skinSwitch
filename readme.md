@@ -252,6 +252,115 @@ test3_8: {
 				}
 ```
 
+2023-02-11修改
+
+1. 增加动皮可以不出框选择,  在gongji的代码块添加ck: false   即可指定对应的动皮不出框进行攻击. 这是为了适配某些动皮其他动作和待机变化非常小, 甚至可能没有下半身. 所以只是原地切换动作. 
+
+```
+gongji: {
+					action: 'kaishi',
+					skin: 'effect',  
+					ck: false,  // 出框与否, 表示攻击不出框,只改变骨骼原本位置. 拼音chukuang缩写
+				},
+```
+
+2. 添加待机可以指定骨骼皮肤.  攻击如需使用皮肤也要指定对应的皮肤标签, 皮肤的具体标签可以通过spine预览功能获取
+
+```js
+
+	test_skin_gongji: {
+				name: '3.8/06/spine_minister_costume_62_88',  // 可以直接文件夹带名字
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: 1,
+				version: '3.8',
+				skin: 'effect',  // 待机初始皮肤
+				gongji: {
+					action: 'kaishi',
+					skin: 'effect',
+					ck: false,  // 出框与否, 表示攻击不出框,只改变骨骼原本位置. 拼音chukuang缩写
+				},
+				json: true,  // 标明当前是json骨骼, 同理如果包含其他骨骼, 都需要指定json字段
+				
+			},
+```
+
+3. 指示线修改: 如果动皮没有攻击动作, 但是也可以配置指示线, 这时候指示线的攻击位置是从角色框出发.  同理主动指定不出框的动皮也可以这样指定.
+
+
+
+4. 增加长按可以更换待机骨骼的皮肤. 如果有多个皮肤的话. 
+
+
+
+皮肤切换完整动皮参数
+
+```js
+tenggongzhu: {
+			菡萏慕卿: {
+				name: "滕公主/菡萏慕卿/daiji2",  // 待机同原来一样, 此处表示骨骼文件所在路径. 相对于原来十周年UI的动皮存放位置
+				flipX: true,
+				x: [0, 0.5],
+				y: [0, 0.4],
+				scale: 1.0,
+				angle: 0,
+				speed: 1,
+                // json: true,  // 如果当前是json骨骼的话, 也必须要进行标明
+                // version: 4.0  // 当前支持spine的版本为3.6, 3.8,4.0. 默认不填写为3.6, 使用其他版本必须标注版本, 否则会报错.
+                // atkFlipX  如果有些动皮需要攻击翻转的话, 加上这个参数 当在屏幕左边 会自动翻转.
+                    
+				teshu: 'play2',// 触发武将技能, 会执行次标签指定动作, 如果不填写默认为Teshu
+                teshu: {  // 如果teshu写法是一个对象字典的话, 可以具体配置
+					name: '许邵/评世雕龙/chuchang2', // 如果名称与待机一样, 那么不会出框, 否则会出框, 并且只有标记为shizhounian的才能够在回合外进行出框
+					action: ['gongji', 'jineng'],  // 播放特殊动画指定的标签, 如果填写了多个, 那么会随机播放一个teshu标签
+					// scale: 0.45  // 其他参数同待机. 
+				},
+				gongji: {  // 攻击参数和teshu一样
+					name: "滕公主/菡萏慕卿/chuchang2", 
+					action: ["gongji"],  // 出杀或攻击时随机播放一个动画
+					scale: 0.45,
+					flipX: true,
+                    // ck: false,  // 出框与否, 表示攻击不出框,只改变骨骼原本位置. 拼音chukuang缩写, 此处也必须要求和原来的骨骼名称一致,才会有效. 不同骨骼此参数无效. 
+				},
+				shizhounian: true,  // 标明这是十周年的骨骼, 出场位置和出框默认会在原地, 并且返回也不是位移
+				chuchang: {  // 每一个回合开始前播放
+					name: "滕公主/菡萏慕卿/chuchang",
+					action: "play",
+					scale: 0.7,
+				},
+                play2: 'play2',  // 十周年皮肤会随机时间播放play2动作, 默认读取play2标签.
+				shan: "play3", // 只有是shizhounian为true时才会播放出闪的动画. 默认play3, 可以不进行填写
+				background:  '滕公主/菡萏慕卿/beijing.png',  // 指定角色的静态背景
+                beijing: {  // 角色的动态背景
+					name: '滕公主/菡萏慕卿/beijing',  
+					scale: 0.4,
+					x: [0, 1.2],
+					y: [0, 0.5]
+				},
+				// 指示线
+				zhishixian: {
+					name: '滕公主/菡萏慕卿/shouji2', // 指示线
+					scale: 0.7,
+					speed: 0.7,
+					delay: 0.1,  // 指示线在攻击多久后出现, 区间[0, 1], 默认0
+					factor: 0.5,  // 调节参数, 自己根据游戏效果进行调节的参数
+					effect: {  // 爆炸特效 一般是shouji
+						name: '滕公主/菡萏慕卿/shouji',  // 爆炸骨骼名称
+						scale: 0.6,
+						speed: 0.7,
+						delay: 0.5,
+                        // factor: 100,  // 调节参数, 自己根据游戏效果进行调节的参数, 十周年指示线填小一点. 默认0.5   
+					}
+				},
+				skinName: "菡萏慕卿"
+			},
+
+```
+
+
+
+
+
 
 
 
@@ -437,4 +546,16 @@ else if (item[1] == 'textbutton') {
 本人测试时使用了特效测试, 手杀UI, 无名杀补丁,原版千幻聆音都没有出现问题. 理论上UI扩展,武将扩展都不会出现兼容问题.
 
 如果需要是用千幻聆音, 请在相应群下载本人修改过的兼容皮肤切换extension.
+
+
+
+千幻1.66版本动皮背景切割有一点点小问题,需要加上几行代码 在1232行
+
+![](./doc/千幻1.66修改.png) 
+
+```js
+                if (animation.player && animation.player.beijing && !cutdybg) {
+                    animation.player.beijing.clip = null
+                }
+```
 

@@ -1137,6 +1137,29 @@ function destroy(data) {
 	am.canvas = null
 }
 
+function changeSkelSkin(data) {
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let apnode = am.getNodeBySkinId(data.skinId)
+	if (!apnode) return
+	let skins = apnode.skeleton.data.skins
+	if (skins.length > 1) {
+		let curSkin = apnode.skeleton.skin.name
+		// 替换当前皮肤为下一个皮肤
+		for (let i = 0; i < skins.length; i++) {
+			if (skins[i].name === curSkin) {
+				let j = i + 1
+				if (j === skins.length) {
+					j = 0
+				}
+				apnode.skeleton.setSkinByName(skins[j].name);
+				apnode.skeleton.setSlotsToSetupPose();
+				return
+			}
+		}
+	}
+}
+
 
 /*************** 每个函数处理worker消息 end ***************/
 
@@ -1201,6 +1224,8 @@ onmessage = function (e) {
 			break
 		case 'DESTROY':
 			destroy(data)
+		case 'changeSkelSkin':
+			changeSkelSkin(data)
 
 	}
 }
