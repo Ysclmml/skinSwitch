@@ -3776,7 +3776,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         mvp.ortho2d(0, 0, canvas.width, canvas.height);
                         mvp.translate(canvas.width*posX, posY * canvas.height, 0)
-                        // mvp.translate(1, 2, 0)
 
                         mvp.scale(scale, scale, 0)
 
@@ -3814,10 +3813,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
                 lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {
                     lib.init.js(skinSwitch.url, 'animations', function () {
-                        console.log('dcdAni======', window.dcdAnim)
                         let replace = () => {
                             if (window.dcdAnim) {
-                                window.dcdAnim = decadeUI.animation = new DecadeAnimationProxy(window.dcdAnim, '', lib)
+                                window.dcdAnim = decadeUI.animation = new DecadeAnimationProxy(window.dcdAnim, lib)
                                 console.log('替换结束')
                             } else {
                                 requestAnimationFrame(replace)

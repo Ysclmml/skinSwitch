@@ -1150,8 +1150,10 @@ class Animation4_0 extends BaseAnimation{
         let thisAnim = this;
         if (skelType === 'json') {
             thisAnim.spine.assetManager.loadText(filename + '.json', () => {
-                thisAnim.spine.assets[filename] = { name: filename, skelType: skelType };
-                thisAnim.spine.assetManager.loadTextureAtlas(filename + '.atlas', onload, onerror);
+                thisAnim.spine.assetManager.loadTextureAtlas(filename + '.atlas', () => {
+                    thisAnim.spine.assets[filename] = { name: filename, skelType: skelType };
+                    if (onload) onload()
+                }, onerror);
             }, onerror);
         } else {
             thisAnim.spine.assetManager.loadBinary(filename + '.skel', () => {
@@ -1895,6 +1897,9 @@ class AnimationManager {
         if (params) {
             this.dpr = params.dpr
             this.dprAdaptive = true
+            if (params.animation) {
+                this.animations[SupportSpineVersion.v3_6] = params.animation
+            }
         }
         this.width = undefined
         this.height = undefined
@@ -2219,7 +2224,6 @@ class DecadeAnimationOffscreenProxy {
 
     loadSpine(filename, skelType, onload, onerror, version) {
         this.postFuncMsg('loadSpine', [filename, skelType, version], data => {
-            console.log('data0000', data)
             if (data.success && onload) {
                 onload()
             } else if (data.error && onerror) {
@@ -2283,7 +2287,117 @@ class DecadeAnimationOffscreenProxy {
 
 }
 
+
+class DecadeAnimationProxy {
+
+    constructor(animation, lib) {
+        if (!animation) return
+        animation.render = Animation3_6.prototype.render.bind(animation)
+        this.am = new AnimationManager(lib.assetURL + 'extension/十周年UI/assets/animation/', animation.canvas, 88888, {dpr: 1, animation})
+        this.cap = animation.cap
+        this.nameVersionMap = {}
+        this.canvas = animation.canvas
+    }
+
+    createTextureRegion(image, name, version) {
+        return this.getAni(null, version).loadSpine(image, name)
+    }
+
+    /**
+     *
+     * @param name 骨骼名称
+     * @param version 可以指定版本, 如果不指定会优先去查询已经加载的骨骼, 如果已经加载了, 可以省略此参数, 否则默认3.6
+     * @returns {BaseAnimation}
+     */
+    getAni(name, version) {
+        if (version) {
+            return this.am.getAnimation(version)
+        }
+        return this.am.getAnimation(this.nameVersionMap[name])
+    }
+
+    hasSpine(name, version) {
+        return this.getAni(name, version).hasSpine(name)
+    };
+
+    loadSpine(filename, skelType, onload, onerror, version) {
+        let _this = this
+        return this.getAni(filename, version).loadSpine(filename, skelType, () => {
+            if (version && version !== '3.6') {
+                _this.nameVersionMap[filename] = version
+            }
+            if (onload) onload()
+        }, onerror)
+    }
+
+    prepSpine(filename, autoLoad, version) {
+        return this.getAni(filename, version).prepSpine(filename, autoLoad)
+    };
+
+    playSpine(sprite, position, version){
+        if (typeof sprite === 'string') {
+            sprite = {name: sprite}
+        }
+        return this.getAni(sprite.name, version).playSpine(sprite, position);
+    };
+
+    loopSpine(sprite, position, version) {
+        if (typeof sprite === 'string') {
+            sprite = {name: sprite}
+        }
+        return this.getAni(sprite.name, version).playSpine(sprite, position);
+    };
+
+    stopSpine(sprite, version) {
+        if (typeof sprite === 'string') {
+            sprite = {name: sprite}
+        }
+        return this.getAni(sprite.name, version).stopSpine(sprite);
+    };
+
+    stopSpineAll(version) {
+        return this.getAni(null, version).stopSpineAll();
+    };
+
+    getSpineActions(filename, version) {
+        return this.getAni(filename, version).getSpineActions(filename);
+    };
+
+    getSpineBounds(filename, version) {
+        return this.getAni(filename, version).getSpineBounds(filename);
+    };
+
+    // 不检查是否已经加载, 如果未加载, 会先加载然后进行播放
+    loadAndPlaySpine(sprite, position, version, onsuccess, onerror) {
+        let _this = this
+        if (typeof sprite === 'string') {
+            sprite = {name: sprite}
+        }
+        let dynamic = this.getAni(sprite.name, version);
+        if (dynamic.hasSpine(sprite.name)) {
+            dynamic.playSpine(sprite, position)
+            if (onsuccess) onsuccess()
+        } else {
+            dynamic.loadSpine(sprite.name, sprite.json ? 'json': 'skel', () => {
+                if (version && version !== '3.6') {
+                    _this.nameVersionMap[sprite.name] = version
+                }
+                console.log('version.....', version, sprite)
+                dynamic.playSpine(sprite, position)
+                if (onsuccess) {
+                    onsuccess()
+                }
+            }, (data) => {
+                if (onerror) onerror(data)
+                console.log('error', data)
+            })
+        }
+    }
+}
+
+
 if (self.window) {
-    window.DecadeAnimationProxy = DecadeAnimationOffscreenProxy
+    window.DecadeAnimationOffscreenProxy = DecadeAnimationOffscreenProxy
+    window.DecadeAnimationProxy = DecadeAnimationProxy
 }
 

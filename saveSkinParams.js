@@ -374,6 +374,20 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 ]
             }
         }
+    },
+    "xiahoudun": {
+        "刚烈无惧": {
+            "scale": 0.4,
+            "x": [
+                0,
+                0.72
+            ],
+            "y": [
+                0,
+                0.38
+            ],
+            "angle": 0
+        }
     }
 }
 }
