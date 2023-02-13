@@ -109,7 +109,11 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
                             }
                         }
                     } else if (k === 'dynamicBackground') {
-                        daijiParams['beijing'] = skin[k]
+                        if (typeof skin[k] === 'string') {
+                            daijiParams['beijing'] = {name: skin[k]}
+                        } else {
+                            daijiParams['beijing'] = skin[k]
+                        }
                     } else {
                         if (skin[k] === undefined || k === 'gongji' || k === 'chuchang' || k === 'teshu') {
                             continue

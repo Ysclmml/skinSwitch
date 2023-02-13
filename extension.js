@@ -192,7 +192,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             skinSwitch.dynamic.setBackground(deputy ? "deputy" : "primary", this);
                         }
                     } else {
-                        let isYh = this.getElementsByClassName("skinYh");
                         if (this.dynamic) {
                             this.stopDynamic();
                             decadeUI.CUR_DYNAMIC--;
@@ -206,14 +205,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             } else {
                                 this.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/皮肤切换/images/card/card.png")'
                             }
-                            if (isYh.length < 1) {
-                                let yh = skinSwitch.createYH(this.group);
-                                this.appendChild(yh);
-                            }
-                        } else {
-                            if (isYh.length > 1) isYh[0].remove();
+
                         }
                     }
+                    skinSwitch.skinSwitchCheckYH(this)
                 };
 
                 if (lib.config[skinSwitch.decadeKey.dynamicSkin]) {
@@ -221,11 +216,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         alert("您的设备环境不支持新版手杀动皮效果，请更换更好的设备或者不使用此版本的手杀动皮效果");
                         return
                     } else {
-
                         // 拦截原来的logSkill函数, 加上如果使用非攻击技能,就播放特殊动画
-
                         // 本体1.9.117.2, 由于logSkill的trigger没有使用前就可以触发的, 所以仍然复制一份进行处理.
-
                         if (lib.version >= '1.9.117.2') {
                             console.log('======== version >= 1.9.117.2===========')
                             if (!lib.element.player._pfqh_replace_logSkill) {
@@ -450,7 +442,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                                     if (timeDelta >= 200) {
                                         if (/*timeDelta <= 350 &&*/ event.triggername !== 'useCardBefore') {
-                                            if (event._trigger.targets.length <= player.__lastGongji.tLen) {
+                                            if (player.__lastGongji && event._trigger.targets.length <= player.__lastGongji.tLen) {
                                                 return
                                             }
                                         }
@@ -606,23 +598,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                         }
 
-                        lib.skill._setDoubleAvatarBackground = {
-                            trigger: {
-                                global: 'gameStart'
-                            },
-                            forced: true,
-                            filter: function (event, player) {
-                                return get.mode() != 'guozhan' && player.name2 && player.dynamic;
-                            },
-                            content: function () {
-                                let str = ['primary', 'deputy'];
-                                for (let i = 0; i < 2; i++) {
-                                    if (player.dynamic[str[i]] && !player.isUnseen(i)) {
-                                        skinSwitch.dynamic.setBackground(str[i], player);
-                                    }
-                                }
-                            }
-                        }
+                        // lib.skill._setDoubleAvatarBackground = {
+                        //     trigger: {
+                        //         global: 'gameStart'
+                        //     },
+                        //     forced: true,
+                        //     filter: function (event, player) {
+                        //         return get.mode() != 'guozhan' && player.name2 && player.dynamic;
+                        //     },
+                        //     content: function () {
+                        //         let str = ['primary', 'deputy'];
+                        //         for (let i = 0; i < 2; i++) {
+                        //             if (player.dynamic[str[i]] && !player.isUnseen(i)) {
+                        //                 skinSwitch.dynamic.setBackground(str[i], player);
+                        //             }
+                        //         }
+                        //     }
+                        // }
 
                         // 游戏开始时检查所有角色的圆弧组别是否正确
                         lib.skill._fix_yh = {
@@ -631,42 +623,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             },
                             forced: true,
                             filter: function (event, player) {
-                                return get.mode() !== 'guozhan' && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && player === game.me
+                                return !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
                             },
                             content: function () {
                                 for (let p of game.players) {
-                                    if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) continue
-
-                                    let isYh = p.getElementsByClassName("skinYh")
-
-                                    if (p.name === 'unknown' && p.name1) {
-                                        let hide = lib.character[p.name1][4];
-                                        let isHide;
-                                        if (hide && hide.length > 0 && hide[0] === "hiddenSkill") {
-                                            isHide = true;
-                                        }
-                                        if (isHide) {
-                                            if (isYh.length > 0) {
-                                                isYh[0].remove();
-                                            }
-                                            continue
-                                        }
-                                    }
-
-                                    if (isYh.length > 0) {
-                                        let yh = isYh[0]
-                                        let splits = (yh.src || '').split('/')
-                                        let sub = splits[splits.length - 1]
-                                        let curGroup = sub.split('.')[0]
-                                        if (curGroup !== p.group) {
-                                            isYh[0].remove()
-                                            yh = skinSwitch.createYH(p.group)
-                                            p.append(yh)
-                                        }
-                                    } else {
-                                        let yh = skinSwitch.createYH(p.group)
-                                        p.append(yh)
-                                    }
+                                   skinSwitch.skinSwitchCheckYH(p)
                                 }
 
                             }
@@ -679,28 +640,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             },
                             forced: true,
                             filter: function (event, player) {
-                                return get.mode() !== 'guozhan' && !player.isUnseen(0) && !player.isUnseen(1) && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
+                                return !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
                             },
                             content: function () {
-                                let p = player
-                                if (!p.dynamic || (!p.dynamic.primary && !p.dynamic.deputy)) return
-                                let isYh = p.getElementsByClassName("skinYh")
-
-                                if (isYh.length > 0) {
-                                    let yh = isYh[0]
-                                    let splits = (yh.src || '').split('/')
-                                    let sub = splits[splits.length - 1]
-                                    let curGroup = sub.split('.')[0]
-                                    if (curGroup !== p.group) {
-                                        isYh[0].remove()
-                                        yh = skinSwitch.createYH(p.group)
-                                        p.append(yh)
-                                    }
-                                } else {
-                                    let yh = skinSwitch.createYH(p.group)
-                                    p.append(yh)
-                                }
-
+                                skinSwitch.skinSwitchCheckYH(player)
                             }
                         }
 
@@ -1004,16 +947,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         e[0].style.borderRadius = "0";
                                     }
                                 }
-                                if (lib.character[character]) {
-                                    var forces = lib.character[character][1];
-                                    if (/*!this.doubleAvatar*/get.mode() !== 'guozhan' && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on") && this.getElementsByClassName("skinYh").length < 1 && y && !hasHideWuJiang/*&& forces != "shen"*/) {
-                                        var yh = skinSwitch.createYH(forces);
-                                        this.appendChild(yh);
-                                    }
+                                var forces = lib.character[character][1];
 
+                                if (forces !== 'shen' && !!hasHideWuJiang) {
+                                    skinSwitch.skinSwitchCheckYH(this)
                                 }
+
                                 skinSwitch.dynamic.startPlay2Random(this)
                             }
+
+
+
                             var jie;
                             if (character && duicfg.showJieMark) {
                                 if (lib.characterPack.refresh)
@@ -1066,14 +1010,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             let that = this;
 
                             let addYh = () => {
-                                if ((lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")) {
-                                    return
-                                }
-                                let isYh = that.getElementsByClassName("skinYh");
-                                if (Object.keys(isYh).length <= 0) {
-                                    let yh = skinSwitch.createYH(that.group);
-                                    that.appendChild(yh);
-                                }
+                                skinSwitch.skinSwitchCheckYH(that)
                             }
 
                             function showDynamicSkin(e)
@@ -1251,7 +1188,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             }
             updateDecadeDynamicSkin()
             modifyDecadeUIContent()
-            // 提前加载换肤的骨骼
+
         },
         precontent:function() {
             window.skinSwitch = {
@@ -1272,6 +1209,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'useDynamic': 'extension_皮肤切换_useDynamic',  // 使用皮肤切换携带的出框功能
                     'isAttackFlipX': 'extension_皮肤切换_isAttackFlipX',  //
                     'cugDynamicBg': 'extension_皮肤切换_cugDynamicBg',  // 是否裁剪动态背景
+                    'replaceDecadeAni': 'extension_皮肤切换_replaceDecadeAni',  // 是否替换十周年ui的动画播放器对象
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -1295,6 +1233,35 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                     }
                     return false;
+                },
+                // 检查圆弧
+               skinSwitchCheckYH: function (player) {
+                    if (lib.config['extension_十周年UI_newDecadeStyle'] == "on") return;
+                    if (!player || get.itemtype(player) != 'player') return;
+                    let group = player.group || 'weizhi';
+                    let isYh = false;
+
+                    if (player.dynamic) {
+                        if (player.dynamic.primary && player.dynamic.primary != null && !player.isUnseen(0)) isYh = true;
+                        if (player.dynamic.deputy && player.dynamic.deputy != null && !player.isUnseen(1)) isYh = true;
+                    }
+
+                    let skinYh = player.getElementsByClassName("skinYh");
+                    if (isYh && skinYh.length == 0) {
+                        skinSwitch.createYH(group)
+                    } else if (!isYh && skinYh.length > 0) {
+                        player.removeChild(skinYh[0]);
+                    } else if (isYh && skinYh.length > 0) {
+                        let yh = skinYh[0]
+                        let splits = (yh.src || '').split('/')
+                        let sub = splits[splits.length - 1]
+                        let curGroup = sub.split('.')[0]
+                        if (curGroup !== group) {
+                            skinYh[0].remove()
+                            yh = skinSwitch.createYH(group)
+                            player.append(yh)
+                        }
+                    }
                 },
                 //判断文件、文件夹是否存在
                 qhly_checkFileExist: function (path, callback) {
@@ -1474,15 +1441,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     return res;
                 },
                 createYH: function (group) {
-                    console.log('createYhhhhh', group)
                     var yh = document.createElement("img");
-                    let imgurl = skinSwitch.url + "/images/border/" + group + ".png"
-                    yh.src = imgurl;
-                    yh.onerror = function () {
-                        yh.src = skinSwitch.url + "images/border/weizhi.png"
-                        this.onerror = null;
-                        return true;
-                    }
+                    yh.src = skinSwitch.url + "/images/border/" + group + ".png";
                     yh.classList.add("skinYh")
                     yh.style.display = "block";
                     yh.style.position = "absolute";
@@ -2691,6 +2651,24 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             angle: posData.angle
                         })
                     },
+                    // 播放特效
+                    playEffect: function (sprite, position) {
+                        skinSwitch.chukuangWorkerInit()
+                        if (position && position.parent) {
+                            position.parent = {
+                                boundRect: position.parent.getBoundingClientRect(),
+                                bodySize: {
+                                    bodyWidth: decadeUI.get.bodySize().width,
+                                    bodyHeight: decadeUI.get.bodySize().height
+                                }
+                            }
+                        }
+                        skinSwitch.chukuangWorker.postMessage({
+                            message: "PLAY_EFFECT",
+                            sprite,
+                            position: position,
+                        })
+                    }
                 },
                 chukuangWorkerOnMessage: {
                     init: function () {
@@ -3813,21 +3791,31 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
                 lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {
                     lib.init.js(skinSwitch.url, 'animations', function () {
-                        let replace = () => {
-                            if (window.dcdAnim) {
-                                window.dcdAnim = decadeUI.animation = new DecadeAnimationProxy(window.dcdAnim, lib)
-                                console.log('替换结束')
-                            } else {
-                                requestAnimationFrame(replace)
+                        if (lib.config[skinSwitch.configKey.replaceDecadeAni]) {
+                            let replace = () => {
+                                if (window.dcdAnim) {
+                                    window.dcdAnim = decadeUI.animation = new DecadeAnimationProxy(window.dcdAnim, lib)
+                                    console.log('替换结束')
+                                } else {
+                                    requestAnimationFrame(replace)
+                                }
                             }
+                            replace()
                         }
-                        replace()
                     })
 
                 })
             })
 
             lib.init.js(skinSwitch.url, 'pfqhUtils', function () {})
+
+            lib.init.js(skinSwitch.url, 'effects', function () {
+                for (let k in pfqhSkillEffect) {
+                    for (let i=0; i<pfqhSkillEffect[k].length; i++) {
+                        lib.skill[`__pfqh_${k}_${i}`] = pfqhSkillEffect[k][i]
+                    }
+                }
+            })
 
             let editBox  // 编辑动皮参数的弹窗
             let adjustPos  // 显示动画的相对位置. 这个是相对全局window, 用于辅助调试pos位置
@@ -4859,6 +4847,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 "init": true,
                 "intro": "如果设备不支持离屏渲染或者使用EngEx或D扩展出框, 请关闭此出框功能",
             },
+            'replaceDecadeAni': {
+                name: "支持播放ol4.0特效",
+                "init": false,
+                "intro": "替换十周年UI的decadeUi.animation对象后允许播放3.8,4.0的特效",
+            },
             'isAttackFlipX': {
                 name: "AI出框是否翻转X轴",
                 "init": false,
@@ -4872,7 +4865,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             'genDynamicSkin': {
                 name: "<div><button onclick='skinSwitch.genDynamicSkin()'>转换D动态参数(生成的新文件在扩展文件夹下)</button></div>",
                 clear: true
-            }
+            },
+
         },
         help:{},
         package:{
@@ -5026,4 +5020,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  4. 指示线增加非攻击角色也可以添加
  5. 可以主动攻击不出框
  6. 添加待机可以指定骨骼的皮肤, 出框也可以指定.
+ */
+
+/** 1.15版本更新
+ 1. 修复d动态皮肤参数转换错误
+ 2. 修复4.0和3.8clip slots报错bug
+ 3. 支持播放spine 4.0特效
  */

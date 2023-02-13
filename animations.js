@@ -5,6 +5,7 @@ if (self.spine_4 && self.spine) {
     spine_4.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
     spine_4.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
     spine_4.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
+    spine_4.Matrix4.prototype.setPos2D = spine.webgl.Matrix4.prototype.setPos2D
     spine_4.Matrix4.prototype.originTranslate = spine_4.Matrix4.prototype.translate
     spine_4.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
 
@@ -44,6 +45,7 @@ if (self.spine3_8 && self.spine) {
     spine3_8.webgl.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
     spine3_8.webgl.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
     spine3_8.webgl.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
+    spine3_8.webgl.Matrix4.prototype.setPos2D = spine.webgl.Matrix4.prototype.setPos2D
     spine3_8.webgl.Matrix4.prototype.originTranslate = spine_4.Matrix4.prototype.translate
     spine3_8.webgl.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
 

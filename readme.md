@@ -291,6 +291,20 @@ gongji: {
 
 4. 增加长按可以更换待机骨骼的皮肤. 如果有多个皮肤的话. 
 
+   
+
+2023-02-13修改:
+
+增加允许播放其他spine版本的特效, 接口与老的一致. 使用之前需要打开对应的功能.
+
+```js
+// 老的调用方式
+decadeUI.animation.playSpine('effect_youxikaishi')
+
+// 播放冰杀, 使用这个函数不用提前加在骨骼.  骨骼特效路径为十周年UI/assets/animation为起点. 放在其他目录请使用相对路径
+decadeUI.animation.loadAndPlaySpine({name: 'ol冰杀/bingsha01', json: true}, {parent: game.players[2]}, '4.0')
+```
+
 
 
 皮肤切换完整动皮参数
@@ -356,12 +370,6 @@ tenggongzhu: {
 			},
 
 ```
-
-
-
-
-
-
 
 
 

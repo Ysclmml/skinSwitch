@@ -1162,6 +1162,34 @@ function adjust(data) {
 }
 
 
+// 单纯用来播放特效
+function playEffect(data) {
+    let sprite = data.sprite
+    let position = data.sprite
+    if (typeof sprite === 'string') {
+        sprite = {name: sprite}
+    }
+    let v = sprite.version || '3.6'
+    let dynamic = playerAnimation.getAnni(null, v)
+    if (position && position.parent) {
+        position.referNode = new HTMLElement(position.parent.boundRect, position.parent.bodySize)
+        position.parent = null
+    }
+
+    if (dynamic.hasSpine(sprite.name)) {
+        dynamic.playSpine(sprite, position)
+    } else {
+        dynamic.loadSpine(sprite.name, sprite.json ? 'json': 'skel', () => {
+            dynamic.playSpine(sprite, position)
+        }, () => {
+
+        })
+    }
+
+
+}
+
+
 /** @type {AnimationManager} */
 let decadeUIAni
 function createDecadeAni(data) {
@@ -1341,6 +1369,7 @@ function decadeAniFunc(data) {
     }
 }
 
+
 onmessage = function (e) {
     let data = e.data
     switch (data.message) {
@@ -1361,6 +1390,9 @@ onmessage = function (e) {
             break
         case 'ADJUST':
             adjust(data)
+            break
+        case 'PLAY_EFFECT':
+            playEffect(data)
             break
         case 'CREATE_DECADE_ANI':
             createDecadeAni(data)
