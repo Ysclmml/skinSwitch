@@ -7711,10 +7711,17 @@ var spine_4 = (() => {
     clipStart(slot, clip) {
       if (this.clipAttachment)
         return 0;
+      this.clipSlot = slot;
       this.clipAttachment = clip;
-      let n = clip.worldVerticesLength;
-      let vertices = Utils.setArraySize(this.clippingPolygon, n);
-      clip.computeWorldVertices(slot, 0, n, vertices, 0, 2);
+
+      if (slot) {
+        let n = clip.worldVerticesLength;
+        let vertices = Utils.setArraySize(this.clippingPolygon, n);
+        clip.computeWorldVertices(slot, 0, n, vertices, 0, 2);
+      } else {
+        this.clippingPolygon = clip.vertices.concat();
+      }
+
       let clippingPolygon = this.clippingPolygon;
       SkeletonClipping.makeClockwise(clippingPolygon);
       let clippingPolygons = this.clippingPolygons = this.triangulator.decompose(clippingPolygon, this.triangulator.triangulate(clippingPolygon));
@@ -10729,20 +10736,26 @@ var spine_4 = (() => {
       this.temp3 = new Color();
       this.temp4 = new Color();
       this.twoColorTint = twoColorTint;
+
+      if (context instanceof ManagedWebGLRenderingContext) {
+        this.gl = context.gl;
+      } else {
+        this.gl = context;
+      }
+
       if (twoColorTint)
         this.vertexSize += 4;
       this.vertices = Utils.newFloatArray(this.vertexSize * 1024);
     }
 
     getSlotsMask () {
-      var scale = this.outcropScale;
-      var angle = this.outcropAngle;
+      var scale = this.outcropScale;  // 当前大小
+      var angle = this.outcropAngle;  // 角度
       var gl = this.gl;
-
-      var ox = gl.canvas.width  / 2;
-      var oy = gl.canvas.height / 2;
-      var x = this.outcropX;
-      var y = this.outcropY;
+      var ox = gl.canvas.width  / 2;  // canvas的宽度/2
+      var oy = gl.canvas.height / 2;  // canvas的高度/2
+      var x = this.outcropX;  // 当前骨骼的x位置
+      var y = this.outcropY;  // 当前骨骼的y位置
       if (x == null)
         x = ox;
       if (y == null)
@@ -10762,7 +10775,7 @@ var spine_4 = (() => {
 
       let slotsMask = this.slotsMask;
       if (slotsMask == null) {
-        slotsMask = this.slotsMask = new ClippingAttachment('outcrop');
+        this.slotsMask = slotsMask = new ClippingAttachment('outcrop');
         slotsMask.vertices = new Array(8);
         slotsMask.worldVerticesLength = slotsMask.vertices.length;
       }
@@ -10824,7 +10837,6 @@ var spine_4 = (() => {
       }
 
       for (let i = 0, n = drawOrder.length; i < n; i++) {
-        let clippedVertexSize = clipper.isClipping() ? 2 : vertexSize;
         let slot = drawOrder[i];
         if (!slot.bone.active) {
           clipper.clipEndWithSlot(slot);
@@ -10860,6 +10872,8 @@ var spine_4 = (() => {
         }
 
         let texture = null;
+        let clippedVertexSize = clipper.isClipping() ? 2 : vertexSize;
+
         if (attachment instanceof RegionAttachment) {
           let region = attachment;
           renderable.vertices = this.vertices;
@@ -10885,7 +10899,10 @@ var spine_4 = (() => {
           attachmentColor = mesh.color;
         } else if (attachment instanceof ClippingAttachment) {
           let clip = attachment;
-          clipper.clipStart(slot, clip);
+          if (!this.disableMask && !this.outcropMask) {
+            clipper.clipStart(slot, clip);
+          }
+          // clipper.clipStart(slot, clip);
           continue;
         } else {
           clipper.clipEndWithSlot(slot);

@@ -2809,7 +2809,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                         if (data.action === 'GongJi') {
                             // 如果参数直接指明包含不出框的话, 那么直接请求待机worker
-                            debugger
                             if (dynamic.primary) {
                                 let playerP = dynamic.primary.player;
                                 if (playerP.gongji && playerP.gongji.ck === false) {
