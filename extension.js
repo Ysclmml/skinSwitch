@@ -1210,6 +1210,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'isAttackFlipX': 'extension_皮肤切换_isAttackFlipX',  //
                     'cugDynamicBg': 'extension_皮肤切换_cugDynamicBg',  // 是否裁剪动态背景
                     'replaceDecadeAni': 'extension_皮肤切换_replaceDecadeAni',  // 是否替换十周年ui的动画播放器对象
+                   // 'adjustQhlyFact': 'extension_皮肤切换_adjustQhlyFact',  // 调整预览参数
+                   'modifyQhlxPreview': 'extension_皮肤切换_modifyQhlxPreview',  // 调整预览大小
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -1234,6 +1236,26 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
                     return false;
                 },
+                // adjustQhlyFact: function (e) {
+                //     let v = Number(e.target.value)
+                //     if (isNaN(v) || v > 1 || v <= 0){
+                //         let saveVal = lib.config[skinSwitch.configKey.adjustQhlyFact]
+                //         if (!saveVal || isNaN(Number(saveVal))) {
+                //             saveVal = 0.85
+                //         }
+                //         e.target.value = Number(saveVal).toFixed(2)
+                //         return
+                //     }
+                //     lib.config[skinSwitch.configKey.adjustQhlyFact] = v
+                //     for (let p of game.players) {
+                //         if (p.dynamic) {
+                //             p.dynamic.renderer.postMessage({
+                //                 message: 'changeQhlxFactor',
+                //                 factor: v
+                //             })
+                //         }
+                //     }
+                // },
                 // 检查圆弧
                skinSwitchCheckYH: function (player) {
                     if (lib.config['extension_十周年UI_newDecadeStyle'] == "on") return;
@@ -3794,7 +3816,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (lib.config[skinSwitch.configKey.replaceDecadeAni]) {
                             let replace = () => {
                                 if (window.dcdAnim) {
-                                    window.dcdAnim = decadeUI.animation = new DecadeAnimationProxy(window.dcdAnim, lib)
+                                    window.spineAnim = new DecadeAnimationProxy(window.dcdAnim, lib)
                                     console.log('替换结束')
                                 } else {
                                     requestAnimationFrame(replace)
@@ -4782,6 +4804,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     lib.qhly_callbackList.push(skinSwitch.dynamic.qhly_callback)
                 }
 
+                skinSwitch.lib = lib
             })
         },
         config:{
@@ -4866,6 +4889,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 name: "<div><button onclick='skinSwitch.genDynamicSkin()'>转换D动态参数(生成的新文件在扩展文件夹下)</button></div>",
                 clear: true
             },
+            'modifyQhlxPreview': {
+                name: "调整千幻大屏预览待机大小",
+                init: true,
+                intro: '默认的千幻大屏预览大小太大了, 我调整的小一些'
+            },
+            // "adjustQhlyFact": {
+            //     name: "<input id='adjustQhlyFact' onblur='skinSwitch.adjustQhlyFact(event)' style='width: 80px'>调整千幻聆音大图预览参数</input>",
+            //     intro: "当使用千幻雷修版本使用大图预览的时候, 这个参数是用来调整大图预览参数的",
+            //     clear: true,
+            //     init: 0.85
+            // },
 
         },
         help:{},

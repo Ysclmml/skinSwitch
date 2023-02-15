@@ -59,7 +59,7 @@ class PlayerAnimation {
         let pLoad = function (actionParams, times) {
             if (actionParams) {
                 actionParams.alpha = actionParams.alpha == null ? player.alpha : actionParams.alpha
-                let anni = _this.getAnni(player)
+                let anni = _this.getAnni(player, actionParams.version)
 
                 if (!anni.hasSpine(actionParams.name)) {
                     let skelType = actionParams.json ? 'json': 'skel';
@@ -117,8 +117,8 @@ class PlayerAnimation {
             return this.lianxuChuKuang(player, actionParams, data)
         }
 
-        if (!this.getAnni(player).hasSpine(actionParams.name)) {
-            this.getAnni(player).loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', () => {
+        if (!this.getAnni(player, actionParams.version).hasSpine(actionParams.name)) {
+            this.getAnni(player, actionParams.version).loadSpine(actionParams.name, actionParams.json ? 'json': 'skel', () => {
                 this.playChuKuang(player, actionParams, data)
             }, this.errPlaySpine)
         } else {
@@ -378,9 +378,9 @@ class PlayerAnimation {
         let playNode = actionParams.playNode
         // 这里说明上一次出框已经完成, 可能会让原来的待机显现, 保险起见, 再发一次隐藏的消息
         // 判断上次的动作是否播放完成.
-        if (!this.getAnni(playNode.player).nodes.includes(playNode)) {
+        if (!this.getAnni(playNode.player, actionParams.version).nodes.includes(playNode)) {
             playNode.skeleton.completed = true
-            let playedSprite = this.getAnni(playNode.player).playSpine(playNode.actionParams)
+            let playedSprite = this.getAnni(playNode.player, actionParams.version).playSpine(playNode.actionParams)
             this.setSkin(actionParams, playedSprite)
             playedSprite.player = player
             playedSprite.actionParams = actionParams
@@ -444,7 +444,7 @@ class PlayerAnimation {
             actionParams.showTime = actionInfo.showTime
             actionParams.action = actionInfo.action
         }
-        let playedSprite = this.getAnni(player).playSpine(actionParams)
+        let playedSprite = this.getAnni(player, actionParams.version).playSpine(actionParams)
         playedSprite.player = player
         playedSprite.actionParams = actionParams
         this.setSkin(actionParams, playedSprite)
@@ -833,7 +833,7 @@ function completePlayerParams(avatarPlayer, action) {
             // 只支持假动皮攻击出框, 其他动作和待机相同, 不允许出框
             if (action === 'GongJi') {
                 // 查找待机动作的默认动作标签, 并缓存
-                let results = playerAnimation.getAnni(avatarPlayer).getSpineActions(daijiName)
+                let results = playerAnimation.getAnni(avatarPlayer, actionParams.version).getSpineActions(daijiName)
                 if (results && results.length > 0) {
                     // 检查是否有GongJi标签, 如果有那是真动皮
                     if (actionParams.fakeDynamic) {
@@ -890,7 +890,7 @@ function completePlayerParams(avatarPlayer, action) {
                 }
                 avatarPlayer.actionState[action] = false
             }  else if (action === 'chuchang') {
-                let results = playerAnimation.getAnni(avatarPlayer).getSpineActions(daijiName)
+                let results = playerAnimation.getAnni(avatarPlayer, actionParams.version).getSpineActions(daijiName)
                 if (results && results.length > 0) {
                     for (let r of results) {
                         if (r.name === actionParams.action) {
@@ -917,7 +917,7 @@ function completePlayerParams(avatarPlayer, action) {
             avatarPlayer.actionState[action] = false
         } else {
             // 查找骨骼与正确的标签
-            let results = playerAnimation.getAnni(avatarPlayer).getSpineActions(actionParams.name)
+            let results = playerAnimation.getAnni(avatarPlayer, actionParams.version).getSpineActions(actionParams.name)
             let isArray = Array.isArray(actionParams.action)
             let states = []
 

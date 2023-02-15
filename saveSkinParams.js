@@ -54,19 +54,6 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 0,
                 0.46
             ],
-            "qhlx": {
-                "gongji": {
-                    "scale": 1,
-                    "x": [
-                        0,
-                        0.27
-                    ],
-                    "y": [
-                        0,
-                        0.49
-                    ]
-                }
-            },
             "beijing": {
                 "scale": 0.4,
                 "x": [
@@ -93,12 +80,12 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
         "脂车香姝": {
             "scale": 1,
             "x": [
-                -50,
-                1.02
+                0,
+                0.66
             ],
             "y": [
                 0,
-                0.4
+                0.28
             ],
             "beijing": {
                 "scale": 0.6,
@@ -164,37 +151,11 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     0,
                     0.4
                 ]
-            },
-            "qhlx": {
-                "daiji": {
-                    "scale": 1,
-                    "x": [
-                        5,
-                        0.38
-                    ],
-                    "y": [
-                        2,
-                        0.3
-                    ]
-                }
             }
         }
     },
     "caoying": {
         "锋芒毕露": {
-            "qhlx": {
-                "gongji": {
-                    "scale": 1.2,
-                    "x": [
-                        0,
-                        0.28
-                    ],
-                    "y": [
-                        0,
-                        0.43
-                    ]
-                }
-            },
             "gongji": {
                 "scale": 0.65,
                 "x": [
@@ -205,24 +166,16 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     0,
                     0.39
                 ]
-            }
-        }
-    },
-    "guozhao": {
-        "雍容尊雅": {
-            "qhlx": {
-                "daiji": {
-                    "scale": 1.2,
-                    "x": [
-                        -80,
-                        0.46
-                    ],
-                    "y": [
-                        8,
-                        0.33
-                    ]
-                }
-            }
+            },
+            "scale": 0.65,
+            "x": [
+                0,
+                0.36
+            ],
+            "y": [
+                0,
+                -0.04
+            ]
         }
     },
     "re_sunyi": {
@@ -280,19 +233,6 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                     0,
                     0.37
                 ]
-            },
-            "qhlx": {
-                "beijing": {
-                    "scale": 0.56,
-                    "x": [
-                        0,
-                        -0.09
-                    ],
-                    "y": [
-                        0,
-                        0.49
-                    ]
-                }
             }
         }
     },
@@ -387,6 +327,19 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 0.38
             ],
             "angle": 0
+        }
+    },
+    "guozhao": {
+        "雍容尊雅": {
+            "scale": 0.55,
+            "x": [
+                0,
+                -0.14
+            ],
+            "y": [
+                0,
+                0.43
+            ]
         }
     }
 }

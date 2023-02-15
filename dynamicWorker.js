@@ -23,6 +23,8 @@ var animationManagers = [];
 let chukuangId = 99999   // 自动出框的nodeID起始, 为了不和主线程传过去的skinId重复
 
 let isMobile = false
+let dpr = 1
+let modifyQhlxPreview
 
 /**
  * 获取动皮管理对象DynamicPlayer
@@ -69,6 +71,10 @@ function playSkin(am, data) {
 	
 	// 获取正确的ani
 	let dynamic = am.getAnimation(sprite.player.version)
+	let beijingDynamic
+	if (sprite.player && sprite.player.beijing != null) {
+		beijingDynamic = am.getAnimation(sprite.player.beijing.version || sprite.player.version)
+	}
 	update(am, data);
 
 	sprite.loop = true;
@@ -151,16 +157,59 @@ function playSkin(am, data) {
 		}
 
 	}
+	// 将千幻的大小改成自适应
 	let loadAllSkels = () => {
 		let loadDaiJi = () => {
 			let skelType = sprite.player.json ? 'json': 'skel'
 			try {
+				let setNewScale = () => {
+					if (sprite.qhlxBigAvatar && modifyQhlxPreview) {
+						dynamic.update({
+							width: player.divPos.width,
+							height: player.divPos.height,
+							dpr: dpr,
+						})
+						let oldScale = player.scale / player.largeFactor
+						let fact = qhlxFactor
+						let mul = Math.min( player.divPos.width / 120 , player.divPos.height / 200) * oldScale
+						sprite.scale = mul * fact
+						player.scale = mul * fact
+
+						if (sprite.x[1] < 0) {
+							sprite.x[1] += (-mul * player.divPos.width * sprite.x[1] / fact * 0.6) / (mul * fact * player.divPos.width)
+						}  else {
+							sprite.x[1] += qhlxFactor * 0.1
+						}
+						if (sprite.y[1] < 0) {
+							let yy = -sprite.y[1]
+
+							if (yy < 0.1) {
+								yy = yy * 3
+							} else if (yy < 0.2) {
+
+							}else if(yy < 0.35){
+								yy *= 0.8
+							} else if(yy < 0.5) {
+								yy = yy * 0.6
+							} else {
+								yy = yy * 0.4
+							}
+							sprite.y[1] += (mul * player.divPos.height * yy / fact * 0.6) / (mul * fact * player.divPos.height)
+						} else {
+							sprite.y[1] += qhlxFactor * 0.15
+						}
+
+					}
+				}
 				if (dynamic.hasSpine(sprite.name)) {
+					// 获取骨骼的具体大小
+					setNewScale()
 					postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
 				} else {
 					try {
 						dynamic.loadSpine(sprite.name, skelType, () => {
-							postMessage({id: data.id, type: 'loadFinish', sprite: sprite})
+							setNewScale()
+							postMessage({id: data.id, type: 'loadFinish', sprite: sprite});
 						}, (errMsg) => {
 							if (errMsg) {
 								console.error(errMsg)
@@ -179,10 +228,10 @@ function playSkin(am, data) {
 		}
 
 		if (sprite.player && sprite.player.beijing != null) {
-			if (dynamic.hasSpine(sprite.player.beijing.name)) {
+			if (beijingDynamic.hasSpine(sprite.player.beijing.name)) {
 				loadDaiJi()
 			} else {
-				dynamic.loadSpine(sprite.player.beijing.name, sprite.player.beijing.json ? 'json': 'skel', function () {
+				beijingDynamic.loadSpine(sprite.player.beijing.name, sprite.player.beijing.json ? 'json': 'skel', function () {
 					loadDaiJi()
 				})
 			}
@@ -235,6 +284,8 @@ function getLabelIgnoreCase(node, label) {
 function create(data) {
 	if (animationManagers.length >= 4) return;
 	let am = new AnimationManager(data.pathPrefix,  data.canvas, data.id);
+	if (data.dpr) dpr = data.dpr
+	modifyQhlxPreview = data.modifyQhlxPreview
 	animationManagers.push(am);
 }
 
@@ -253,6 +304,10 @@ function startPlaySkin(data) {
 	if (!am) return;
 	let sprite = data.sprite
 	let dynamic = am.getAnimation(sprite.player.version)
+	let beijingDynamic
+	if (sprite.player && sprite.player.beijing != null) {
+		beijingDynamic = am.getAnimation(sprite.player.beijing.version || sprite.player.version)
+	}
 
 	let run = function (beijingNode) {
 		let t = dynamic.playSpine(sprite)
@@ -308,7 +363,7 @@ function startPlaySkin(data) {
 		}
 		let node
 		try {
-			node = dynamic.playSpine(sprite.player.beijing)
+			node = beijingDynamic.playSpine(sprite.player.beijing)
 			node.isbeijing = true
 		} catch (e) {
 			console.error(e)
@@ -1160,79 +1215,51 @@ function changeSkelSkin(data) {
 	}
 }
 
-
-/*************** 每个函数处理worker消息 end ***************/
-
-onmessage = function (e) {
-	let data = e.data
-	switch (data.message) {
-		case 'CREATE':
-			create(data)
-			break;
-		case 'PLAY':
-			play(data)
-			break;
-		case 'StartPlay':  // 真正开始播放背景和待机骨骼
-			startPlaySkin(data)
-			break
-		case 'STOP':
-			stop(data)
-			break;
-
-		case 'STOPALL':
-			stopAll(data)
-			break;
-
-		case 'UPDATE':
-			msgUpdate(data)
-			break;
-
-		case "ACTION":
-			action(data)
-			break;
-
-		case "HIDE":
-			hide1(data)
-			break;
-
-		case "HIDE2":
-			hide2(data)
-			break;
-
-		case "FIND":
-			find(data)
-			break;
-		case "SHOW":
-			show(data)
-			break;
-
-		case "ADJUST":
-			adjust(data)
-			break
-
-		case "DEBUG":
-			debug(data)
-			break
-		case "POSITION":
-			position(data)
-			break
-		case "hideAllNode":
-			hideAllNode(data)
-			break
-		case 'recoverDaiJi':
-			recoverDaiJi(data)
-			break
-		case 'DESTROY':
-			destroy(data)
-		case 'changeSkelSkin':
-			changeSkelSkin(data)
-
-	}
-}
-
 function update(animationManager, data) {
 	animationManager.updateSpineAll(data)
 }
+
+function getBound(data) {
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+
+	let name = data.name
+	let version = data.version
+	let eventId = data.eventId
+	let type = data.type
+	let dynamic = am.getAnimation(version)
+
+	// let apnode = am.getNodeBySkinId(data.skinId)
+	// if (!apnode) return
+
+	if (dynamic.hasSpine(name)) {
+		let bounds = dynamic.getSpineBounds(name)
+		postMessage({
+			eventId: eventId,
+			bounds: bounds
+		})
+	} else {
+		dynamic.loadSpine(name, type || 'skel', () => {
+			let bounds = dynamic.getSpineBounds(name)
+			postMessage({
+				eventId: eventId,
+				bounds: bounds
+			})
+		}, () => {
+			postMessage({
+				error: true,
+				errMsg: 'error'
+			})
+		})
+	}
+
+}
+function changeQhlxFactor(data) {
+	if (data.factor) {
+		qhlxFactor = data.factor
+	}
+}
+
 
 // 获取需要隐藏的apnode
 function getHideDynamic(d, hideSkinId) {
@@ -1584,4 +1611,82 @@ function getActionDuration(dynamic, skelName, actionName) {
 		duration = spineActions[0].duration
 	}
 	return duration
+}
+
+
+/*************** 每个函数处理worker消息 end ***************/
+
+onmessage = function (e) {
+	let data = e.data
+	switch (data.message) {
+		case 'CREATE':
+			create(data)
+			break;
+		case 'PLAY':
+			play(data)
+			break;
+		case 'StartPlay':  // 真正开始播放背景和待机骨骼
+			startPlaySkin(data)
+			break
+		case 'STOP':
+			stop(data)
+			break;
+
+		case 'STOPALL':
+			stopAll(data)
+			break;
+
+		case 'UPDATE':
+			msgUpdate(data)
+			break;
+
+		case "ACTION":
+			action(data)
+			break;
+
+		case "HIDE":
+			hide1(data)
+			break;
+
+		case "HIDE2":
+			hide2(data)
+			break;
+
+		case "FIND":
+			find(data)
+			break;
+		case "SHOW":
+			show(data)
+			break;
+
+		case "ADJUST":
+			adjust(data)
+			break
+
+		case "DEBUG":
+			debug(data)
+			break
+		case "POSITION":
+			position(data)
+			break
+		case "hideAllNode":
+			hideAllNode(data)
+			break
+		case 'recoverDaiJi':
+			recoverDaiJi(data)
+			break
+		case 'DESTROY':
+			destroy(data)
+			break
+		case 'changeSkelSkin':
+			changeSkelSkin(data)
+			break
+		case 'getBound':
+			getBound(data)
+			break
+		case 'changeQhlxFactor':
+			changeQhlxFactor(data)
+			break
+
+	}
 }

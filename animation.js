@@ -1165,6 +1165,8 @@ var newDuilib;
 						id: this.id,  // 当前对象id
 						canvas: canvas,
 						pathPrefix: pathPrefix,
+						dpr: Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1),
+						modifyQhlxPreview: skinSwitch.lib.config[skinSwitch.configKey.modifyQhlxPreview]
 					}, [canvas]);
 					
 					workers[i].capacity++;
