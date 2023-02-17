@@ -1433,6 +1433,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                     }
                 },
+                genDyTempFile: function () {
+                    if (window.pfqhUtils) {
+                        if (decadeUI.dynamicSkin) {
+                            pfqhUtils.generateDynamicFile(lib,decadeUI.dynamicSkin)
+                        }
+                    }
+                },
                 addProgress: function (obj, value, total) {
                     var progress = Math.floor(value / total * 100);
                     obj.style.backgroundSize = progress + "% 100%";
@@ -3789,7 +3796,39 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
                     init()
 
+                },
+
+                // 管理滑动事件 status: true  -> 开启
+                allowTouchEvent: function (status) {
+                    let thunderForbidTouch = function () {
+                        _status.th_swipe_up = lib.config.swipe_up;
+                        lib.config.swipe_up = ''
+                        _status.th_swipe_down = lib.config.swipe_down;
+                        lib.config.swipe_down = ''
+                        _status.th_swipe_left = lib.config.swipe_left;
+                        lib.config.swipe_left = ''
+                        _status.th_swipe_right = lib.config.swipe_right;
+                        lib.config.swipe_right = ''
+                        _status.th_gamePause = ui.click.pause
+                        ui.click.pause = ()=>{}
+                    }
+
+                    let thunderAllowTouch = function () {
+                        if (_status.th_swipe_up) {
+                            lib.config.swipe_up =  _status.th_swipe_up
+                            lib.config.swipe_down = _status.th_swipe_down
+                            lib.config.swipe_left = _status.th_swipe_left
+                            lib.config.swipe_right = _status.th_swipe_right
+                            ui.click.pause = _status.th_gamePause
+                        }
+                    }
+                    if (status) {
+                        thunderAllowTouch()
+                    } else {
+                        thunderForbidTouch()
+                    }
                 }
+
             };
 
             skinSwitch.dynamic.selectSkin.cd = true;
@@ -3828,8 +3867,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 })
             })
-
-            lib.init.js(skinSwitch.url, 'pfqhUtils', function () {})
 
             lib.init.js(skinSwitch.url, 'effects', function () {
                 for (let k in pfqhSkillEffect) {
@@ -3915,6 +3952,27 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 let adjustbeijing = daijiAdjust.querySelector('#adjustbeijing')
 
                 let arena = document.getElementById('arena')
+
+                // 编辑栏加入拖拽
+                let at = new AnyTouch(editBox)
+                at.on('pan', (e) => {
+                    if (e.nativeEvent.touches && e.nativeEvent.touches.length > 1) return
+                    // e包含位移/速度/方向等信息
+                    // 获取x,y偏移
+                    let deltaX = e.deltaX
+                    let deltaY = e.deltaY
+
+                    let _lastX = editBox._lastX || 0
+                    let _lastY = editBox._lastY || 0
+
+                    _lastX += deltaX
+                    _lastY += deltaY
+                    editBox.style.transform = `translate(${_lastX}px,${_lastY}px)`
+                    editBox._lastX = _lastX
+                    editBox._lastY = _lastY
+
+                });
+
                 // 控制位置的方向键
                 let adjustDirection = ui.create.div('.adjustDirection .hidden-adjust', arena)
                 adjustDirection.classList.add('adjustDirection')
@@ -3932,45 +3990,81 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <button id="rightbtn"><i class="right"></i></button>
                     </div>
                 `
-
                 let adjustXYRate = function (direction) {
-                    return  function () {
+                    let timeEnd, time
+                    let downFunc =  function () {
                         // 改变骨骼的位置
-                        let dat = currentPlay === 'daiji' || currentPlay === 'beijing' ? daijiXYPos : chukuangXYPos
-                        let step = 0.01  // step暂时写死
-                        switch (direction) {
-                            case 'up':
-                                dat.y[1] += step
-                                dat.y[1] = Number(dat.y[1].toFixed(2))
-                                break
-                            case 'left':
-                                dat.x[1] -= step
-                                dat.x[1] = Number(dat.x[1].toFixed(2))
-                                break
-                            case 'bottom':
-                                dat.y[1] -= step
-                                dat.y[1] = Number(dat.y[1].toFixed(2))
-                                break
-                            case 'right':
-                                dat.x[1] += step
-                                dat.x[1] = Number(dat.x[1].toFixed(2))
-                                break
-                        }
-                        skinSwitch.postMsgApi.adjust(player, currentPlay, {x: dat.x, y: dat.y})
+                        //获取鼠标按下时的时间
+                        time = setInterval(function () {
+                            timeEnd = getTimeNow();
+                            //如果此时检测到的时间与第一次获取的时间差有1000毫秒
+                            let dat = currentPlay === 'daiji' || currentPlay === 'beijing' ? daijiXYPos : chukuangXYPos
+                            let step = 0.01  // step暂时写死
+                            switch (direction) {
+                                case 'up':
+                                    dat.y[1] += step
+                                    dat.y[1] = Number(dat.y[1].toFixed(2))
+                                    break
+                                case 'left':
+                                    dat.x[1] -= step
+                                    dat.x[1] = Number(dat.x[1].toFixed(2))
+                                    break
+                                case 'bottom':
+                                    dat.y[1] -= step
+                                    dat.y[1] = Number(dat.y[1].toFixed(2))
+                                    break
+                                case 'right':
+                                    dat.x[1] += step
+                                    dat.x[1] = Number(dat.x[1].toFixed(2))
+                                    break
+                            }
+                            skinSwitch.postMsgApi.adjust(player, currentPlay, {x: dat.x, y: dat.y})
 
-                        // 改变文本值
-                        if (currentPlay === 'daiji' || currentPlay === 'beijing') {
-                            daijiPos.querySelector('span').innerHTML = `x:${dat.x}<br/>y:${dat.y}`
-                        } else {
-                            chuKuangPos.querySelector('span').innerHTML = `x:${dat.x}<br/>y:${dat.y}`
-                        }
+                            // 改变文本值
+                            if (currentPlay === 'daiji' || currentPlay === 'beijing') {
+                                daijiPos.querySelector('span').innerHTML = `x:${dat.x}<br/>y:${dat.y}`
+                            } else {
+                                chuKuangPos.querySelector('span').innerHTML = `x:${dat.x}<br/>y:${dat.y}`
+                            }
+                        }, 50)
+
+
                     }
+                    let holdUp = function () {
+                        //如果按下时间不到1000毫秒便弹起，
+                        clearInterval(time);
+                    }
+                    //获取此刻时间
+                    let getTimeNow = function () {
+                        return new Date().getTime()
+                    }
+                    downFunc.holdUp = holdUp
+
+                    return downFunc
+
                 }
 
-                adjustDirection.querySelector('#upbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('up'))
-                adjustDirection.querySelector('#leftbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('left'))
-                adjustDirection.querySelector('#bottombtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click',  adjustXYRate('bottom'))
-                adjustDirection.querySelector('#rightbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('right'))
+                let uf = adjustXYRate('up')
+                let lf = adjustXYRate('left')
+                let bf = adjustXYRate('bottom')
+                let rf = adjustXYRate('right')
+
+                let downEvent =  lib.config.touchscreen ? 'touchstart' : 'mousedown'
+                let upEvent =  lib.config.touchscreen ? 'touchend' : 'mouseup'
+
+                adjustDirection.querySelector('#upbtn').addEventListener(downEvent, uf)
+                adjustDirection.querySelector('#upbtn').addEventListener(upEvent, uf.holdUp)
+                adjustDirection.querySelector('#leftbtn').addEventListener(downEvent, lf)
+                adjustDirection.querySelector('#leftbtn').addEventListener(upEvent, lf.holdUp)
+                adjustDirection.querySelector('#bottombtn').addEventListener(downEvent, bf)
+                adjustDirection.querySelector('#bottombtn').addEventListener(upEvent, bf.holdUp)
+                adjustDirection.querySelector('#rightbtn').addEventListener(downEvent, rf)
+                adjustDirection.querySelector('#rightbtn').addEventListener(upEvent, rf.holdUp)
+
+                // adjustDirection.querySelector('#upbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('up'))
+                // adjustDirection.querySelector('#leftbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('left'))
+                // adjustDirection.querySelector('#bottombtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click',  adjustXYRate('bottom'))
+                // adjustDirection.querySelector('#rightbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('right'))
 
 
                 let updateAdjustPos = function (pos, mode) {
@@ -4720,8 +4814,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             function toggleShow(dom) {
                 if (dom.classList.contains('hidden-adjust')) {
                     dom.classList.remove('hidden-adjust')
+                    skinSwitch.allowTouchEvent(false)
                 } else {
                     dom.classList.add('hidden-adjust')
+                    skinSwitch.allowTouchEvent(true)
                 }
             }
 
@@ -4795,6 +4891,29 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 js(skinSwitch.url + 'component/message.js', () => {
                     window.skinSwitchMessage = new SkinSwitchMessage()
                 })
+                lib.init.js(skinSwitch.url + 'component/live2d', 'live2dcubismcore.min', () => {
+                    lib.init.js(skinSwitch.url + 'component/live2d', 'pixi.min', () => {
+                        lib.init.js(skinSwitch.url + 'component/live2d', 'Live2dLoader', () => {
+                            console.log('Live2dLoader====>', Live2dLoader)
+                            new CustomLive2dLoader([
+                                {
+                                    width: 300,
+                                    height: 300,
+                                    left: "0px",
+                                    bottom: "0px",
+                                    // role: "../live2d_assets/aisaikesi_4/aisaikesi_4.model3.json",
+                                    role: lib.assetURL + 'extension/皮肤切换/live2d_assets/pinghai_6/pinghai_6.model3.json',
+                                    //background:"https://cdn.jsdelivr.net/gh/alg-wiki/AzurLaneL2DViewer@gh-pages/assets/bg/bg_church_jp.png",
+                                    opacity: 1,
+                                    // mobile: false,
+                                    mobile: true,
+                                    draggable: true,
+                                    pierceThrough: true,
+                                },
+                            ]);
+                        })
+                    })
+                })
 
 
                 // 在看千幻聆音代码的时候发现切换皮肤后会执行一个回调函数, 这个可以比较好的解决动静皮互相切换的问题, 只有非千幻聆音雷修版本才会触发这个回调函数
@@ -4805,6 +4924,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 }
 
                 skinSwitch.lib = lib
+
+                lib.init.js(skinSwitch.url, 'pfqhUtils', function () {})
+
             })
         },
         config:{
@@ -4888,6 +5010,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             'genDynamicSkin': {
                 name: "<div><button onclick='skinSwitch.genDynamicSkin()'>转换D动态参数(生成的新文件在扩展文件夹下)</button></div>",
                 clear: true
+            }, // generateDynamicFile
+            'genDyTempFile': {
+                name: "<div><button onclick='skinSwitch.genDyTempFile()'>自动生成动皮模板参数</button></div>",
+                clear: true,
+                info: '动皮文件夹结构是 --> 武将中文名(武将id也行)/皮肤名称/骨骼  <--- 形式的话, 可以自动根据当前已填写的参数动态生成动皮模板'
             },
             'modifyQhlxPreview': {
                 name: "调整千幻大屏预览待机大小",

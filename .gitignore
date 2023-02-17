@@ -13,8 +13,9 @@ ehthumbs.db
 Thumbs.db
 localStorage.json
 node_modules
-saveSkinParams.js
 转换后_dynamicSkin.js
+十周年ui动皮自动生成参数.js
+live2d_assets
 
 .idea
 .vscode

@@ -298,6 +298,17 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 -0.45
             ],
             "angle": 0
+        },
+        "测试": {
+            "scale": 0.12,
+            "x": [
+                0,
+                0.52
+            ],
+            "y": [
+                0,
+                -0.46
+            ]
         }
     },
     "qinghegongzhu": {
@@ -340,6 +351,21 @@ window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.sa
                 0,
                 0.43
             ]
+        }
+    },
+    "diaochan": {
+        "玉婵仙子": {
+            "beijing": {
+                "scale": 0.3,
+                "x": [
+                    0,
+                    0.16
+                ],
+                "y": [
+                    0,
+                    0.4
+                ]
+            }
         }
     }
 }

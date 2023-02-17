@@ -2,6 +2,457 @@
 
 window.pfqhUtils = {
 
+    // 参数: path: 初始路径, filter: 函数, 过滤需要筛选的文件格式, callback, 触发的回调, 回调传参是下面锁返回的数据
+    // 获取十周年UI下的所有骨骼文件, 并且自动转换为参数, 递归的获取文件夹下的所有文件及其目录文件, 返回格式如下所示
+    // 返回 {
+    //       path: path,  // 当前路径
+    //       children: [
+    //          {
+    //              path: path,
+    //              folds: folds,
+    //              files: files,
+    //              children: []
+    //          },
+    //       ],
+    //       folds: [],  // 当前文件夹名字
+    //       files: [],  // 当前文件夹下的文件
+    //    }
+    getAllFiles: (path, filter, callback) => {
+        let tasks = []  // 任务队列
+        let taskCount = 0
+        let res = {}
+
+        let getFiles = (path, parent) => {
+            game.getFileList(path, function (folds, files) {
+                parent.path = path
+                parent.folds = folds
+                parent.files = []
+                parent.children = []
+                files.forEach(file => {
+                    if (filter && filter(file, path)) {
+                        parent.files.push(file)
+                    } else {
+                        parent.files.push(file)
+                    }
+                })
+                folds.forEach(fold => {
+                    taskCount++
+                    let t = (r) => {
+                        getFiles(path + '/' + fold, r)
+                    }
+                    t.res = {}
+                    parent.children.push(t.res)
+                    tasks.push(t)
+                })
+
+                taskCount--
+            })
+        }
+        let t = (dict) => {
+            getFiles(path, dict)
+        }
+        t.res = res
+        tasks.push(t)
+
+        taskCount++
+        // 等待队列中的所有任务执行完成
+        let finishTasks = () => {
+            if (taskCount === 0) {
+                console.log('getAllFileFinish!!!', res)
+                callback(res)
+            }
+            else {
+                if (tasks.length > 0) {
+                    let task = tasks.shift()
+                    task(task.res)
+                }
+                requestAnimationFrame(finishTasks)
+            }
+        }
+        requestAnimationFrame(finishTasks)
+    },
+
+    // data是文件读取后的Buffer对象. 获取spine文件的版本号
+    getSpineFileVersion: function(path, callback, fail) {
+        // game.readFile(skinSwitch.dcdUrl + '/assets/dynamic/fullskin_caoying_JinGuoHuaWu.skel', function (data) {
+        game.readFile(path, function (data) {
+            // 匹配spine的版本号
+            let versionReg = /\d\.\d+\.\d+/
+            // 读取文件开头大概100个字节即可
+            let m = data.slice(0, 100).toString().match(versionReg)
+            let version = null
+            if (m) {
+                let v = m[0]
+                if (v.startsWith('3.6')) {
+                    version =  '3.6'
+                } else if (v.startsWith('3.7')) {
+                    version =  '3.7'
+                } else if (v.startsWith('3.8')) {
+                    version =  '3.8'
+                } else if (v.startsWith('4.0')) {
+                    version =  '4.0'
+                } else if (v.startsWith('4.1')) {
+                    version =  '4.1'
+                }
+            }
+            callback(version)
+        }, function (err) {
+            console.log('读取文件失败', err)
+            if (fail) {
+                fail(err)
+            }
+        })
+
+
+    },
+
+    // 直接根据十周年文件夹下所有的骨骼, 生成一份默认参数模板, 减小填写工作量, 会直接生成参数和json信息, 预乘参数需要自行添加.
+    // 但是要求骨骼文件存放位置是  武将名(武将id也行)/皮肤名称/文件位置
+    // 生成参数规则, 根据文件夹内的骨骼数量, 如果有标准的十周年文件命名规则, 那么会当作十周年骨骼进行处理
+    // 如果只有一个骨骼, 那么按照手杀骨骼进行处理
+    // 如果有包含beijing名称的骨骼, 那么一律把之当作背景, 放在背景参数
+    // 会自动识别骨骼文件的版本和json
+    // 文件后缀为bg结尾的png或者jpg, 会当作动皮的背景
+    generateDynamicFile: function(lib, dskins) {
+        let path = skinSwitch.dcdUrl + '/assets/dynamic'
+        pfqhUtils.getAllFiles(path, function (file, path) {
+            let suffixes = ['.png', '.atlas', '.json', '.skel', '.jpg' ]
+            for (let suf of suffixes) {
+                if (file.endsWith(suf)) {
+                    return true
+                }
+            }
+            return false
+        }, function (res) {
+            // 只获取3层文件夹的, 不再考虑最里层的了
+            let skinInfoMap = {}
+            let imgBgMap = {}  // 存储以_bg结尾的图片, 可能是骨骼的静态背景文件
+            let wujiangSkinMap = {}
+            for (let i = 0; i < res.folds.length; i++) {
+                let wujiang = res.folds[i]
+                let wujiangSkins = res.children[i]
+                for (let j = 0; j < wujiangSkins.folds.length; j++) {
+                    let skinName = wujiangSkins.folds[j]
+                    let skels = wujiangSkins.children[j]
+                    // 遍历出所有可能的骨骼, 必须包含3个文件, png, atlas, skel或者json
+                    for (let f of skels.files){
+                        let name = f.substring(0, f.lastIndexOf("."))
+                        // 解析每一个文件
+                        name = `${wujiang}/${skinName}/${name}`
+                        let ext = f.substring(f.lastIndexOf(".")+1)
+                        if (!(name in skinInfoMap)) {
+                            if (name.endsWith('_bg')) {
+                                skinInfoMap[name.slice(0, name.length - 3)] = {}
+                            } else {
+                                skinInfoMap[name] = {}
+                            }
+                        }
+                        if (ext === 'png') {
+                            if (name.endsWith('_bg')) {
+                                // imgBgMap[name.slice(0, name.length - 3)] = f
+                                imgBgMap[`${wujiang}/${skinName}`] = f
+                            } else {
+                                skinInfoMap[name].png = true
+                            }
+                        } else if (ext === 'skel') {
+                            skinInfoMap[name].type = 'skel';
+                        } else if (ext === 'json') {
+                            skinInfoMap[name].type = 'json';
+                        } else if (ext === 'atlas') {
+                            skinInfoMap[name].altas = true
+                        }
+                    }
+
+                }
+            }
+            let cnCharPattern = new RegExp("[\u4E00-\u9FA5]+")
+
+            let cnName2IdMap = {}
+            // 创建所有中文武将名 -> 英文的映射, 重复只取第一个.
+            for (let wjId in lib.character) {
+                let cnName = lib.translate[wjId]
+                if (cnName) {
+                    if (!(cnName in cnName2IdMap)) {
+                        cnName2IdMap[cnName]= [wjId]
+                    } else {
+                        cnName2IdMap[cnName].push(wjId)
+                    }
+                }
+            }
+            let checkVersionCount = 0
+            let to_check_version = []
+
+            for(let key in skinInfoMap) {
+                let info = skinInfoMap[key]
+                // 如果十周年文件里面已经有了对应武将和对应皮肤的话, 跳过.
+                if (!(info.type && info.altas && info.png)) {
+                    continue
+                }
+                let infoSlice = key.split('/')
+                let wj = infoSlice[0], sk = infoSlice[1], tag = infoSlice[2]
+                tag = tag.toLowerCase()  // 小写, 方便处理
+
+                let bgKey = `${wj}/${sk}`
+
+                // 获取的武将的名称在无名杀的id, 如果本来就是id了, 那么不做变化.
+                if (wj.match(cnCharPattern)) {
+                    // 获取武将的英文
+                    if (wj in cnName2IdMap) {
+                        wj = cnName2IdMap[wj][0]
+                    } else {
+                        continue
+                    }
+                }
+
+                if (wj in dskins && sk in dskins[wj]) {
+                    continue
+                }
+
+                if (wj in lib.character) {
+                    // 填写信息
+                    if (!(wj in wujiangSkinMap)) {
+                        wujiangSkinMap[wj] = {}
+                    }
+                    if (!(sk in wujiangSkinMap[wj])) {
+                        wujiangSkinMap[wj][sk] = {
+                            bg: imgBgMap[bgKey] ? `${bgKey}/${imgBgMap[bgKey]}`: null,
+                        }
+                    }
+                    wujiangSkinMap[wj][sk][tag] = {
+                        type: info.type,
+                        name: key,
+                        version: '',
+                    };
+                    to_check_version.push({
+                        'info': wujiangSkinMap[wj][sk][tag],
+                        'path': skinSwitch.dcdUrl + '/assets/dynamic/' + key + '.' + info.type
+                    });
+                    checkVersionCount++;
+                }
+            }
+
+            let checkVerFunc = () => {
+                if (checkVersionCount > 0) {
+                    if (to_check_version.length > 0) {
+                        let cv = to_check_version.shift();
+                        pfqhUtils.getSpineFileVersion(cv.path, (v) => {
+                            cv.info.version = v
+                            checkVersionCount--
+                        }, () => {
+                            checkVersionCount--
+                        })
+                    }
+                    requestAnimationFrame(checkVerFunc)
+                } else {
+                    console.log('wujiangSkinMap:  ', wujiangSkinMap)
+                    // 填写文件.
+                    let _writeToFile = () => {
+                        let daijiTags = ['daiji2', 'xingxiang', 'daiji']
+                        let chuchangTags = ['chuchang']
+                        let beijingTags = ['beijing']
+                        let gongjiTags = ['chuchang2', 'jineng02']
+                        let teshuTags = ['jineng02', 'chuchang2']
+                        let zhishixianTags = ['shouji2']
+                        let zhishixianBaoTags = ['shouji']
+
+                        let stringBuffer = []
+                        let defaultXY = {
+                            x: [0, 0.5],
+                            y: [0, 0.5],
+                        }
+                        let defaultBeiJing = {
+                            x: [0, 0.98],
+                            y: [0, 0.47]
+                        }
+                        let defaultScale = 0.35
+                        stringBuffer.push(`'use strict';\ndecadeModule.import(function(lib, game, ui, get, ai, _status){\n`)
+                        stringBuffer.push('\tdecadeUI.dynamicSkin = {\n')
+
+                        let daijiParams, gongjiParams, zhishixianParams, teshuParams, beijingParams, chuchangParams, zhishixianBaoParams
+
+                        let checkoutTagIn = (info, tags) => {
+                            for (let t of tags) {
+                                if (t in info) {
+                                    return t
+                                }
+                            }
+                            return false
+                        }
+                        let getParams = (skelInfo, tags) => {
+                            let tag = checkoutTagIn(skelInfo, tags)
+                            if (tag){
+                                let params = {
+                                    name: skelInfo[tag].name,
+                                    scale: defaultScale,
+                                }
+                                params.version = skelInfo[tag].version
+                                if (skelInfo[tag].type === 'json') {
+                                    params.json = true;
+                                }
+                                return params
+                            }
+                        }
+                        for (let wj in wujiangSkinMap) {
+                            stringBuffer.push(`\t\t${wj}: {\n`)
+                            for (let sk in wujiangSkinMap[wj]) {
+                                // 如果以数字开头
+                                if (sk.match(/^[0-9]/)) {
+                                    stringBuffer.push(`\t\t\t_${sk}: {\n`);
+                                } else {
+                                    stringBuffer.push(`\t\t\t${sk}: {\n`);
+                                }
+                                let skelInfo = wujiangSkinMap[wj][sk]
+
+                                let hasOtherVersion = false  // 标记是否含有其他版本的骨骼
+
+                                // 判断每一个是否存在于其中.
+                                gongjiParams = getParams(skelInfo, gongjiTags)
+                                chuchangParams = getParams(skelInfo, chuchangTags)
+                                if (chuchangParams) {
+                                    chuchangParams.scale = 0.7
+                                }
+                                teshuParams = getParams(skelInfo, teshuTags)
+                                zhishixianParams = getParams(skelInfo, zhishixianTags)
+                                if (zhishixianParams) {
+                                    zhishixianParams.delay = 0.3
+                                    zhishixianParams.scale = 0.7
+                                    zhishixianParams.speed = 0.8
+                                }
+                                zhishixianBaoParams = getParams(skelInfo, zhishixianBaoTags)
+                                if (zhishixianBaoParams) {
+                                    zhishixianBaoParams.delay = 0.3
+                                    zhishixianBaoParams.scale = 0.7
+                                    zhishixianBaoParams.speed = 0.8
+                                }
+                                beijingParams = getParams(skelInfo, beijingTags)
+                                if (beijingParams) {
+                                    beijingParams.x = defaultBeiJing.x
+                                    beijingParams.y = defaultBeiJing.y
+                                }
+                                daijiParams = getParams(skelInfo, daijiTags)
+                                if (daijiParams) {
+                                    daijiParams.x = defaultXY.x
+                                    daijiParams.y = defaultXY.y
+                                } else {
+                                    // 默认获取第一个非背景骨骼
+                                    for (let k in skelInfo) {
+                                        if (k === 'bg' || beijingTags.includes(k)) {
+                                            continue
+                                        }
+                                        daijiParams = {
+                                            x: defaultXY.x,
+                                            y: defaultXY.y,
+                                            name: skelInfo[k].name,
+                                            scale: defaultScale,
+                                            version: skelInfo[k].version
+                                        }
+                                        if (skelInfo[k].type === 'json') {
+                                            daijiParams.json = true
+                                        }
+                                        break
+                                    }
+                                }
+                                if (!daijiParams) {
+                                    daijiParams = {}
+                                }
+                                if (chuchangParams) {
+                                    daijiParams.shizhounian = true
+                                }
+
+                                for (let p of [daijiParams, gongjiParams, zhishixianParams, teshuParams, beijingParams, chuchangParams, zhishixianBaoParams]) {
+                                    if (p && (p.version !== '3.6')) {
+                                        hasOtherVersion = true
+                                    }
+                                }
+                                if (!hasOtherVersion) {
+                                    for (let p of [daijiParams, gongjiParams, zhishixianParams, teshuParams, beijingParams, chuchangParams, zhishixianBaoParams]) {
+                                        if (p) {
+                                            delete p.version
+                                        }
+                                    }
+                                }
+                                if (skelInfo.bg != null) {
+                                    daijiParams.background = skelInfo.bg
+                                }
+
+                                // 开始填写皮肤切换参数.
+                                for (let k in daijiParams) {
+                                    stringBuffer.push(`\t\t\t\t${k}: ${JSON.stringify(daijiParams[k])},\n`);
+                                }
+
+                                if (beijingParams) {
+                                    stringBuffer.push(`\t\t\t\tbeijing: {\n`)
+                                    for (let k in beijingParams) {
+                                        stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(beijingParams[k])},\n`)
+                                    }
+                                    stringBuffer.push(`\t\t\t\t},\n`)
+                                }
+
+                                if (chuchangParams) {
+                                    stringBuffer.push(`\t\t\t\tchuchang: {\n`)
+                                    for (let k in chuchangParams) {
+                                        stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(chuchangParams[k])},\n`)
+                                    }
+                                    stringBuffer.push(`\t\t\t\t},\n`)
+                                }
+
+                                if (gongjiParams) {
+                                    stringBuffer.push(`\t\t\t\tgongji: {\n`)
+                                    for (let k in gongjiParams) {
+                                        stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(gongjiParams[k])},\n`)
+                                    }
+                                    stringBuffer.push(`\t\t\t\t},\n`)
+                                }
+
+                                if (teshuParams) {
+                                    stringBuffer.push(`\t\t\t\tteshu: {\n`)
+                                    for (let k in teshuParams) {
+                                        stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(teshuParams[k])},\n`)
+                                    }
+                                    stringBuffer.push(`\t\t\t\t},\n`)
+                                }
+                                if (zhishixianParams) {
+                                    stringBuffer.push(`\t\t\t\tzhishixian: {\n`)
+                                    for (let k in zhishixianParams) {
+                                        stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(zhishixianParams[k])},\n`)
+                                    }
+                                    if (zhishixianBaoParams) {
+                                        stringBuffer.push(`\t\t\t\t\teffect: {\n`)
+                                        for (let k in zhishixianBaoParams) {
+                                            stringBuffer.push(`\t\t\t\t\t\t${k}: ${JSON.stringify(zhishixianBaoParams[k])},\n`)
+                                        }
+                                        stringBuffer.push(`\t\t\t\t\t},\n`)
+                                    }
+                                    stringBuffer.push(`\t\t\t\t},\n`);
+                                }
+                                stringBuffer.push(`\t\t\t},\n`)
+                            }
+                            stringBuffer.push(`\t\t},\n`)
+                        }
+                        stringBuffer.push('\t}\n\n')
+                        stringBuffer.push('})\n')
+
+                        let str = stringBuffer.join('')
+                        // 写入文件中
+                        game.writeFile(str, skinSwitch.path, '十周年ui动皮自动生成参数.js', function () {
+                            console.log('十周年ui动皮自动生成参数js成功')
+                            skinSwitchMessage.show({
+                                type: 'success',
+                                text: '生成成功',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        })
+                    }
+                    _writeToFile()
+
+                }
+            }
+            requestAnimationFrame(checkVerFunc)
+        })
+    },
+
+
     // 将D的动皮参数转换为皮肤切换的动皮参数, 写入到扩展目录文件夹
     transformDdyskins: (dskins) => {
         if (!dskins) return
@@ -138,15 +589,25 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 
                 // 开始填写皮肤切换参数.
                 for (let k in daijiParams) {
-                    stringBuffer.push(`\t\t\t\t${k}: ${JSON.stringify(daijiParams[k])},\n`)
+                    if ('beijing' !== k) {
+                        stringBuffer.push(`\t\t\t\t${k}: ${JSON.stringify(daijiParams[k])},\n`)
+                    }
+                }
+
+                if ('beijing' in daijiParams) {
+                    stringBuffer.push(`\t\t\t\tbeijing: {\n`)
+                    for (let k in daijiParams.beijing) {
+                        stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(daijiParams.beijing[k])},\n`)
+                    }
+                    stringBuffer.push(`\t\t\t\t},\n`)
                 }
 
                 if (chuchangParams) {
-                    stringBuffer.push(`\t\t\t\tchuchang: {\n`)
+                    stringBuffer.push(`\t\t\t\tchuchang: {\n`);
                     for (let k in chuchangParams) {
                         stringBuffer.push(`\t\t\t\t\t${k}: ${JSON.stringify(chuchangParams[k])},\n`)
                     }
-                    stringBuffer.push(`\t\t\t\t},\n`)
+                    stringBuffer.push(`\t\t\t\t},\n`);
                 }
 
                 if (gongjiParams) {

@@ -1,9 +1,10 @@
 .editDynamic {
-    height: 40%;
+    height: 46%;
     width: 22%;
     position: absolute;
     top: 7%;
     right: 2%;
+    transform: translate(0px, 0px);
     z-index: 100;
     display: flex;
     flex-direction: row;
