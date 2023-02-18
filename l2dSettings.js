@@ -2,8 +2,8 @@ window.pfqhLive2dSettings = {
 
     // 默认的配置,每个模型可以覆盖配置
     baseSetting:{
-        width: 300,
-        height: 300,
+        width: 0.2,
+        height: 0.4,
         left: "120px",
         bottom: "180px",
         basePath: 'extension/皮肤切换/live2d_assets/',  // 存放基础的路径

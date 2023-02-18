@@ -1195,6 +1195,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         base[k] = pfqhLive2dSettings.models[curVal][k]
                                     }
                                     base.role = lib.assetURL + base.basePath + base.role
+                                    base.height = base.height * decadeUI.get.bodySize().height
+                                    base.width = base.width * decadeUI.get.bodySize().width
                                     skinSwitch.l2dLoader = new CustomLive2dLoader([
                                         base
                                     ]);
@@ -3325,7 +3327,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     let initFoldsInfo = () => {
                         // 获取这个文件夹下的所有合法的skel文件和所有文件夹
-                        pfqhUtils.getFoldsFiles(currentPath, function (file, path) {
+                        pfqhUtils.getFoldsFiles(currentPath.replace(lib.assetURL, ''), function (file, path) {
                             let suffixes = ['.png', '.atlas', '.json', '.skel', '.jpg' ]
                                 for (let suf of suffixes) {
                                     if (file.endsWith(suf)) {
@@ -5053,6 +5055,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         base[k] = pfqhLive2dSettings.models[value][k]
                     }
                     base.role = lib.assetURL + base.basePath + base.role
+                    base.height = base.height * decadeUI.get.bodySize().height
+                    base.width = base.width * decadeUI.get.bodySize().width
                     game.saveConfig(skinSwitch.configKey.l2dSetting, value)
                     if (skinSwitch.l2dLoader) {
                         skinSwitch.l2dLoader.changeModel(base)
