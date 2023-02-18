@@ -72,6 +72,22 @@ window.pfqhUtils = {
         requestAnimationFrame(finishTasks)
     },
 
+    // 只获取一层文件
+    getFoldsFiles: (path, filter, callback) => {
+        game.getFileList(path, function (folds, files) {
+            let retFiles = files
+            if (filter) {
+                retFiles = []
+                files.forEach(file => {
+                    if (filter && filter(file, path)) {
+                        retFiles.push(file)
+                    }
+                })
+            }
+            callback(folds, retFiles)
+        })
+    },
+
     // data是文件读取后的Buffer对象. 获取spine文件的版本号
     getSpineFileVersion: function(path, callback, fail) {
         // game.readFile(skinSwitch.dcdUrl + '/assets/dynamic/fullskin_caoying_JinGuoHuaWu.skel', function (data) {

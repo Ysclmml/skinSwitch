@@ -2401,5 +2401,6 @@ class DecadeAnimationProxy {
 if (self.window) {
     window.DecadeAnimationOffscreenProxy = DecadeAnimationOffscreenProxy
     window.DecadeAnimationProxy = DecadeAnimationProxy
+    window.AnimationManager = AnimationManager
 }
 

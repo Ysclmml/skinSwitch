@@ -68,7 +68,11 @@ function preLoadChuKuangSkel(dynamic, apnode) {
 function playSkin(am, data) {
 
 	let sprite = (typeof data.sprite == 'string') ? {name: data.sprite} : data.sprite;
-	
+	let player;
+
+	if (!sprite.player) {
+		sprite.player = sprite
+	}
 	// 获取正确的ani
 	let dynamic = am.getAnimation(sprite.player.version)
 	let beijingDynamic
@@ -79,10 +83,7 @@ function playSkin(am, data) {
 
 	sprite.loop = true;
 
-	let player;
-	if (!sprite.player) {
-		sprite.player = sprite
-	}
+
 
 	player = sprite.player;
 	sprite.alpha = player.alpha;
@@ -1252,7 +1253,6 @@ function getBound(data) {
 			})
 		})
 	}
-
 }
 function changeQhlxFactor(data) {
 	if (data.factor) {

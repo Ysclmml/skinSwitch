@@ -2888,7 +2888,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     previewWindow.innerHTML = `
                     <style>
                         #preview-canvas { position: absolute; width: 100% ;height: 100%; }
-                        .previewWindow span {display: inline-block; margin-left: 20px}
+                        #previewSpineDom span {display: inline-block; margin-left: 20px}
                         input[type='range'] {
                         -webkit-appearance: none;
                         width: 180px;
@@ -2933,7 +2933,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         background: #d6a63c;
                       }
                       
-                      #previewSpineDom span, #previewSpineDom select{
+                       #previewSpineDom select{
                         margin-bottom: 8px;
                       }
                       
@@ -2961,20 +2961,210 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         white-space: nowrap;
                         background-color: #18a058;  
                       }
-                      
-                      
+                    
+                    .wp-s-core-pan__body-detail, .wp-s-core-pan__body-detail div {
+                        position: relative;
+                        width: 100%;
                         
+                    }
+                    
+                    /* 弹出的框的大小*/
+                    .wp-s-core-pan__body-detail {
+                        /*width: 296px;*/
+                        /*height: 400px;*/
+                        /*border-left: 1px solid #f0f0f0;*/
+                    }
+                    .wp-s-core-pan__detail-slot {
+                        width: 100%;
+                        height: 100%;
+                    }
+            
+                    /*.nd-detail{*/
+                    /*    display: inline-block;*/
+                    /*    position: relative;*/
+                    /*    padding: 24px;*/
+                    /*    font-size: 12px;*/
+                    /*    overflow: auto;*/
+                    /*}*/
+                    .nd-new-main-list__detail {
+                        height: 100%;
+                        width: 100%;
+                        padding-top: 0!important;
+                        padding-right: 0!important;
+                    }
+                    .nd-new-main-list__detail {
+                        min-height: 356px;
+                    }
+            
+                    .nd-new-main-list__detail .nd-detail-filelist__title, .nd-new-main-list__detail .nd-detail__title {
+                        height: 40px;
+                        line-height: 40px;
+                        padding-bottom: 0;
+                    }
+                    .nd-detail-filelist__title {
+                        /*margin-bottom: #f1f2f4;*/
+                        padding-bottom: 15px;
+                        font-weight: 600;
+                        /*color: #03081a;*/
+                        display: -webkit-box;
+                        display: -ms-flexbox;
+                        display: flex;
+                        -webkit-box-pack: justify;
+                        -ms-flex-pack: justify;
+                        justify-content: space-between;
+                        -webkit-box-align: center;
+                        -ms-flex-align: center;
+                        align-items: center;
+                    }
+            
+                    .nd-detail-filelist__name{
+                        padding: 12px 0;
+                        border-bottom: 1px solid #f1f2f4;
+                        font-size: 14px;
+                        /*color: #454d5a;*/
+                        font-weight: 600;
+                        word-break: break-all;
+                    }
+                    
+                    .nd-detail-filename:hover {
+                        background-color: #847a93;
+                        cursor: pointer;
+                    }
+            
+                    .nd-detail-filelist__put-away-btn {
+                        color: #818999;
+                        cursor: pointer;
+                        font-weight: 400;
+                    }
+            
+                    .nd-detail-filelist__put-away-btn .u-uicon{
+                        margin-right: 4px;
+                        position: relative;
+                        top: -1px;
+                    }
+            
+                    [class*=" u-icon-"], [class^=u-icon-] {
+                        font-family: union-design-icons!important;
+                        speak: none;
+                        font-style: normal;
+                        font-weight: 400;
+                        font-variant: normal;
+                        text-transform: none;
+                        line-height: 1;
+                        vertical-align: baseline;
+                        display: inline-block;
+                        -webkit-font-smoothing: antialiased;
+                        -moz-osx-font-smoothing: grayscale;
+                    }
+                    .nd-detail-filelist__name .u-file-icon--list {
+                        width: 32px;
+                        height: 32px;
+                        -o-object-fit: contain;
+                        object-fit: contain;
+                        margin-right: 8px;
+                    }
+                    .u-file-icon.u-file-icon--list {
+                        width: 40px;
+                        height: 40px;
+                    }
+                    .u-file-icon {
+                        display: inline-block;
+                        vertical-align: middle;
+                    }
+            
+                    .nd-detail-filelist__list {
+                        width: 100%;
+                        min-height: 400px;
+                        /*height: calc(100% - 140px);*/
+                        border-radius: 13px;
+                        position: relative;
+                        margin-top: 14px;
+                        padding: 0 12px;
+                        overflow-y: auto;
+                    }
+                    .u-file-icon.u-file-icon--list {
+                        width: 40px;
+                        height: 40px;
+                    }
+                    .nd-detail-filelist__list .u-file-icon--list {
+                        width: 24px;
+                        height: 24px;
+                    }
+            
+                    .u-file-icon {
+                        display: inline-block;
+                        vertical-align: middle;
+                    }
+            
+                    .nd-detail-filename__title-text {
+                        padding-left: 5px;
+                        line-height: 40px;
+                        max-width: calc(92%);
+                        text-overflow: ellipsis;
+                        overflow: hidden;
+                    }
+                    .text-clip, .text-ellip, .text-ellipsis {
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
+                    .inline-block-v-middle {
+                        display: inline-block;
+                        vertical-align: middle;
+                    }
+                    .text-clip, .text-ellip, .text-ellipsis {
+                        overflow: hidden;
+                        white-space: nowrap;
+                        text-overflow: ellipsis;
+                    }
+                    .text-elip, .text-ellip {
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+                    .inline-block-v-middle {
+                        display: inline-block;
+                        vertical-align: middle;
+                    }
+            
+                    ::-webkit-scrollbar {
+                        width: 6px;
+                        height: 10px;
+                    }
+            
+                    ::-webkit-scrollbar-track {
+                        border-radius: 0;
+                        background: none;
+                    }
+            
+                    ::-webkit-scrollbar-thumb {
+                        background-color: rgba(85,85,85,.4);
+                    }
+            
+                    ::-webkit-scrollbar-thumb,::-webkit-scrollbar-thumb:hover {
+                        border-radius: 5px;
+                        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.2);
+                    }
+            
+                    ::-webkit-scrollbar-thumb:hover {
+                        background-color: rgba(85,85,85,.3)
+                    }  
+                    
+                    .aButton{
+                        cursor: pointer;
+                        text-align: center;
+                        display: block;
+                        text-decoration: none;
+                        height: 30px;
+                        line-height: 30px;
+                    }
+                    
                     </style>
                     <canvas id="preview-canvas"></canvas>
                     <div id="previewSpineDom" style="color: #fff; position: absolute; top: 0; left: 30px;">
                         <span style="font-weight: bold">spine动画预览窗口</span>
-                        <span>版本:</span><select id="spineVersion">
-                            <option label="3.6"  value="3.6" selected></option>
-                            <option label="3.8"  value="3.8"></option>
-                            <option label="4.0"  value="4"></option>
-                        </select>
-                        <span>目录:</span><select id="folders"></select>
-                        <span>骨骼:</span><select id="skeletonList"></select>
+                        <span id="curVersionText">当前版本:</span>
+                        <span><a href="#unique-id" class="closeBtn aButton" style="display: block">目录</a></span>
                         <span>动画标签:</span><select id="animationList"></select>
                         <span>皮肤:</span><select id="skinList"></select>
 <!--                        <span>Debug:</span><input type="checkbox" id="debug">-->
@@ -2985,110 +3175,267 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <span>x: <input id="posX" type="number" value="0.5" step="0.05" style="width: 50px"></span>
                         <span>y: <input id="posY" type="number" value="0.5" step="0.05" style="width: 50px"></span>
                         <span>动画时长:<span id="aniTime"></span></span>
-                        <button id="closePreviewWindow" style="margin-left: 20px" class="closeBtn">关闭预览窗口</button>
+                        <button id="closePreviewWindow" style="margin-left: 20px; margin-top: 10px;" class="closeBtn">关闭预览窗口</button>
                     </div>
+                    <!--  模态框       -->
+                    <div class="light-modal" id="unique-id" role="dialog" aria-labelledby="light-modal-label" aria-hidden="false">
+                        <div class="light-modal-content animated zoomInUp">
+                            <!-- light modal header -->
+                            <div class="light-modal-header">
+                                <h3 class="light-modal-heading">选择文件夹预览</h3>
+                                <a href="#" class="light-modal-close-icon" aria-label="close">&times;</a>
+                            </div>
+                            <!-- light modal body -->
+                            <div class="light-modal-body">
+                               <div class="wp-s-core-pan__body-detail">
+                                 <div class="wp-s-core-pan__detail-slot">
+                                    <section class="nd-detail nd-new-main-list__detail"><!---->
+                                        <div class="nd-detail-filelist" 
+                                             type="simple">
+                                            <div class="nd-detail-filelist__contain">
+                                                <div class="nd-detail-filelist__title">
+                                                    文件夹内容
+                                                </div>
+                                                <div class="nd-detail-filelist__name"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABRUExURUxpcf++Hv/ZU//OPv/DL/+9Gv/BI/+4Bf+4Ef/XcP/LOP/TSf/RRP/WTv/JM/+3Ef+9Ff/bhf+5BP/DJf+yDv/imv/kqv/bXP/w0v/fd//calQXUgwAAAAKdFJOUwB///8d3L9enl8sr20gAAACN0lEQVRYw+2Y65abIBRGE1EzVbyNSW18/wctHA6XYw4q9Ee7Vt2AgOHbcVyTOMztdnFxcXFMWf7gKHN190VRKDpFC0iNqB5ZvqpXzJRxHoF7hrAa9/hK9j2oYIA2QA/UqXeyNg5QDBrshhHbUH8xxO+uT7sOJ/tU5a4wh0eK8KmKHTxd28Bfo16pqphep5l6I+R/p8xr668kVghVceH8M5EZYnGhnBKRceGqmaZXPPw2xbO+1xU+8axwe8NfzkIV7xVZdF0AVhi+rWdxIfgmwloE6CkrDCPwJbYUeFgK61icxFcNKyxIxE+WgnllQ0y4+HffzZ8WZtJlCDtz+CzqaaFaVGiWBNEOZZ15zihsT2CFnXk4QStsLohTU3FC+Af8I8JWV1fa1jy8u+hnOUy2vnd5SkeGrJBfHZwDbxe87pfxQvejmMZZYxxdYSoyVyixSvtXFLJ7hWq5xCRNSTozczzHCj8T54kI5d8QCtvZAodDIa7DgRkJaII2hBfaJC7EOE7D076XuIoVBu8oN3kpBLVt4YXBVaUSFSbS5Akb00znSoPn9KCJCN0am7SnGhganC4kKhR2MV0vvEn4M7bFhM3GIZqtgfiPr9BdSAYnrnCX3rQeB/2xsKcHouiBBhpO+phQL9CdjmKqsRkXpkMz57dmfTY1v3k8is26zvN2A6yIbKVqm/tMjFBMp5jpxrWKbsB1dJw/AsC3Lt/YEaK7x1t5r7aLj3ned/fRj1TK3H9wXFxc/F/8BgM0jBZ4nc19AAAAAElFTkSuQmCC"
+                                                                                        alt="folder" class="u-file-icon u-file-icon--list"><span id="pfqhCurFold">当前文件夹</span></div>
+                                                <div class="nd-detail-filelist__list bg">
+                                                    <div style="display: flex; flex-direction: row">
+                                                        <div id="pfqhFoldList" style="white-space: nowrap; width: 43%; display: flex;flex-direction: column;" >
+                                                            <div class="nd-detail-filename" id="pfqhLastDir">
+                                                            <img
+                                                                 src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABRUExURUxpcf++Hv/ZU//OPv/DL/+9Gv/BI/+4Bf+4Ef/XcP/LOP/TSf/RRP/WTv/JM/+3Ef+9Ff/bhf+5BP/DJf+yDv/imv/kqv/bXP/w0v/fd//calQXUgwAAAAKdFJOUwB///8d3L9enl8sr20gAAACN0lEQVRYw+2Y65abIBRGE1EzVbyNSW18/wctHA6XYw4q9Ee7Vt2AgOHbcVyTOMztdnFxcXFMWf7gKHN190VRKDpFC0iNqB5ZvqpXzJRxHoF7hrAa9/hK9j2oYIA2QA/UqXeyNg5QDBrshhHbUH8xxO+uT7sOJ/tU5a4wh0eK8KmKHTxd28Bfo16pqphep5l6I+R/p8xr668kVghVceH8M5EZYnGhnBKRceGqmaZXPPw2xbO+1xU+8axwe8NfzkIV7xVZdF0AVhi+rWdxIfgmwloE6CkrDCPwJbYUeFgK61icxFcNKyxIxE+WgnllQ0y4+HffzZ8WZtJlCDtz+CzqaaFaVGiWBNEOZZ15zihsT2CFnXk4QStsLohTU3FC+Af8I8JWV1fa1jy8u+hnOUy2vnd5SkeGrJBfHZwDbxe87pfxQvejmMZZYxxdYSoyVyixSvtXFLJ7hWq5xCRNSTozczzHCj8T54kI5d8QCtvZAodDIa7DgRkJaII2hBfaJC7EOE7D076XuIoVBu8oN3kpBLVt4YXBVaUSFSbS5Akb00znSoPn9KCJCN0am7SnGhganC4kKhR2MV0vvEn4M7bFhM3GIZqtgfiPr9BdSAYnrnCX3rQeB/2xsKcHouiBBhpO+phQL9CdjmKqsRkXpkMz57dmfTY1v3k8is26zvN2A6yIbKVqm/tMjFBMp5jpxrWKbsB1dJw/AsC3Lt/YEaK7x1t5r7aLj3ned/fRj1TK3H9wXFxc/F/8BgM0jBZ4nc19AAAAAElFTkSuQmCC"
+                                                                 alt="folder" class="category u-file-icon u-file-icon--list">
+                                                            <span class="nd-detail-filename__title-text inline-block-v-middle text-ellip">返回上级</span>
+                                                            </div>
+                                                        </div>
+                                                        <div id="pfqhFilesList" style="margin-left: 5%; white-space: nowrap; width: 43%; display: flex;flex-direction: column;"">
+                                   
+                                                        </div>
+                                                    </div>
+                                                    
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </section>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                     `
 
-                    let version = '3.6'  // 默认版本号为空
-                    let assetsPath   // 默认资源路径
-                    let spineLib
-                    let webGlSpine
                     let canvas;
-                    let gl;
-                    let shader;
-                    let batcher;
-                    let mvp;
-                    let skeletonRenderer;
-                    let assetManager;
-                    let debugRenderer;
-                    let shapes;
-                    let lastFrameTime;
-                    let activeSkeleton = "";
-                    let curDir = '根目录'  // 标明当前预览的目录, 默认是根目录
-                    let skeletons = {}
-                    let allLoadSkels = {}  // 管理所有已经加载好的骨骼文件
-                    let allLoadAssetType = {}  // 管理所有已经加载好的骨骼文件
-                    let allSkels = {}  // 管理所有骨骼数据. 骨骼名称和骨骼后缀
-
+                    let activeSkeleton = null
+                    let currentNode = null
                     let isClosed = false   // 全局信号, 通知关闭, 停止渲染
-                    let renderRequestId = null
-                    let stopRenderSign = null
+                    let isUpdate = false
+
+                    canvas = document.getElementById('preview-canvas')
+
+                    let animationManager = new AnimationManager('', canvas, 123456)
 
                     // 被监视的元素
-                    canvas = document.getElementById('preview-canvas')
                     let px = document.getElementById('posX')
                     let py = document.getElementById('posY')
                     let canvasSize = canvas.getBoundingClientRect()
-                    let x = 0.5 * canvasSize.width
+                    let x = 0.65 * canvasSize.width
                     let y = 0.5 * canvasSize.height
                     let scale = 0.5
                     // 开始监视el上的手势变化
                     const at = new AnyTouch(canvas)
 
-                    let globalValInitial = function () {
-                        // spine4把一些webgl的库从spine.webgl.xxx 移动到了spine本身
-                        if (version === '3.6') {
-                            assetsPath = 'assets'
-                            spineLib = spine
-                            webGlSpine = spine.webgl
-                        } else if (version === '4') {
-                            assetsPath = 'assets_4'
-                            spineLib = spine_4
-                            webGlSpine = spine_4
-                            webGlSpine.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
-                            webGlSpine.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
-                            webGlSpine.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
-                            webGlSpine.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
-                        } else if (version === '3.8') {
-                            assetsPath = 'assets_3_8'
-                            spineLib = spine3_8
-                            webGlSpine = spine3_8.webgl
-                            webGlSpine.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
-                            webGlSpine.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
-                            webGlSpine.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
-                            webGlSpine.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
+                    let currentPath = lib.assetURL + 'extension/皮肤切换/assets'
+                    // 获取模态框文件夹和文件列表dom
+                    let foldsEle = document.getElementById('pfqhFoldList')
+                    let filesEle = document.getElementById('pfqhFilesList')
+                    let curFoldEle = document.getElementById('pfqhCurFold')
+
+                    let clickName = lib.config.touchscreen ? 'touchend' : 'click'
+
+                    curFoldEle.innerText = currentPath
+
+                    // 返回上一级事件
+                    document.getElementById('pfqhLastDir').addEventListener(clickName, function (e) {
+                        currentPath = currentPath === '' ? '' : currentPath.substring(0, currentPath.lastIndexOf('/'));
+                        initFoldsInfo()
+                        e.stopPropagation()
+                    })
+
+                    // 只过滤出包含完整spine骨骼的文件进行预览
+                    let filterSpineFile = (files) => {
+                        let skinInfoMap = {}
+                        for (let f of files){
+                            let name = f.substring(0, f.lastIndexOf("."))
+                            let ext = f.substring(f.lastIndexOf(".")+1)
+                            if (!(name in skinInfoMap)) {
+                                skinInfoMap[name] = {}
+                            }
+                            if (ext === 'png') {
+                                skinInfoMap[name].png = true
+                            } else if (ext === 'skel') {
+                                skinInfoMap[name].type = 'skel';
+                            } else if (ext === 'json') {
+                                skinInfoMap[name].type = 'json';
+                            } else if (ext === 'atlas') {
+                                skinInfoMap[name].altas = true
+                            }
                         }
+                        let retFiles = []
+                        for (let k in skinInfoMap) {
+                            let info = skinInfoMap[k]
+                            // 如果十周年文件里面已经有了对应武将和对应皮肤的话, 跳过.
+                            if (info.type && info.altas && info.png) {
+                                retFiles.push({
+                                    path: k + '.' + info.type,
+                                    name: k
+                                })
+                            }
 
-                        mvp = new webGlSpine.Matrix4();
-                        x = 0.5 * canvasSize.width
-                        y = 0.5 * canvasSize.height
-                        scale = 0.5
-                        activeSkeleton = "";
-                        curDir = '根目录'  // 标明当前预览的目录, 默认是根目录
-                        skeletons = {}
-                        allLoadSkels = {}  // 管理所有已经加载好的骨骼文件
-                        allLoadAssetType = {}  // 管理所有已经加载好的骨骼文件
-                        allSkels = {}  // 管理所有骨骼数据. 骨骼名称和骨骼后缀
-                        // 初始化Option
-                        document.getElementById('folders').options.length = 0
-                        document.getElementById('skeletonList').options.length = 0
-                        document.getElementById('animationList').options.length = 0
-
-                    };
-
-                    let versionSelect = document.getElementById('spineVersion')
-                    versionSelect.onchange = function (e) {
-                        version = versionSelect.options[versionSelect.selectedIndex].value
-                        stopRenderSign = true
-
-                        setTimeout(() => {
-                            globalValInitial()
-                            init() // 切换版本重新初始化
-                        }, 100)
+                        }
+                        return retFiles
                     }
-                    globalValInitial()
+
+                    let initFoldsInfo = () => {
+                        // 获取这个文件夹下的所有合法的skel文件和所有文件夹
+                        pfqhUtils.getFoldsFiles(currentPath, function (file, path) {
+                            let suffixes = ['.png', '.atlas', '.json', '.skel', '.jpg' ]
+                                for (let suf of suffixes) {
+                                    if (file.endsWith(suf)) {
+                                        return true
+                                    }
+                                }
+                                return false
+                            }, function (folds, files) {
+                                curFoldEle.innerText = currentPath
+                                // 删除之前节点
+                                for (let i = foldsEle.childNodes.length - 1; i > 1 ; i--) {
+                                    foldsEle.childNodes[i].remove()
+                                }
+                                for (let i = filesEle.childNodes.length - 1; i > 0 ; i--) {
+                                    filesEle.childNodes[i].remove()
+                                }
+                                for (let i = 0; i < folds.length; i++) {
+                                    let div = document.createElement('div');
+                                    div.innerHTML = `
+                                    <img
+                                         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABRUExURUxpcf++Hv/ZU//OPv/DL/+9Gv/BI/+4Bf+4Ef/XcP/LOP/TSf/RRP/WTv/JM/+3Ef+9Ff/bhf+5BP/DJf+yDv/imv/kqv/bXP/w0v/fd//calQXUgwAAAAKdFJOUwB///8d3L9enl8sr20gAAACN0lEQVRYw+2Y65abIBRGE1EzVbyNSW18/wctHA6XYw4q9Ee7Vt2AgOHbcVyTOMztdnFxcXFMWf7gKHN190VRKDpFC0iNqB5ZvqpXzJRxHoF7hrAa9/hK9j2oYIA2QA/UqXeyNg5QDBrshhHbUH8xxO+uT7sOJ/tU5a4wh0eK8KmKHTxd28Bfo16pqphep5l6I+R/p8xr668kVghVceH8M5EZYnGhnBKRceGqmaZXPPw2xbO+1xU+8axwe8NfzkIV7xVZdF0AVhi+rWdxIfgmwloE6CkrDCPwJbYUeFgK61icxFcNKyxIxE+WgnllQ0y4+HffzZ8WZtJlCDtz+CzqaaFaVGiWBNEOZZ15zihsT2CFnXk4QStsLohTU3FC+Af8I8JWV1fa1jy8u+hnOUy2vnd5SkeGrJBfHZwDbxe87pfxQvejmMZZYxxdYSoyVyixSvtXFLJ7hWq5xCRNSTozczzHCj8T54kI5d8QCtvZAodDIa7DgRkJaII2hBfaJC7EOE7D076XuIoVBu8oN3kpBLVt4YXBVaUSFSbS5Akb00znSoPn9KCJCN0am7SnGhganC4kKhR2MV0vvEn4M7bFhM3GIZqtgfiPr9BdSAYnrnCX3rQeB/2xsKcHouiBBhpO+phQL9CdjmKqsRkXpkMz57dmfTY1v3k8is26zvN2A6yIbKVqm/tMjFBMp5jpxrWKbsB1dJw/AsC3Lt/YEaK7x1t5r7aLj3ned/fRj1TK3H9wXFxc/F/8BgM0jBZ4nc19AAAAAElFTkSuQmCC"
+                                         alt="folder" class="category u-file-icon u-file-icon--list">
+                                    <span class="nd-detail-filename__title-text inline-block-v-middle text-ellip">${folds[i]}</span>
+                                `;
+                                    div.setAttribute('fold', folds[i]);
+                                    div.classList.add('nd-detail-filename');
+                                    div.addEventListener(clickName, function (e) {
+                                        currentPath = `${currentPath}/${this.getAttribute('fold')}`
+                                        console.log('taggggg', currentPath, this.getAttribute('fold'))
+
+                                        initFoldsInfo()
+                                        e.stopPropagation()
+                                    });
+                                    foldsEle.appendChild(div);
+                                }
+
+                                //
+                                let retFiles = filterSpineFile(files)
+                                for (let i = 0; i < retFiles.length; i++) {
+                                    let div = document.createElement('div')
+                                    div.innerHTML = `
+                                    <img
+                                         src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABIUExURUxpcTOL+DSL+DqO+Veb/mKl/kmX+zWL+U6a+2ao/0aW+0CS+kyZ/GCk/mWn/1yi/lef/VGc/Pr9/+jz/2+s+46//b3a/4O3/AJIojgAAAAKdFJOUwDf//8d3U+en52O09RGAAACF0lEQVRYw+2Y63ajIBCAW8ZqHC5KrZv3f9MFhpuJTQfrjz1n/SDIbT4npw2pfXu7uLi4YNOP39O367rRvOKja/V9GHOqcTTmVGNnzLlGl6A2WvvWxGsqJo9ajKMuGP0dDcbxSWTShKlGfOOoebCNRTidYxynDXrb1dUU0ziGEF3ZdHHoza14xocMXzJyhLdpmme/e6ag2XeobqYCnBRvs98fm32meId56nnCErk+czfVhlub0CyfOyzaHhTa9XOX9aDQqnU/w7uyjULrcC3i+ocI4iUOVkQ7+8IVeptXWgUgMXD3xjv1UYCyCa6QUAiC0E64fMUBYBTOrUJnROmBryCEMEAsCbYKrSIkCSXS0LYLla8U6K4KSYi+H5ZsWmcJY1ohmpos3OLWmoSF9JajX9m8ckyIRfjIrzM8KERfq5J/yridZwrDx0HF6suOMF24QoXJGijCR/gZboB/TZgDYyd9lqU8mqGPlGQMJR8OfiDjZNjDEQ5S0hlDZ4ushWkqwxSWJCgezOKYIMsw7Ri4wi0g3HfBKuF55bBQTNod1WcKw9kv6yShTQgUQA6A6IsjAEmFJ4RXOF24W+gBcIUxAaiapChi/zolw5rfC+GYUKTqG1G11Vxo2Bn6AJLk8NiPC6JBKOjXLv0ZEruwN2AJe8GCnKzHgEGw4STonm/fub535rNUx8xx4D+RdsPP9Af+m3FxcfH/8hcLt2QJ3T9wuwAAAABJRU5ErkJggg=="
+                                         class="category u-file-icon u-file-icon--list" alt="${retFiles[i].path}">
+                                    <span class="nd-detail-filename__title-text inline-block-v-middle text-ellip">${retFiles[i].path}</span>
+                                `
+                                    div.setAttribute('path', retFiles[i].path)
+                                    div.classList.add('nd-detail-filename')
+                                    div.addEventListener(clickName, function (e) {
+                                        console.log('file', this.getAttribute('path'))
+                                        playSelectAsset(this.getAttribute('path'))
+                                        e.stopPropagation()
+                                    })
+                                    filesEle.appendChild(div)
+                                }
+                            }
+                        )
+                    }
+
+                    initFoldsInfo()
+
+                    let playSelectAsset = (path) => {
+                        // 拼接当前所选择的文件, 获取版本号, 然后进行资源载入与播放
+                        pfqhUtils.getSpineFileVersion(currentPath + '/' + path, function (version) {
+                            if ((!['3.6', '3.8', '4.0'].includes(version))) {
+                                skinSwitchMessage.show({
+                                    'type': 'warning',
+                                    'text': `当前不支持${version}版本的骨骼文件播放`,
+                                    'duration': 1500
+                                });
+                                return
+                            }
+
+                            // 加载当前骨骼
+                            let dy = animationManager.getAnimation(version)
+
+                            let name = path.substring(0, path.lastIndexOf("."))
+                            let ext = path.substring(path.lastIndexOf(".")+1)
+
+                            let filename = currentPath + '/' + name
+                            if (!isUpdate) {
+                                dy.update({
+                                    width: decadeUI.get.bodySize().width,
+                                    height: decadeUI.get.bodySize().height,
+                                    dpr: Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1),
+                                })
+                            }
+
+                            let play = () => {
+                                animationManager.stopSpineAll()
+                                let node = dy.playSpine({
+                                    x: [0, 0.65],
+                                    y: [0, 0.5],
+                                    name: filename,
+                                    scale: 0.5,
+                                    loop: true
+                                })
+                                document.getElementById('curVersionText').innerText = `当前版本: ${version}`
+                                // 切换当前的骨骼
+                                activeSkeleton = node.skeleton
+                                currentNode = node
+                                // 更新当前骨骼的标签信息
+                                init()
+                            }
+
+                            if (dy.hasSpine(filename)) {
+                                play()
+                            } else {
+                                dy.loadSpine(filename, ext, () => {
+                                    play()
+                                }, () => {
+                                    console.log('加载骨骼错误')
+                                })
+                            }
+
+                        }, function () {
+                            skinSwitchMessage.show({
+                                'type': 'warning',
+                                'text': `获取版本号错误`,
+                                'duration': 1500
+                            })
+                        })
+
+                    }
 
                     let scaleSlider
-                    scaleSlider = document.createElement('input')
-                    scaleSlider.min = '0'
-                    scaleSlider.max = '3'
-                    scaleSlider.value = '0.5'
-                    scaleSlider.type = 'range';
+                    {
+                        scaleSlider = document.createElement('input')
+                        scaleSlider.min = '0'
+                        scaleSlider.max = '3'
+                        scaleSlider.value = '0.5'
+                        scaleSlider.type = 'range';
 
-                    // scaleSlider = decadeUI.component.slider(0.1, 3, 0.5)
-                    scaleSlider.setAttribute('step', '0.1')
-                    let scaleNode = document.getElementById('scale')
-                    scaleNode.parentNode.insertBefore(scaleSlider, scaleNode)
+                        // scaleSlider = decadeUI.component.slider(0.1, 3, 0.5)
+                        scaleSlider.setAttribute('step', '0.1')
+                        let scaleNode = document.getElementById('scale')
+                        scaleNode.parentNode.insertBefore(scaleSlider, scaleNode)
+                    }
 
                     let speedSlider
                     {
@@ -3110,6 +3457,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         closePreviewWindow.parentNode.insertBefore(con, closePreviewWindow)
 
                         speedSlider.onchange = function(){
+                            if (currentNode) {
+                                currentNode.speed = speedSlider.value
+                            }
                             speedText.innerHTML = '速度: ' + speedSlider.value
                         };
 
@@ -3180,12 +3530,16 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             text.innerHTML = `进度: ${Number(timeSlider.value).toFixed(2)}`
 
                             // 修改speed为0, 并且跳转到具体的时间
-                            let state = skeletons[activeSkeleton].state
                             speedSlider.value = 0
                             speedSlider.onchange()
 
-                            let entry = state.tracks[0]
-                            entry.trackTime = Number(timeSlider.value) * entry.animationEnd
+                            if (currentNode) {
+                                currentNode.speed = speedSlider.value
+                                let state = activeSkeleton.state
+                                let entry = state.tracks[0]
+                                entry.trackTime = Number(timeSlider.value) * entry.animationEnd
+                            }
+
 
                         }, 10))
                     }
@@ -3211,6 +3565,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         angleSlider.onchange = function(){
                             text.innerHTML = '角度: ' + angleSlider.value + '°'
+                            if (currentNode) {
+                                currentNode.angle = angleSlider.value
+                            }
                         };
 
                     }
@@ -3228,9 +3585,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let vy =  y / canvasSize.height
                         px.value = vx.toString()
                         py.value = vy.toString()
-                        allLoadSkels[curDir][activeSkeleton].previewParams.posX = px.value
-                        allLoadSkels[curDir][activeSkeleton].previewParams.posY = py.value
-                    });
+                        if (currentNode) {
+                            currentNode.x = [0, vx]
+                            currentNode.y = [0, vy]
+                        }
+                    })
 
                     at.on(['pinchin', 'pinchout'], debounce((e) => {
                         // e包含位移/速度/方向等信息
@@ -3274,326 +3633,73 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }, 200)
                     })
 
-                    let loadAssets = (fold, skels) => {
-                        // 先加载根目录下的所有骨骼
-                        let loadSkels = {}
-                        let prefix = ''
-                        if (fold === '根目录') prefix = ''
-                        else prefix = fold + '/'
-                        for (let k in skels) {
-                            let values = skels[k]
-                            if ('atlas' in values && 'json' in values) {
-                                assetManager.loadText(prefix + values['json']);
-                                assetManager.loadTextureAtlas(prefix + values['atlas']);
-                                loadSkels[k] = 'json'
-                            } else if ('atlas' in values && 'skel' in values) {
-                                assetManager.loadBinary(prefix + values['skel']);
-                                assetManager.loadTextureAtlas(prefix + values['atlas']);
-                                loadSkels[k] = 'skel'
-                            }
-                        }
-                        allLoadAssetType[fold] = loadSkels
-                    }
-
-
                     function init () {
-                        // Setup canvas and WebGL context. We pass alpha: false to canvas.getContext() so we don't use premultiplied alpha when
-                        // loading textures. That is handled separately by PolygonBatcher.
-                        canvas = document.getElementById("preview-canvas");
-                        canvas.width = window.innerWidth;
-                        canvas.height = window.innerHeight;
-                        // gl = canvas.getContext("webgl", config) || canvas.getContext("experimental-webgl", config);
-                        let config = { alpha: true };
-                        gl = canvas.getContext('webgl', config) || canvas.getContext('experimental-webgl', config);
-                        if (!gl) {
-                            alert('WebGL初始化失败')
-                            return;
+
+                        if (!activeSkeleton) {
+                            return
                         }
-
-                        // Create a simple shader, mesh, model-view-projection matrix, SkeletonRenderer, and AssetManager.
-                        shader = webGlSpine.Shader.newTwoColoredTextured(gl);
-                        batcher = new webGlSpine.PolygonBatcher(gl);
-                        mvp.ortho2d(0, 0, canvas.width - 1, canvas.height - 1);
-                        skeletonRenderer = new webGlSpine.SkeletonRenderer(gl);
-                        assetManager = new webGlSpine.AssetManager(gl, skinSwitch.url + assetsPath + '/');
-
-                        // Create a debug renderer and the ShapeRenderer it needs to render lines.
-                        // debugRenderer = new webGlSpine.SkeletonDebugRenderer(gl);
-                        // debugRenderer.drawRegionAttachments = true;
-                        // debugRenderer.drawBoundingBoxes = true;
-                        // debugRenderer.drawMeshHull = true;
-                        // debugRenderer.drawMeshTriangles = true;
-                        // debugRenderer.drawPaths = true;
-                        // debugShader = webGlSpine.Shader.newColored(gl);
-                        // shapes = new webGlSpine.ShapeRenderer(gl);
-
-                        // Tell AssetManager to load the resources for each skeleton, including the exported .skel file, the .atlas file and the .png
-                        // file for the atlas. We then wait until all resources are loaded in the load() method.
-
-
-                        // 动态的获取放入asset文件夹下的所有文件, 然后下拉进行预览
-                        game.getFileList(skinSwitch.path + '/' + assetsPath, function (folds, files) {
-                            let folderSel = document.getElementById('folders')
-                            let getDynamicFiles = files => {
-                                let skels = {}
-                                files.forEach(file => {
-                                    let name = file.substring(0, file.lastIndexOf("."))
-                                    let ext = file.substring(file.lastIndexOf(".")+1)
-                                    if (!(name in skels)) {
-                                        skels[name] = {}
-                                    }
-                                    skels[name][ext] = file
-                                })
-                                return skels
-                            }
-                            let folderAdd = function (folder, selected) {
-                                let option = document.createElement('option')
-                                option.setAttribute('value', folder)
-                                option.text = folder
-                                if (selected) option.setAttribute('selected', selected)
-                                folderSel.options.add(option)
-                            }
-                            let selectFolder = ''
-                            if (files.length > 0) {
-                                // 加载主目录下的所有文件
-                                allSkels['根目录'] = getDynamicFiles(files);
-                                folderAdd('根目录', true)
-                                selectFolder = '根目录'
-                            }
-
-                            // 获取以及和二级目录对应的文件信息
-                            folds.forEach(fold => {
-                                game.getFileList(`${skinSwitch.path}/${assetsPath}/${fold}`, function (folds, files)  {
-                                    allSkels[fold] = getDynamicFiles(files)
-                                    if (!selectFolder) {
-                                        folderAdd(fold, true)
-                                        selectFolder = fold
-                                        curDir = fold
-                                    } else {
-                                        folderAdd(fold, false)
-                                    }
-                                })
-                            })
-                            if (!selectFolder && folds.length === 0) {
-                                if (window.skinSwitchMessage) {
-                                    skinSwitchMessage.show({
-                                        'type': 'warning',
-                                        'text': `assets文件夹并无骨骼可以进行预览`,
-                                        'duration': 3000
-                                    })
-                                }
-                                return
-                            }
-
-                            let waitFirstLoad = function () {
-                                if (!selectFolder) {
-                                    requestAnimationFrame(waitFirstLoad)
-                                } else {
-                                    loadAssets(selectFolder, allSkels[selectFolder])
-                                    requestAnimationFrame(load)
-                                }
-                            }
-
-                            // 等待第一个文件夹加载完成
-                            if (!selectFolder && folds.length > 0) {
-                                requestAnimationFrame(waitFirstLoad)
-                            } else {
-                                loadAssets(selectFolder, allSkels[selectFolder])
-                                requestAnimationFrame(load)
-                            }
-
-                        })
 
                         document.getElementById('scale').oninput = function (e) {
                             let v = e.srcElement.value
                             if (scaleSlider) {
                                 scaleSlider.value = v
                             }
-                            allLoadSkels[curDir][activeSkeleton].previewParams.scale = v
+                            if (currentNode) {
+                                currentNode.scale = v;
+                            }
                         }
                         document.getElementById('posX').oninput = function (e) {
                             let v = e.srcElement.value
-                            allLoadSkels[curDir][activeSkeleton].previewParams.posX = v
+                            if (currentNode) {
+                                currentNode.y = [0, Number(v) || 0.65]
+                            }
                         }
                         document.getElementById('posY').oninput = function (e) {
                             let v = e.srcElement.value
-                            allLoadSkels[curDir][activeSkeleton].previewParams.posY = v
+                            if (currentNode) {
+                                currentNode.y = [0, Number(v) || 0.5]
+                            }
+
                         }
 
                         document.getElementById('premultipliedAlpha').onchange = function (e) {
-                            allLoadSkels[curDir][activeSkeleton].previewParams.premultipliedAlpha = e.target.checked
-                        }
-
-                        document.getElementById('folders').onchange = function (e) {
-                            curDir = this.options[this.selectedIndex].text
-                            // 输入框的值也改成存储的值, 存储之前的路径, 防止出错
-                            if (!allLoadAssetType[curDir]) {
-                                requestAnimationFrame(load)
-                            } else {
-                                setupUI();
-                                lastFrameTime = Date.now() / 1000;
-                                requestAnimationFrame(render)
+                            if (currentNode) {
+                                currentNode.premultipliedAlpha =  e.target.checked
                             }
                         }
+
+                        document.getElementById('flipX').onchange = function (e) {
+                            if (currentNode) {
+                                currentNode.flipX =  e.target.checked
+                            }
+                        }
+                        document.getElementById('flipY').onchange = function (e) {
+                            if (currentNode) {
+                                currentNode.flipY =  e.target.checked
+                            }
+                        }
+
 
                         if (scaleSlider) {
                             scaleSlider.oninput = function(){
                                 // let v= s1.value / 8;
-                                document.getElementById('scale').value = scaleSlider.value
-                                allLoadSkels[curDir][activeSkeleton].previewParams.scale = scaleSlider.value
-                            };
-                        }
-
-
-                    }
-
-                    function load () {
-                        // Wait until the AssetManager has loaded all resources, then load the skeletons.
-                        if (assetManager.isLoadingComplete()) {
-                            let loadAssetType = allLoadAssetType[curDir]
-                            if (!loadAssetType) {
-                                loadAssets(curDir, allSkels[curDir])
-                                return requestAnimationFrame(load)
-
-                            }
-                            let tmpSkeletons = {}
-                            // 保存所有的骨骼数据
-                            for (let k in loadAssetType) {
-                                let name = k
-                                if (curDir !== '根目录') {
-                                    name = curDir + '/' + k
+                                if (currentNode) {
+                                    currentNode.scale = scaleSlider.value
                                 }
-                                try {
-
-                                    tmpSkeletons[name] = loadSkeleton(name, loadAssetType[k])
-                                    skeletons[name] = tmpSkeletons[name]
-                                } catch (e) {
-                                    console.log(`加载${curDir}骨骼${k}出错, 请检查骨骼是否正确`)
-                                    console.error(e)
-                                    if (window.skinSwitchMessage) {
-                                        skinSwitchMessage.show({
-                                            'type': 'warning',
-                                            'text': `加载${curDir}中骨骼${k}出错, 请检查骨骼是否正确`,
-                                            'duration': 3000
-                                        })
-                                    }
-                                    continue
-                                }
-                                tmpSkeletons[name].previewParams = {scale: 0.5, posX: 0.5, posY: 0.5}
-                                allLoadSkels[curDir] = tmpSkeletons
+                                document.getElementById('scale').value = scaleSlider.value;
                             }
-                            if (Object.keys(tmpSkeletons).length === 0) {
-                                skinSwitchMessage.show({
-                                    'type': 'warning',
-                                    'text': `当前${curDir}中无正确骨骼预览`,
-                                    'duration': 3000
-                                })
-                                return
-                            }
-                            setupUI();
-                            lastFrameTime = Date.now() / 1000;
-
-                            stopRenderSign = null  // 加载好资源允许继续渲染, 防止错误
-
-                            requestAnimationFrame(render); // Loading is done, call render every frame.
-                        } else {
-                            requestAnimationFrame(load);
                         }
-                    }
 
-                    function loadSkeleton (name, type) {
-
-                        // Load the texture atlas using name.atlas from the AssetManager.
-                        let atlas = assetManager.get(name + ".atlas");
-
-                        // Create a AtlasAttachmentLoader that resolves region, mesh, boundingbox and path attachments
-                        let atlasLoader = new spineLib.AtlasAttachmentLoader(atlas);
-
-                        // Create a SkeletonBinary instance for parsing the .skel file.
-                        let skeletonBinary = new spineLib.SkeletonBinary(atlasLoader);
-
-                        // Set the scale to apply during parsing, parse the file, and create a new skeleton.
-                        skeletonBinary.scale = 1;
-                        let skeletonData
-                        if (type === 'json') {
-                            skeletonData = 	new spineLib.SkeletonJson(atlasLoader).readSkeletonData(assetManager.get(name + ".json"));
-                        } else {
-                            skeletonData = skeletonBinary.readSkeletonData(assetManager.get(name + ".skel"));
-                        }
-                        let skeleton = new spineLib.Skeleton(skeletonData);
-                        skeleton.setSkinByName('default');
-                        let bounds = calculateSetupPoseBounds(skeleton);
-
-                        // Create an AnimationState, and set the initial animation in looping mode.
-                        let animationStateData = new spineLib.AnimationStateData(skeleton.data);
-                        let animationState = new spineLib.AnimationState(animationStateData);
-
-                        // 默认第一个动画
-                        let initialAnimation = skeleton.data.animations[0].name
-
-                        animationState.setAnimation(0, initialAnimation, true);
-                        animationState.addListener({
-                            start: function(track) {
-                                // console.log("Animation on track " + track.trackIndex + " started");
-                            },
-                            interrupt: function(track) {
-                                // console.log("Animation on track " + track.trackIndex + " interrupted");
-                            },
-                            end: function(track) {
-                                // console.log("Animation on track " + track.trackIndex + " ended");
-                            },
-                            disposed: function(track) {
-                                // console.log("Animation on track " + track.trackIndex + " disposed");
-                            },
-                            complete: function(track) {
-                                // console.log("Animation on track " + track.trackIndex + " completed");
-                            },
-                            event: function(track, event) {
-                                // console.log("Event on track " + track.trackIndex + ": " + JSON.stringify(event));
-                            }
-                        })
-
-                        // Pack everything up and return to caller.
-                        return { skeleton: skeleton, state: animationState, bounds: bounds};
-                    }
-
-                    function calculateSetupPoseBounds(skeleton) {
-                        skeleton.setToSetupPose();
-                        skeleton.updateWorldTransform();
-                        var offset = new spineLib.Vector2();
-                        var size = new spineLib.Vector2();
-                        skeleton.getBounds(offset, size, []);
-                        return { offset: offset, size: size };
-                    }
-
-                    function setupUI () {
-                        let skeletonList = document.getElementById('skeletonList')
-                        // 获取所有当前目录开头的文件
-                        let skeletons = allLoadSkels[curDir]
-                        skeletonList.options.length = 0
-                        let i = 0
-                        for (let skeletonName in skeletons) {
-                            if (i === 0 ){
-                                activeSkeleton = skeletonName
-                                i++
-                            }
-                            let option = document.createElement('option')
-                            option.setAttribute('value', skeletonName)
-                            if (skeletonName.startsWith(curDir + '/'))
-                                option.text = skeletonName.substr(curDir.length + 1, skeletonName.length)
-                            else
-                                option.text = skeletonName
-                            if (skeletonName === activeSkeleton)  option.setAttribute('selected', 'selected')
-                            skeletonList.options.add(option)
-                        }
-                        let setupAnimationUI = function() {
-                            let animationList = document.getElementById('animationList')
-                            animationList.options.length = 0
+                        let setupAnimationUI = () => {
+                            // 初始化骨骼数据
                             if (!activeSkeleton) {
                                 return
                             }
-                            let skeleton = skeletons[activeSkeleton].skeleton;
-                            let state = skeletons[activeSkeleton].state;
+                            let animationList = document.getElementById('animationList')
+                            animationList.options.length = 0
+
+                            let skeleton = activeSkeleton
+                            let state = skeleton.state;
                             let activeAnimation = state.tracks[0].animation.name;
                             for (let i = 0; i < skeleton.data.animations.length; i++) {
                                 let name = skeleton.data.animations[i].name;
@@ -3602,14 +3708,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 option.text = name
                                 if (name === activeAnimation) {
                                     option.setAttribute('selected', 'selected')
-                                    document.getElementById('aniTime').innerText = Number(skeleton.data.animations[i].duration).toFixed(1)
+                                    document.getElementById('aniTime').innerText = Number(skeleton.data.animations[i].duration).toFixed( 1)
                                 }
                                 animationList.options.add(option)
                             }
 
                             animationList.onchange =function() {
-                                let state = skeletons[activeSkeleton].state;
-                                let skeleton = skeletons[activeSkeleton].skeleton;
+                                let skeleton = activeSkeleton
+                                let state = skeleton.state;
                                 let animationName = animationList.options[animationList.selectedIndex].text
                                 skeleton.setToSetupPose();
                                 state.setAnimation(0, animationName, true);
@@ -3619,14 +3725,15 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                         let setupSkinUI = function () {
-                            let skinList = document.getElementById('skinList')
-                            skinList.options.length = 0
                             if (!activeSkeleton) {
                                 return
                             }
-                            let skeleton = skeletons[activeSkeleton].skeleton;
+
+                            let skinList = document.getElementById('skinList')
+                            skinList.options.length = 0
+
+                            let skeleton = activeSkeleton
                             let skins = skeleton.data.skins
-                            console.log('skins====', skins)
 
                             for (let i = 0; i < skins.length; i++) {
                                 let name = skins[i].name;
@@ -3641,161 +3748,24 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
 
                             skinList.onchange = function() {
-                                let skeleton = skeletons[activeSkeleton].skeleton;
+                                let skeleton = activeSkeleton
                                 let skinName = skinList.options[skinList.selectedIndex].text
                                 skeleton.setSkinByName(skinName);
                                 skeleton.setSlotsToSetupPose();
                             }
                         }
 
-                        let initInputVal = () => {
-                            document.getElementById('scale').value = skeletons[activeSkeleton].previewParams.scale
-                            scale = skeletons[activeSkeleton].previewParams.scale
-                            scaleSlider.value = skeletons[activeSkeleton].previewParams.scale
-                            document.getElementById('posX').value = skeletons[activeSkeleton].previewParams.posX
-                            x = skeletons[activeSkeleton].previewParams.posX * canvasSize.width
-                            document.getElementById('posY').value = skeletons[activeSkeleton].previewParams.posY
-                            y = skeletons[activeSkeleton].previewParams.posY * canvasSize.height
-                            document.getElementById('premultipliedAlpha').checked = Boolean(skeletons[activeSkeleton].previewParams.premultipliedAlpha)
-                        }
-
-                        initInputVal()
-
-                        skeletonList.onchange = function() {
-                            activeSkeleton = skeletonList.options[skeletonList.selectedIndex].value
-                            // 输入框的值也改成存储的值
-                            initInputVal()
-                            setupAnimationUI();
-                            setupSkinUI()
-                        }
-                        setupAnimationUI();
+                        setupAnimationUI()
                         setupSkinUI()
+
+                        // 初始化xy坐标
+                        x = 0.65 * canvasSize.width
+                        y = 0.5 * canvasSize.height
+                        console.log(activeSkeleton.premultipliedAlpha = document.getElementById('premultipliedAlpha'))
+                        currentNode.premultipliedAlpha = document.getElementById('premultipliedAlpha').checked
+                        currentNode.flipX = document.getElementById('flipX').checked
+                        currentNode.flipY = document.getElementById('flipY').checked
                     }
-
-                    // spine动画本质就是不断的调用render函数重新渲染. 根据每一次的delta差值计算出当前帧应该渲染什么画面
-                    let render = function () {
-                        if (isClosed) return
-                        if (stopRenderSign) {
-                            return requestAnimationFrame(render);
-                        }
-
-                        var now = Date.now() / 1000;
-                        var delta = now - lastFrameTime;
-                        lastFrameTime = now;
-
-                        // Update the MVP matrix to adjust for canvas size changes
-                        resize();
-
-                        // gl.clearColor(0.3, 0.3, 0.3, 1);
-                        gl.clearColor(0, 0, 0, 0);
-                        gl.clear(gl.COLOR_BUFFER_BIT);
-                        // gl.clear(gl.COLOR_BUFFER_BIT);
-
-                        // Apply the animation state based on the delta time.
-                        var skeleton = skeletons[activeSkeleton].skeleton;
-                        var state = skeletons[activeSkeleton].state;
-                        var bounds = skeletons[activeSkeleton].bounds;
-                        let speed = 1
-                        if (speedSlider) {
-                            speed = speedSlider.value
-                        }
-                        if (angleSlider) {
-                            mvp.rotate(Number(angleSlider.value), 0, 0, 1);
-                        }
-
-                        state.update(delta * speed);
-                        state.apply(skeleton);
-                        skeleton.updateWorldTransform();
-
-                        gl.enable(gl.SCISSOR_TEST);
-                        gl.scissor(0, 0, canvas.width, canvas.height);
-
-                        // Bind the shader and set the texture and model-view-projection matrix.
-                        shader.bind();
-                        shader.setUniformi(webGlSpine.Shader.SAMPLER, 0);
-
-                        shader.setUniform4x4f(webGlSpine.Shader.MVP_MATRIX, mvp.values);
-
-                        // Start the batch and tell the SkeletonRenderer to render the active skeleton.
-                        batcher.begin(shader);
-
-                        skeleton.opacity = 1
-
-
-                        if (version === '4' || version === '3.8') {
-                            skeleton.scaleX = document.getElementById('flipX').checked ? -1 : 1
-                            skeleton.scaleY = document.getElementById('flipY').checked ? -1 : 1
-                        } else {
-                            skeleton.flipX = document.getElementById('flipX').checked
-                            skeleton.flipY = document.getElementById('flipY').checked
-                        }
-                        skeletonRenderer.premultipliedAlpha = Boolean(skeletons[activeSkeleton].previewParams.premultipliedAlpha)
-                        // skeletonRenderer.premultipliedAlpha = true;
-                        skeletonRenderer.draw(batcher, skeleton);
-                        batcher.end();
-                        shader.unbind();
-
-                        // Draw debug information.
-                        // let debug = document.getElementById('debug').checked
-                        // if (debug) {
-                        //     debugShader.bind();
-                        //     debugShader.setUniform4x4f(webGlSpine.Shader.MVP_MATRIX, mvp.values);
-                        //     // debugRenderer.premultipliedAlpha = premultipliedAlpha;
-                        //     shapes.begin(debugShader);
-                        //     debugRenderer.draw(shapes, skeleton);
-                        //     shapes.end();
-                        //     debugShader.unbind();
-                        // }
-                        gl.disable(gl.SCISSOR_TEST);
-                        requestAnimationFrame(render);
-                    }
-
-                    function resize () {
-                        let w = canvas.clientWidth;
-                        let h = canvas.clientHeight;
-                        if (canvas.width != w || canvas.height != h) {
-                            canvas.width = w;
-                            canvas.height = h;
-                        }
-
-                        // Calculations to center the skeleton in the canvas.
-                        let bounds = skeletons[activeSkeleton].bounds;
-                        let skeleton = skeletons[activeSkeleton]
-                        var centerX = bounds.offset.x + bounds.size.x / 2;
-                        var centerY = bounds.offset.y + bounds.size.y / 2;
-                        // var scaleX = bounds.size.x / canvas.width;
-                        // var scaleY = bounds.size.y / canvas.height;
-                        // var scale = Math.max(scaleX, scaleY) * 1.2;
-                        // if (scale < 1) scale = 1;
-                        var width = canvas.width ;
-                        var height = canvas.height ;
-
-                        // 这个函数的作用: https://blog.csdn.net/FrankieWang008/article/details/7003961  https://www.cnblogs.com/yangxiaoluck/archive/2012/02/22/2363124.html
-                        // 正射投影，又叫平行投影。 正射投影的最大一个特点是无论物体距离相机多远，投影后的物体大小尺寸不变
-                        // 定义裁剪面,裁剪面中心
-                        mvp.ortho2d(centerX - width / 2, centerY - height / 2, width, height);
-                        gl.viewport(0, 0, canvas.width, canvas.height);
-
-                        // 获取输入的属性
-                        let scale = Number(skeleton.previewParams.scale) || 0.5
-                        let posX = Number(skeleton.previewParams.posX) || 0.5
-                        let posY = Number(skeleton.previewParams.posY) || 0.5
-
-                        mvp.ortho2d(0, 0, canvas.width, canvas.height);
-                        mvp.translate(canvas.width*posX, posY * canvas.height, 0)
-
-                        mvp.scale(scale, scale, 0)
-
-
-                        // console.log(bounds, centerX, centerY,  centerX - width / 2, centerY - height / 2, width, height)
-                        // 参数X，Y指定了视见区域的左下角在窗口中的位置，一般情况下为（0，0），Width和Height指定了视见区域的宽度和高度
-                        // 这个函数的作用是将裁剪面投影的图像显示在整个屏幕上, 左下角是opengl定义的坐标原点. 后面两个参数定义的是显示区域也就是屏幕的宽和高
-                        // gl.viewport(0, 0, canvas.width / 2, canvas.height);
-                        // gl.viewport(canvas.width / 2, 0, canvas.width / 2, canvas.height / 2);
-
-                    }
-                    init()
-
                 },
 
                 // 管理滑动事件 status: true  -> 开启
@@ -3840,33 +3810,39 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             lib.init.css(skinSwitch.url + "style", "edit")
             lib.init.css(skinSwitch.url + "component", "iconfont")
             lib.init.css(skinSwitch.url + "component", "message")
+            lib.init.css(skinSwitch.url + "style", "light-modal")
             lib.init.js(skinSwitch.url, 'saveSkinParams', function() {
                 window.saveFunc(lib, game, ui, get, ai, _status);
             }, function() {
                 skinSwitch.saveSkinParams = {}
             });
 
+
             // 加载新的ani
             lib.init.js(skinSwitch.url, 'animation')
             lib.init.js(skinSwitch.url + 'component', 'any-touch.umd.min')
-            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
-                lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {
-                    lib.init.js(skinSwitch.url, 'animations', function () {
-                        if (lib.config[skinSwitch.configKey.replaceDecadeAni]) {
-                            let replace = () => {
-                                if (window.dcdAnim) {
-                                    window.spineAnim = new DecadeAnimationProxy(window.dcdAnim, lib)
-                                    console.log('替换结束')
-                                } else {
-                                    requestAnimationFrame(replace)
+            // 覆盖十周年的spine
+            lib.init.js(skinSwitch.url, 'spine', function () {
+                lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
+                    lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {
+                        lib.init.js(skinSwitch.url, 'animations', function () {
+                            if (lib.config[skinSwitch.configKey.replaceDecadeAni]) {
+                                let replace = () => {
+                                    if (window.dcdAnim) {
+                                        window.spineAnim = new DecadeAnimationProxy(window.dcdAnim, lib)
+                                        console.log('替换结束')
+                                    } else {
+                                        requestAnimationFrame(replace)
+                                    }
                                 }
+                                replace()
                             }
-                            replace()
-                        }
-                    })
+                        })
 
+                    })
                 })
             })
+
 
             lib.init.js(skinSwitch.url, 'effects', function () {
                 for (let k in pfqhSkillEffect) {
@@ -5187,4 +5163,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  1. 修复d动态皮肤参数转换错误
  2. 修复4.0和3.8clip slots报错bug
  3. 支持播放spine 4.0特效
+ */
+
+/** 1.16版本更新
+ 1. 添加动态生成模板参数, 已经有的不会继续添加
+ 2. 骨骼动画现在可以任意版本进行混用
+ 3. 修改预览页面, 可以指定文件夹
+ 4. 调整骨骼位置可以长按十字键修改, 并且可以拖动编辑显示框
+ 5. l2d尝试, 卡的话关闭该功能即可.
  */
