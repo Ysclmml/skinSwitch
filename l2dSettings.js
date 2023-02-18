@@ -23,15 +23,19 @@ window.pfqhLive2dSettings = {
         },
         dafeng_2: {
             role: 'dafeng_2/dafeng_2.model3.json',
-            name: 'dafeng_2',  // 显示在选项上的, 默认为key
+            name: 'dafeng_2',  //
         },
         pinghai_6: {
             role: 'pinghai_6/pinghai_6.model3.json',
             name: 'pinghai_6',  // 显示在选项上的, 默认为key
         },
-        z23: {
-            role: 'z23/z23.model3.json',
-            name: 'z23',  // 显示在选项上的, 默认为key
+        kubo_2: {
+            role: 'kubo_2/kubo_2.model3.json',
+            name: 'kubo_2',  // 显示在选项上的, 默认为key
+        },
+        dujiaoshou_4: {
+            role: 'dujiaoshou_4/dujiaoshou_4.model3.json',
+            name: 'dujiaoshou_4',  //
         },
 
     }
