@@ -2430,8 +2430,13 @@ var spine3_8;
 		}
 		AtlasAttachmentLoader.prototype.newRegionAttachment = function (skin, name, path) {
 			var region = this.atlas.findRegion(path);
-			if (region == null)
-				throw new Error("Region not found in atlas: " + path + " (region attachment: " + name + ")");
+			if (region == null) {
+				console.error("Region not found in atlas: " + path + " (region attachment: " + name + ")")
+				return
+				// throw new Error("Region not found in atlas: " + path + " (region attachment: " + name + ")");
+			}
+			// if (region == null)
+			// 	throw new Error("Region not found in atlas: " + path + " (region attachment: " + name + ")");
 			region.renderObject = region;
 			var attachment = new spine3_8.RegionAttachment(name);
 			attachment.setRegion(region);

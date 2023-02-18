@@ -23,7 +23,7 @@ window.pfqhUtils = {
         let res = {}
 
         let getFiles = (path, parent) => {
-            game.getFileList(path, function (folds, files) {
+            skinSwitch.game.getFileList(path, function (folds, files) {
                 parent.path = path
                 parent.folds = folds
                 parent.files = []
@@ -74,7 +74,7 @@ window.pfqhUtils = {
 
     // 只获取一层文件
     getFoldsFiles: (path, filter, callback) => {
-        game.getFileList(path, function (folds, files) {
+        skinSwitch.game.getFileList(path, function (folds, files) {
             let retFiles = files
             if (filter) {
                 retFiles = []
@@ -91,7 +91,7 @@ window.pfqhUtils = {
     // data是文件读取后的Buffer对象. 获取spine文件的版本号
     getSpineFileVersion: function(path, callback, fail) {
         // game.readFile(skinSwitch.dcdUrl + '/assets/dynamic/fullskin_caoying_JinGuoHuaWu.skel', function (data) {
-        game.readFile(path, function (data) {
+        skinSwitch.game.readFile(path, function (data) {
             // 匹配spine的版本号
             let versionReg = /\d\.\d+\.\d+/
             // 读取文件开头大概100个字节即可
@@ -450,7 +450,7 @@ window.pfqhUtils = {
 
                         let str = stringBuffer.join('')
                         // 写入文件中
-                        game.writeFile(str, skinSwitch.path, '十周年ui动皮自动生成参数.js', function () {
+                        skinSwitch.game.writeFile(str, skinSwitch.path, '十周年ui动皮自动生成参数.js', function () {
                             console.log('十周年ui动皮自动生成参数js成功')
                             skinSwitchMessage.show({
                                 type: 'success',

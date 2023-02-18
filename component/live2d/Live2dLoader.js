@@ -18,10 +18,6 @@ var live2d = PIXI.live2d;
 
 var CustomLive2dLoader = class Live2dLoader {
     constructor(models) {
-        // console.log(
-        //     "%cLive2D using: https://github.com/Weidows-projects/Live2dLoader",
-        //     "color: #6aff00;background: #0c222e;"
-        // );
         let config = models[this.getLive2dIndex(models)];
         if (!config.mobile && this.isMobile()) return;
         this.load(config);
@@ -60,7 +56,9 @@ var CustomLive2dLoader = class Live2dLoader {
         let canvas = document.createElement("canvas");
         canvas.id = "l2dCanvas";
         document.body.appendChild(canvas);
+        this.canvas = canvas
         canvas.style.position = "fixed";
+        canvas.style.zIndex = '12'
         if (config.left) canvas.style.left = config.left;
         if (config.right) canvas.style.right = config.right;
         if (config.top) canvas.style.top = config.top;
@@ -72,10 +70,8 @@ var CustomLive2dLoader = class Live2dLoader {
             canvas.style.backgroundSize = "cover";
         }
 
-        console.log('------> 是否支持: ', PIXI.utils.isWebGLSupported()); // 回傳目前頁面是否支援 WebGL；
         // console.log(app.renderer.type); // 回傳目前 PixiJS app 的renderer 模式：
         // PIXI.RENDERER_TYPE，值為 0、1、2
-        console.log(PIXI.RENDERER_TYPE)
 
         this.app = new PIXI.Application({
             view: document.getElementById("l2dCanvas"),
@@ -85,15 +81,37 @@ var CustomLive2dLoader = class Live2dLoader {
             antialias: true, // 抗锯齿
             autoStart: true,
         });
+        this.initModel(config)
+    }
+
+    async initModel(config) {
         this.model = await live2d.Live2DModel.from(config.role);
         this.app.stage.addChild(this.model);
-        this.model.position.set(
-            canvas.style.width * 0.5,
-            canvas.style.height * 0.5
-        );
-        this.model.scale.set(config.scale || 0.1);
-        if (config.draggable === true) this.draggable(this.model);
-        this.addListener(config, canvas, this.initMotionIndex());
+
+        if (config.scale) {
+            this.model.scale.set(config.scale);
+        } else {
+            const scaleX = this.canvas.width / this.model.width;
+            const scaleY = this.canvas.height / this.model.height;
+            // fit the window
+            this.model.scale.set(Math.min(scaleX, scaleY));
+        }
+
+        if (config.x) {
+            this.model.x = config.x
+        }
+        if (config.y) {
+            this.model.y = config.y
+        }
+
+        if (config.draggable === true) {}this.draggable(this.model);
+    }
+
+    async changeModel(config) {
+        if (this.model) {
+            this.model.destroy()
+        }
+        this.initModel(config)
     }
 
     // 可拖动
@@ -136,6 +154,7 @@ var CustomLive2dLoader = class Live2dLoader {
         document.addEventListener("click", (event) => {
             let offsetX = event.clientX - this.app.view.offsetLeft,
                 offsetY = event.clientY - this.app.view.offsetTop;
+
             if (
                 0 < offsetX &&
                 offsetX < this.app.view.width &&

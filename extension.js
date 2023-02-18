@@ -12,22 +12,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 return
             }
 
-            function groupChange(player) {
-                Object.defineProperty(player,
-                    'group', {
-                        get: function () {
-                            console.log('get 拦截....')
-                            return player.__gruoup;
-                        },
-                        set: function (g) {
-                            console.log('set 设置....')
-                            player.__gruoup = g
-                        },
-                        enumerable: true,
-                        configurable: true,
-                    })
-            }
-
             // 根据本地的存储内容, 更改十周年UI的skinDynamic的数据
             function updateDecadeDynamicSkin(timer) {
 
@@ -1189,6 +1173,40 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             updateDecadeDynamicSkin()
             modifyDecadeUIContent()
 
+            // 加载l2d
+            if (lib.config[skinSwitch.configKey.l2dEnable]) {
+                lib.init.js(skinSwitch.url + 'component/live2d', 'live2dcubismcore.min', () => {
+                    lib.init.js(skinSwitch.url + 'component/live2d', 'pixi.min', () => {
+                        lib.init.js(skinSwitch.url + 'component/live2d', 'Live2dLoader', () => {
+                            // 读取l2d配置
+                            lib.init.js(skinSwitch.url, 'l2dSettings', function () {
+                                // 修改配置
+                                let newItem = {}
+                                for (let k in pfqhLive2dSettings.models) {
+                                    newItem[k] = pfqhLive2dSettings.models[k].name || k
+                                }
+                                console.log('newItem00000000', newItem)
+                                lib.extensionMenu.extension_皮肤切换.l2dSetting.item = newItem
+
+                                let curVal = lib.config[skinSwitch.configKey.l2dSetting]
+                                if (curVal in pfqhLive2dSettings.models) {
+                                    let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
+                                    for (let k in pfqhLive2dSettings.models[curVal]) {
+                                        base[k] = pfqhLive2dSettings.models[curVal][k]
+                                    }
+                                    base.role = lib.assetURL + base.basePath + base.role
+                                    skinSwitch.l2dLoader = new CustomLive2dLoader([
+                                        base
+                                    ]);
+                                }
+
+                            });
+                        })
+                    })
+                })
+            }
+
+
         },
         precontent:function() {
             window.skinSwitch = {
@@ -1212,6 +1230,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'replaceDecadeAni': 'extension_皮肤切换_replaceDecadeAni',  // 是否替换十周年ui的动画播放器对象
                    // 'adjustQhlyFact': 'extension_皮肤切换_adjustQhlyFact',  // 调整预览参数
                    'modifyQhlxPreview': 'extension_皮肤切换_modifyQhlxPreview',  // 调整预览大小
+                   'l2dEnable': 'extension_皮肤切换_l2dEnable',  // 是否允许l2d
+                   'l2dSetting': 'extension_皮肤切换_l2dSetting',  // l2d配置
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -3030,6 +3050,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         background-color: #847a93;
                         cursor: pointer;
                     }
+                    
+                    .previewSelect {
+                        background-color: #847a93;
+                    }
             
                     .nd-detail-filelist__put-away-btn {
                         color: #818999;
@@ -3165,15 +3189,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <span style="font-weight: bold">spine动画预览窗口</span>
                         <span id="curVersionText">当前版本:</span>
                         <span><a href="#unique-id" class="closeBtn aButton" style="display: block">目录</a></span>
-                        <span>动画标签:</span><select id="animationList"></select>
-                        <span>皮肤:</span><select id="skinList"></select>
-<!--                        <span>Debug:</span><input type="checkbox" id="debug">-->
-                        <span>α预乘:</span><input type="checkbox" id="premultipliedAlpha">
-                        <span>flipX:</span><input type="checkbox" id="flipX">
+                         <span>flipX:</span><input type="checkbox" id="flipX">
                         <span>flipY:</span><input type="checkbox" id="flipY">
-                        <span>大小:<input id="scale" type="number" value="0.5" step="0.05" style="width: 50px"></span>
                         <span>x: <input id="posX" type="number" value="0.5" step="0.05" style="width: 50px"></span>
                         <span>y: <input id="posY" type="number" value="0.5" step="0.05" style="width: 50px"></span>
+<!--                        <span>Debug:</span><input type="checkbox" id="debug">-->
+                        <span>α预乘:</span><input type="checkbox" id="premultipliedAlpha">
+                   
+                        <span>动画标签:</span><select id="animationList"></select>
+                        <span>皮肤:</span><select id="skinList"></select>
+                        <span>大小:<input id="scale" type="number" value="0.5" step="0.05" style="width: 50px"></span>
+                     
                         <span>动画时长:<span id="aniTime"></span></span>
                         <button id="closePreviewWindow" style="margin-left: 20px; margin-top: 10px;" class="closeBtn">关闭预览窗口</button>
                     </div>
@@ -3252,6 +3278,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     let clickName = lib.config.touchscreen ? 'touchend' : 'click'
 
+                    let lastSelFile = null
+
                     curFoldEle.innerText = currentPath
 
                     // 返回上一级事件
@@ -3325,8 +3353,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     div.setAttribute('fold', folds[i]);
                                     div.classList.add('nd-detail-filename');
                                     div.addEventListener(clickName, function (e) {
-                                        currentPath = `${currentPath}/${this.getAttribute('fold')}`
-                                        console.log('taggggg', currentPath, this.getAttribute('fold'))
+                                        if (currentPath) {
+                                            currentPath = `${currentPath}/${this.getAttribute('fold')}`
+                                        } else {
+                                            currentPath = this.getAttribute('fold')
+                                        }
 
                                         initFoldsInfo()
                                         e.stopPropagation()
@@ -3347,8 +3378,15 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     div.setAttribute('path', retFiles[i].path)
                                     div.classList.add('nd-detail-filename')
                                     div.addEventListener(clickName, function (e) {
-                                        console.log('file', this.getAttribute('path'))
+                                        if (lastSelFile === this) return
                                         playSelectAsset(this.getAttribute('path'))
+
+                                        // 添加选择的样式
+                                        if (lastSelFile) {
+                                            lastSelFile.classList.remove('previewSelect')
+                                        }
+                                        lastSelFile = this
+                                        this.classList.add('previewSelect')
                                         e.stopPropagation()
                                     })
                                     filesEle.appendChild(div)
@@ -3361,14 +3399,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     let playSelectAsset = (path) => {
                         // 拼接当前所选择的文件, 获取版本号, 然后进行资源载入与播放
-                        pfqhUtils.getSpineFileVersion(currentPath + '/' + path, function (version) {
+                        let fullPath
+                        if (currentPath) {
+                            fullPath = currentPath + '/' + path
+                        } else {
+                            fullPath = path
+                        }
+                        pfqhUtils.getSpineFileVersion(fullPath, function (version) {
+                            if (version == null) {
+                                version = '3.6'
+                            }
                             if ((!['3.6', '3.8', '4.0'].includes(version))) {
                                 skinSwitchMessage.show({
                                     'type': 'warning',
                                     'text': `当前不支持${version}版本的骨骼文件播放`,
                                     'duration': 1500
                                 });
-                                return
+                                return;
                             }
 
                             // 加载当前骨骼
@@ -3376,8 +3423,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                             let name = path.substring(0, path.lastIndexOf("."))
                             let ext = path.substring(path.lastIndexOf(".")+1)
+                            let filename
+                            if (currentPath) {
+                                filename = currentPath + '/' + name
+                            } else {
+                                filename = name
+                            }
 
-                            let filename = currentPath + '/' + name
                             if (!isUpdate) {
                                 dy.update({
                                     width: decadeUI.get.bodySize().width,
@@ -3645,7 +3697,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 scaleSlider.value = v
                             }
                             if (currentNode) {
-                                currentNode.scale = v;
+                                currentNode.scale = Number(v) || 0.5
                             }
                         }
                         document.getElementById('posX').oninput = function (e) {
@@ -3761,6 +3813,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         // 初始化xy坐标
                         x = 0.65 * canvasSize.width
                         y = 0.5 * canvasSize.height
+                        scaleSlider.value = 0.5
+                        document.getElementById('scale').value = 0.5
                         console.log(activeSkeleton.premultipliedAlpha = document.getElementById('premultipliedAlpha'))
                         currentNode.premultipliedAlpha = document.getElementById('premultipliedAlpha').checked
                         currentNode.flipX = document.getElementById('flipX').checked
@@ -3862,7 +3916,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             function editBoxInit() {
                 if (editBox) return
 
-                editBox = ui.create.div('.editDynamic', ui.window)
+                editBox = ui.create.div('.editDynamic .draggable', ui.window)
                 let daijiGroup = ui.create.div('.group', editBox)
                 let chukuangGroup = ui.create.div('.group', editBox)
 
@@ -3929,25 +3983,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 let arena = document.getElementById('arena')
 
-                // 编辑栏加入拖拽
-                let at = new AnyTouch(editBox)
-                at.on('pan', (e) => {
-                    if (e.nativeEvent.touches && e.nativeEvent.touches.length > 1) return
-                    // e包含位移/速度/方向等信息
-                    // 获取x,y偏移
-                    let deltaX = e.deltaX
-                    let deltaY = e.deltaY
 
-                    let _lastX = editBox._lastX || 0
-                    let _lastY = editBox._lastY || 0
+                let at = new AnyTouch(editBox, {bubbles: false, preventDefault: true})
 
-                    _lastX += deltaX
-                    _lastY += deltaY
-                    editBox.style.transform = `translate(${_lastX}px,${_lastY}px)`
-                    editBox._lastX = _lastX
-                    editBox._lastY = _lastY
+                editBox.style.top = '30px'
+                editBox.style.right = '60px'
 
-                });
+                at.on('panstart', () => {
+                    skinSwitch.allowTouchEvent(false)
+                })
+                at.on('panmove', (e) => {
+                    editBox.style.top = parseInt(editBox.style.top) + e.deltaY + 'px'
+                    editBox.style.right = parseInt(editBox.style.right) - e.deltaX + 'px'
+                    console.log('eeeeeee', e)
+                })
+                at.on('panend', () => {
+                    skinSwitch.allowTouchEvent(true)
+                })
 
                 // 控制位置的方向键
                 let adjustDirection = ui.create.div('.adjustDirection .hidden-adjust', arena)
@@ -4867,30 +4919,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 js(skinSwitch.url + 'component/message.js', () => {
                     window.skinSwitchMessage = new SkinSwitchMessage()
                 })
-                lib.init.js(skinSwitch.url + 'component/live2d', 'live2dcubismcore.min', () => {
-                    lib.init.js(skinSwitch.url + 'component/live2d', 'pixi.min', () => {
-                        lib.init.js(skinSwitch.url + 'component/live2d', 'Live2dLoader', () => {
-                            console.log('Live2dLoader====>', Live2dLoader)
-                            new CustomLive2dLoader([
-                                {
-                                    width: 300,
-                                    height: 300,
-                                    left: "0px",
-                                    bottom: "0px",
-                                    // role: "../live2d_assets/aisaikesi_4/aisaikesi_4.model3.json",
-                                    role: lib.assetURL + 'extension/皮肤切换/live2d_assets/pinghai_6/pinghai_6.model3.json',
-                                    //background:"https://cdn.jsdelivr.net/gh/alg-wiki/AzurLaneL2DViewer@gh-pages/assets/bg/bg_church_jp.png",
-                                    opacity: 1,
-                                    // mobile: false,
-                                    mobile: true,
-                                    draggable: true,
-                                    pierceThrough: true,
-                                },
-                            ]);
-                        })
-                    })
-                })
-
 
                 // 在看千幻聆音代码的时候发现切换皮肤后会执行一个回调函数, 这个可以比较好的解决动静皮互相切换的问题, 只有非千幻聆音雷修版本才会触发这个回调函数
                 if (lib.config[skinSwitch.configKey.useDynamic] && skinSwitch.qhly_hasExtension('千幻聆音') && !(lib.config['qhly_viewskin_css'] === 'newui_dc' ||  lib.config['qhly_viewskin_css'] === 'newui_ss')) {
@@ -4900,10 +4928,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 }
 
                 skinSwitch.lib = lib
+                skinSwitch.game = game
 
                 lib.init.js(skinSwitch.url, 'pfqhUtils', function () {})
 
             })
+
         },
         config:{
             //
@@ -4996,6 +5026,38 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 name: "调整千幻大屏预览待机大小",
                 init: true,
                 intro: '默认的千幻大屏预览大小太大了, 我调整的小一些'
+            },
+            'l2dEnable': {
+                name: "是否开启l2d",
+                init:  false,
+                intro: '添加l2d模型'
+            },
+            'l2dSetting': {
+                "name": "live2d模型",
+                "init": "dafeng_4",
+                "item": {
+                    dafeng_4: "dafeng_4",
+                    dafeng_2: 'dafeng_2',
+                    pinghai_6: 'pinghai_6',
+                },
+                onclick: function (value) {
+                    if (!lib.config[skinSwitch.configKey.l2dEnable] || !window.pfqhLive2dSettings) {
+                        return
+                    }
+                    if (lib.config[skinSwitch.configKey.l2dSetting] === value) {
+                        return
+                    }
+                    // 获取当前的配置
+                    let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
+                    for (let k in pfqhLive2dSettings.models[value]) {
+                        base[k] = pfqhLive2dSettings.models[value][k]
+                    }
+                    base.role = lib.assetURL + base.basePath + base.role
+                    game.saveConfig(skinSwitch.configKey.l2dSetting, value)
+                    if (skinSwitch.l2dLoader) {
+                        skinSwitch.l2dLoader.changeModel(base)
+                    }
+                },
             },
             // "adjustQhlyFact": {
             //     name: "<input id='adjustQhlyFact' onblur='skinSwitch.adjustQhlyFact(event)' style='width: 80px'>调整千幻聆音大图预览参数</input>",
