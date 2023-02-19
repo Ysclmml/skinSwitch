@@ -21,7 +21,6 @@ window.pfqhUtils = {
         let tasks = []  // 任务队列
         let taskCount = 0
         let res = {}
-
         let getFiles = (path, parent) => {
             skinSwitch.game.getFileList(path, function (folds, files) {
                 parent.path = path
@@ -85,17 +84,30 @@ window.pfqhUtils = {
                 })
             }
             callback(folds, retFiles)
-        })
+        });
+    },
+
+    decodeArrayBuffer: (ArrayBuffer) => {
+        let utf8 = new Uint8Array(ArrayBuffer);
+        return String.fromCharCode.apply(null, utf8)
     },
 
     // data是文件读取后的Buffer对象. 获取spine文件的版本号
     getSpineFileVersion: function(path, callback, fail) {
-        // game.readFile(skinSwitch.dcdUrl + '/assets/dynamic/fullskin_caoying_JinGuoHuaWu.skel', function (data) {
+
         skinSwitch.game.readFile(path, function (data) {
+
+            let dStr = ''
+            if (data instanceof ArrayBuffer) {
+                dStr = pfqhUtils.decodeArrayBuffer(data.slice(0, 100))
+            } else {
+                dStr = data.slice(0, 100).toString()
+            }
+
             // 匹配spine的版本号
-            let versionReg = /\d\.\d+\.\d+/
+            let versionReg = /\d\.\d+\.\d+/;
             // 读取文件开头大概100个字节即可
-            let m = data.slice(0, 100).toString().match(versionReg)
+            let m = dStr.match(versionReg)
             let version = null
             if (m) {
                 let v = m[0]
@@ -130,7 +142,7 @@ window.pfqhUtils = {
     // 会自动识别骨骼文件的版本和json
     // 文件后缀为bg结尾的png或者jpg, 会当作动皮的背景
     generateDynamicFile: function(lib, dskins) {
-        let path = skinSwitch.dcdUrl + '/assets/dynamic'
+        let path = 'extension/十周年UI/assets/dynamic'
         pfqhUtils.getAllFiles(path, function (file, path) {
             let suffixes = ['.png', '.atlas', '.json', '.skel', '.jpg' ]
             for (let suf of suffixes) {
@@ -241,7 +253,7 @@ window.pfqhUtils = {
                     };
                     to_check_version.push({
                         'info': wujiangSkinMap[wj][sk][tag],
-                        'path': skinSwitch.dcdUrl + '/assets/dynamic/' + key + '.' + info.type
+                        'path': skinSwitch.dcdPath + '/assets/dynamic/' + key + '.' + info.type
                     });
                     checkVersionCount++;
                 }

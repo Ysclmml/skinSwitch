@@ -1,6 +1,6 @@
 // 技能特效绑定  武将id 技能函数
 window.pfqhSkillEffect = {
-    ol_caiwenji: [
+    caiwenji: [
         {
             trigger: { player: 'judgeEnd' },
             filter: function (event, player) {
@@ -49,6 +49,27 @@ window.pfqhSkillEffect = {
                             action: 'play3',
                         }, position)
                 }
+            }
+        },
+        {
+            trigger: {
+                source: "dieBegin",
+            },
+            silent: true,
+            charlotte: true,
+            forced: true,
+            priority: 2022,
+            filter(event, player) {
+                return event.source.name.endsWith('caiwenji')
+            },
+            content: function () {
+                let position = {x: [0, 0.5], y: [0, 0.5], scale: 1.3, speed: 0.8}
+                skinSwitch.chukuangWorkerApi.playEffect({
+                    name: '../../../皮肤切换/effects/蔡文姬击杀/JiSha',
+                    json: true,
+                    version: '4.0',
+                    speed: '0.7'
+                }, position)
             }
         }
     ]

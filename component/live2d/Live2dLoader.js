@@ -58,7 +58,8 @@ var CustomLive2dLoader = class Live2dLoader {
         document.body.appendChild(canvas);
         this.canvas = canvas
         canvas.style.position = "fixed";
-        canvas.style.zIndex = '4'
+        canvas.style.zIndex = '2'
+        // canvas.style.border = '1px solid red'
         if (config.left) canvas.style.left = config.left;
         if (config.right) canvas.style.right = config.right;
         if (config.top) canvas.style.top = config.top;
@@ -94,7 +95,7 @@ var CustomLive2dLoader = class Live2dLoader {
             const scaleX = this.canvas.width / this.model.width;
             const scaleY = this.canvas.height / this.model.height;
             // fit the window
-            this.model.scale.set(Math.min(scaleX, scaleY) * 1.1);
+            this.model.scale.set(Math.min(scaleX, scaleY) * config.scaleFactor);
         }
 
         if (config.x) {
@@ -103,6 +104,20 @@ var CustomLive2dLoader = class Live2dLoader {
         if (config.y) {
             this.model.y = config.y
         }
+
+        // 添加调试的框
+        // const hitAreaFrames = new live2d.HitAreaFrames();
+        //
+        // this.model.addChild(hitAreaFrames);
+        // hitAreaFrames.visible = true
+        //
+        // const foreground = PIXI.Sprite.from(PIXI.Texture.WHITE);
+        // foreground.width = this.model.internalModel.width;
+        // foreground.height = this.model.internalModel.height;
+        // foreground.alpha = 0.2;
+        //
+        // this.model.addChild(foreground);
+        // foreground.visible = true
 
         if (config.draggable === true) {}this.draggable(this.model);
         this.addListener(config, this.canvas, this.initMotionIndex());
@@ -117,20 +132,43 @@ var CustomLive2dLoader = class Live2dLoader {
 
     // 可拖动
     draggable(model) {
-        model.buttonMode = true;
-        model.on("pointerdown", (e) => {
+        // model.buttonMode = true;
+        let c = this.canvas
+        c.addEventListener('pointerdown', (e) => {
+            model._pointerX = e.offsetX;
+            model._pointerY = e.offsetY;
             model.dragging = true;
-            model._pointerX = e.data.global.x - model.x;
-            model._pointerY = e.data.global.y - model.y;
-        });
-        model.on("pointermove", (e) => {
+        })
+
+        c.addEventListener('pointermove', (e) => {
             if (model.dragging) {
-                model.position.x = e.data.global.x - model._pointerX;
-                model.position.y = e.data.global.y - model._pointerY;
+                if (e.offsetX >= c.width + c.offsetLeft || e.offsetY >= c.height + c.offsetTop) {
+                    model.dragging = false
+                    return
+                }
+                model.x = model.x + e.offsetX - model._pointerX;
+                model.y = model.y + e.offsetY - model._pointerY;
+                model._pointerX = e.offsetX
+                model._pointerY = e.offsetY;
             }
-        });
-        model.on("pointerupoutside", () => (model.dragging = false));
-        model.on("pointerup", () => (model.dragging = false));
+        })
+        document.addEventListener('pointerup', () => (model.dragging = false));
+
+
+        // model.on("pointerdown", (e) => {
+        //     model.dragging = true;
+        //     model._pointerX = e.data.global.x - model.x;
+        //     model._pointerY = e.data.global.y - model.y;
+        //     console.log('eeee', e.data, model.x, model.y)
+        // });
+        // model.on("pointermove", (e) => {
+        //     if (model.dragging) {
+        //         model.position.x = e.data.global.x - model._pointerX;
+        //         model.position.y = e.data.global.y - model._pointerY;
+        //     }
+        // });
+        // model.on("pointerupoutside", () => (model.dragging = false));
+        // model.on("pointerup", () => (model.dragging = false));
     }
 
     initMotionIndex() {
@@ -151,37 +189,42 @@ var CustomLive2dLoader = class Live2dLoader {
         // 有的旧模型(比如lafei)不支持, 无法触发执行; 所以统一监听document的点击事件
         // this.model.on("hit", (hitAreas) => {});
         // this.model.emit("hit");
-
-        this.canvas.addEventListener("click", (event) => {
-            let offsetX = event.clientX - this.app.view.offsetLeft,
-                offsetY = event.clientY - this.app.view.offsetTop;
-
-            console.log('xxx', offsetX, offsetY, this.app.view.width , this.app.view.height )
-
-            if (config.pierceThrough !== false) {
-                // 鼠标穿透, 先把 canvas 设为可穿透
-                canvas.style.pointerEvents = "none";
-                // 为该元素派发点击事件 https://www.blogwxb.cn/js%E4%B8%AD%E7%94%A8x%EF%BC%8Cy%E5%9D%90%E6%A0%87%E6%9D%A5%E5%AE%9E%E7%8E%B0%E6%A8%A1%E6%8B%9F%E7%82%B9%E5%87%BB%E5%8A%9F%E8%83%BD/
-                document
-                    .elementsFromPoint(event.clientX, event.clientY)[0]
-                    .dispatchEvent(
-                        new MouseEvent("click", {
-                            bubbles: true, // 事件冒泡
-                            cancelable: true, // 默认事件
-                            view: window,
-                        })
-                    );
-                canvas.style.pointerEvents = "auto";
+        let cn = skinSwitch.lib.config.touchscreen ? 'touchend' : 'click'
+        let offsetX, offsetY
+        let eve = (event) => {
+            if (skinSwitch.lib.config.touchscreen) {
+                offsetX = event.changedTouches[0].pageX - this.app.view.offsetLeft
+                offsetY = event.changedTouches[0].pageY - this.app.view.offsetTop
+            } else {
+                offsetX = event.clientX - this.app.view.offsetLeft
+                offsetY = event.clientY - this.app.view.offsetTop
             }
 
-            if (
-                0 < offsetX &&
-                offsetX < this.app.view.width &&
-                0 < offsetY &&
-                offsetY < this.app.view.height
-            ) {
-
-
+            if (!Number.isFinite(offsetX) || !Number.isFinite(offsetY)) return
+            event.stopPropagation();
+            // if (config.pierceThrough !== false) {
+            //     // 鼠标穿透, 先把 canvas 设为可穿透
+            //     canvas.style.pointerEvents = "none";
+            //     // 为该元素派发点击事件 https://www.blogwxb.cn/js%E4%B8%AD%E7%94%A8x%EF%BC%8Cy%E5%9D%90%E6%A0%87%E6%9D%A5%E5%AE%9E%E7%8E%B0%E6%A8%A1%E6%8B%9F%E7%82%B9%E5%87%BB%E5%8A%9F%E8%83%BD/
+            //
+            //     document.elementsFromPoint(cn === 'touchend' ? event.changedTouches[0].pageX : event.clientX,
+            //         cn === 'touchend' ? event.changedTouches[0].pageY : event.clientY)[0]
+            //         .dispatchEvent(
+            //             new MouseEvent(cn, {
+            //                 bubbles: true, // 事件冒泡
+            //                 cancelable: true, // 默认事件
+            //                 view: window,
+            //             })
+            //         );
+            //     canvas.style.pointerEvents = "auto";
+            // }
+            // if (
+            //     0 < offsetX &&
+            //     offsetX < this.app.view.width &&
+            //     0 < offsetY &&
+            //     offsetY < this.app.view.height
+            // )
+            {
                 let po = this.model.toModelPosition(new PIXI.Point(offsetX, offsetY)),
                     hitAreas,
                     ifRandom;
@@ -226,7 +269,8 @@ var CustomLive2dLoader = class Live2dLoader {
 
                 console.log("Start motion: ", hitAreas.join(" / ") || "random");
             }
-        });
+        }
+        this.canvas.addEventListener(cn, eve);
     }
 
     hitTest(poX, poY) {

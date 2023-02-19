@@ -11,6 +11,7 @@ window.pfqhLive2dSettings = {
         mobile: true,
         draggable: true,  // 是否可拖拽
         pierceThrough: true,
+        scaleFactor: 1.5,
         // scale: xxx,  // 不写自适应
         // x: xxx  // x坐标
         // y: yyy  // y坐标 可以重新定义

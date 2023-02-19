@@ -1195,8 +1195,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         base[k] = pfqhLive2dSettings.models[curVal][k]
                                     }
                                     base.role = lib.assetURL + base.basePath + base.role
-                                    base.height = base.height * decadeUI.get.bodySize().height
-                                    base.width = base.width * decadeUI.get.bodySize().width
+                                    base.height = base.height * skinSwitch.bodySize().height
+                                    base.width = base.width * skinSwitch.bodySize().width
                                     skinSwitch.l2dLoader = new CustomLive2dLoader([
                                         base
                                     ]);
@@ -1257,6 +1257,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                     }
                     return false;
+                },
+                bodySize:function(){
+                    let size = {}
+                    let body = document.body
+                    size.updated = true
+                    size.height = body.clientHeight
+                    size.width = body.clientWidth
+                    return size;
                 },
                 // adjustQhlyFact: function (e) {
                 //     let v = Number(e.target.value)
@@ -3185,6 +3193,29 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         line-height: 30px;
                     }
                     
+                    /* 内容宽度*/ 
+                     @media (max-height: 1200px) {
+                         .filesHeight {
+                            overflow-y: auto;
+                            height: 600px;
+                         }
+                    }
+                    
+                     @media (max-height: 600px) {
+                        .filesHeight {
+                            overflow-y: auto;
+                            height: 320px;
+                        }
+                    }
+                    
+                    
+                    @media (max-height: 380px) {
+                        .filesHeight {
+                            overflow-y: auto;
+                            height: 260px;
+                        }
+                    }
+                    
                     </style>
                     <canvas id="preview-canvas"></canvas>
                     <div id="previewSpineDom" style="color: #fff; position: absolute; top: 0; left: 30px;">
@@ -3228,7 +3259,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                                                         alt="folder" class="u-file-icon u-file-icon--list"><span id="pfqhCurFold">当前文件夹</span></div>
                                                 <div class="nd-detail-filelist__list bg">
                                                     <div style="display: flex; flex-direction: row">
-                                                        <div id="pfqhFoldList" style="white-space: nowrap; width: 43%; display: flex;flex-direction: column;" >
+                                                        <div id="pfqhFoldList" class="filesHeight" style="white-space: nowrap; width: 43%; display: flex;flex-direction: column;" >
                                                             <div class="nd-detail-filename" id="pfqhLastDir">
                                                             <img
                                                                  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABRUExURUxpcf++Hv/ZU//OPv/DL/+9Gv/BI/+4Bf+4Ef/XcP/LOP/TSf/RRP/WTv/JM/+3Ef+9Ff/bhf+5BP/DJf+yDv/imv/kqv/bXP/w0v/fd//calQXUgwAAAAKdFJOUwB///8d3L9enl8sr20gAAACN0lEQVRYw+2Y65abIBRGE1EzVbyNSW18/wctHA6XYw4q9Ee7Vt2AgOHbcVyTOMztdnFxcXFMWf7gKHN190VRKDpFC0iNqB5ZvqpXzJRxHoF7hrAa9/hK9j2oYIA2QA/UqXeyNg5QDBrshhHbUH8xxO+uT7sOJ/tU5a4wh0eK8KmKHTxd28Bfo16pqphep5l6I+R/p8xr668kVghVceH8M5EZYnGhnBKRceGqmaZXPPw2xbO+1xU+8axwe8NfzkIV7xVZdF0AVhi+rWdxIfgmwloE6CkrDCPwJbYUeFgK61icxFcNKyxIxE+WgnllQ0y4+HffzZ8WZtJlCDtz+CzqaaFaVGiWBNEOZZ15zihsT2CFnXk4QStsLohTU3FC+Af8I8JWV1fa1jy8u+hnOUy2vnd5SkeGrJBfHZwDbxe87pfxQvejmMZZYxxdYSoyVyixSvtXFLJ7hWq5xCRNSTozczzHCj8T54kI5d8QCtvZAodDIa7DgRkJaII2hBfaJC7EOE7D076XuIoVBu8oN3kpBLVt4YXBVaUSFSbS5Akb00znSoPn9KCJCN0am7SnGhganC4kKhR2MV0vvEn4M7bFhM3GIZqtgfiPr9BdSAYnrnCX3rQeB/2xsKcHouiBBhpO+phQL9CdjmKqsRkXpkMz57dmfTY1v3k8is26zvN2A6yIbKVqm/tMjFBMp5jpxrWKbsB1dJw/AsC3Lt/YEaK7x1t5r7aLj3ned/fRj1TK3H9wXFxc/F/8BgM0jBZ4nc19AAAAAElFTkSuQmCC"
@@ -3236,7 +3267,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                             <span class="nd-detail-filename__title-text inline-block-v-middle text-ellip">返回上级</span>
                                                             </div>
                                                         </div>
-                                                        <div id="pfqhFilesList" style="margin-left: 5%; white-space: nowrap; width: 43%; display: flex;flex-direction: column;"">
+                                                        <div id="pfqhFilesList" class="filesHeight" style="margin-left: 5%; white-space: nowrap; width: 43%; display: flex;flex-direction: column;"">
                                    
                                                         </div>
                                                     </div>
@@ -3260,7 +3291,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     canvas = document.getElementById('preview-canvas')
 
-                    let animationManager = new AnimationManager('', canvas, 123456)
+                    let animationManager = new AnimationManager(lib.assetURL, canvas, 123456)
 
                     // 被监视的元素
                     let px = document.getElementById('posX')
@@ -3272,7 +3303,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     // 开始监视el上的手势变化
                     const at = new AnyTouch(canvas)
 
-                    let currentPath = lib.assetURL + 'extension/皮肤切换/assets'
+                    let currentPath = 'extension/皮肤切换/assets'
                     // 获取模态框文件夹和文件列表dom
                     let foldsEle = document.getElementById('pfqhFoldList')
                     let filesEle = document.getElementById('pfqhFilesList')
@@ -3281,6 +3312,35 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let clickName = lib.config.touchscreen ? 'touchend' : 'click'
 
                     let lastSelFile = null
+
+
+                    let contentModal = document.getElementById('unique-id').getElementsByClassName('light-modal-body')[0]
+
+                    contentModal.addEventListener('touchstart', touchstart, true);
+                    contentModal.addEventListener('touchmove', touchmove, true);//添加touchmove方法
+                    contentModal.addEventListener('touchend', touchend, true);
+                    function touchstart(e){
+                        // console.log(e.changedTouches[0].pageY,"开始时触摸的位置")
+                        this.move = false //添加一个move参数，触摸时置为false
+                        // this.start = e.changedTouches[0].pageY
+                        this.start = e.pageY
+                    }
+                    function touchmove(){
+                        this.move = true // 触发滑动事件时move置为true
+                    }
+
+                    function touchend(e){
+                        // this.end = e.changedTouches[0].pageY
+                        this.end = e.pageY
+                        if(this.move){ //只有当move为true时才会触发滑动事件
+                            e.stopPropagation()
+                        }else{
+                            if (e.target.touchend) {
+                                e.target.touchend(e.target)
+                            }
+                        }
+                    }
+
 
                     curFoldEle.innerText = currentPath
 
@@ -3327,7 +3387,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     let initFoldsInfo = () => {
                         // 获取这个文件夹下的所有合法的skel文件和所有文件夹
-                        pfqhUtils.getFoldsFiles(currentPath.replace(lib.assetURL, ''), function (file, path) {
+                        pfqhUtils.getFoldsFiles(currentPath, function (file, path) {
                             let suffixes = ['.png', '.atlas', '.json', '.skel', '.jpg' ]
                                 for (let suf of suffixes) {
                                     if (file.endsWith(suf)) {
@@ -3381,6 +3441,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     div.classList.add('nd-detail-filename')
                                     div.addEventListener(clickName, function (e) {
                                         if (lastSelFile === this) return
+
                                         playSelectAsset(this.getAttribute('path'))
 
                                         // 添加选择的样式
@@ -3389,7 +3450,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         }
                                         lastSelFile = this
                                         this.classList.add('previewSelect')
-                                        e.stopPropagation()
+                                        // e.stopPropagation()
                                     })
                                     filesEle.appendChild(div)
                                 }
@@ -3431,7 +3492,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             } else {
                                 filename = name
                             }
-
                             if (!isUpdate) {
                                 dy.update({
                                     width: decadeUI.get.bodySize().width,
@@ -4852,56 +4912,59 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             }
 
             lib.arenaReady.push(function() { //游戏加载完成执行的内容
-                //顶部菜单
-                if (lib.config[skinSwitch.configKey.showEditMenu]) {
-                    // 添加编辑动皮皮肤的位置和出框位置参数
-                    ui.create.system('编辑动皮参数', function() {
-                        setTimeout(function() {
-                            if (!lib.config[skinSwitch.configKey.useDynamic]) {
-                                skinSwitchMessage.show({
-                                    type: 'warning',
-                                    text: '请先打开动皮功能',
-                                    duration: 1500,    // 显示时间
-                                    closeable: false, // 可手动关闭
-                                })
-                                return
-                            }
-                            // 只能编辑自己
-                            if (game.me) {
-                                let player = game.me
-                                if (!player.dynamic || (!player.dynamic.primary)) {
-                                    // alert("只能编辑当前角色的动皮位置参数")
+                lib.init.js(skinSwitch.url, 'pfqhUtils', function () {
+                    //顶部菜单
+                    if (lib.config[skinSwitch.configKey.showEditMenu]) {
+                        // 添加编辑动皮皮肤的位置和出框位置参数
+                        ui.create.system('编辑动皮参数', function() {
+                            setTimeout(function() {
+                                if (!lib.config[skinSwitch.configKey.useDynamic]) {
                                     skinSwitchMessage.show({
                                         type: 'warning',
-                                        text: '只能当前角色是动皮才可编辑参数',
+                                        text: '请先打开动皮功能',
                                         duration: 1500,    // 显示时间
                                         closeable: false, // 可手动关闭
                                     })
                                     return
                                 }
-                                if (get.mode() === 'guozhan' || player.name2 !== undefined) {
-                                    skinSwitchMessage.show({
-                                        type: 'warning',
-                                        text: '只能在单将模式下编辑参数',
-                                        duration: 1500,    // 显示时间
-                                        closeable: false, // 可手动关闭
-                                    })
-                                    return
+                                // 只能编辑自己
+                                if (game.me) {
+                                    let player = game.me
+                                    if (!player.dynamic || (!player.dynamic.primary)) {
+                                        // alert("只能编辑当前角色的动皮位置参数")
+                                        skinSwitchMessage.show({
+                                            type: 'warning',
+                                            text: '只能当前角色是动皮才可编辑参数',
+                                            duration: 1500,    // 显示时间
+                                            closeable: false, // 可手动关闭
+                                        })
+                                        return
+                                    }
+                                    if (get.mode() === 'guozhan' || player.name2 !== undefined) {
+                                        skinSwitchMessage.show({
+                                            type: 'warning',
+                                            text: '只能在单将模式下编辑参数',
+                                            duration: 1500,    // 显示时间
+                                            closeable: false, // 可手动关闭
+                                        })
+                                        return
+                                    }
+                                    // 设置一个全局变量
+                                    window.dynamicEditBox = editBoxShowOrHide()
                                 }
-                                // 设置一个全局变量
-                                window.dynamicEditBox = editBoxShowOrHide()
-                            }
 
-                        }, 100);
-                    }, true)
-                }
+                            }, 100);
+                        }, true)
+                    }
 
-                if (lib.config[skinSwitch.configKey.showPreviewDynamicMenu]) {
-                    ui.create.system('预览spine', function() {
-                        skinSwitch.previewDynamic()
-                    }, true)
-                }
-
+                    if (lib.config[skinSwitch.configKey.showPreviewDynamicMenu]) {
+                        ui.create.system('预览spine', function() {
+                            skinSwitch.previewDynamic()
+                        }, true)
+                    }
+                }, function (err) {
+                    console.log(err)
+                } )
 
                 // 引入js
                 let js = function (path, onload, onerror) {
@@ -4931,8 +4994,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 skinSwitch.lib = lib
                 skinSwitch.game = game
-
-                lib.init.js(skinSwitch.url, 'pfqhUtils', function () {})
 
             })
 
@@ -5055,8 +5116,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         base[k] = pfqhLive2dSettings.models[value][k]
                     }
                     base.role = lib.assetURL + base.basePath + base.role
-                    base.height = base.height * decadeUI.get.bodySize().height
-                    base.width = base.width * decadeUI.get.bodySize().width
+                    base.height = base.height * skinSwitch.bodySize().height
+                    base.width = base.width * skinSwitch.bodySize().width
                     game.saveConfig(skinSwitch.configKey.l2dSetting, value)
                     if (skinSwitch.l2dLoader) {
                         skinSwitch.l2dLoader.changeModel(base)
