@@ -13,6 +13,7 @@ window.pfqhSkillEffect = {
             direct: true,
             charlotte: true,
             forced: true,
+            silent: true,
             content: function () {
                 if (!trigger.result || !trigger.result.suit) return;
                 let position = {x: [0, 0.5], y: [0, 0.5], scale: 1.3, speed: 0.8}
@@ -63,13 +64,15 @@ window.pfqhSkillEffect = {
                 return event.source.name.endsWith('caiwenji')
             },
             content: function () {
-                let position = {x: [0, 0.5], y: [0, 0.5], scale: 1.3, speed: 0.8}
-                skinSwitch.chukuangWorkerApi.playEffect({
-                    name: '../../../皮肤切换/effects/蔡文姬击杀/JiSha',
-                    json: true,
-                    version: '4.0',
-                    speed: '0.7'
-                }, position)
+                let position = {x: [0, 0.5], y: [0, 0.5], scale: 1, speed: 0.8}
+                setTimeout(() => {
+                    skinSwitch.chukuangWorkerApi.playEffect({
+                        name: '../../../皮肤切换/effects/蔡文姬击杀/JiSha',
+                        json: true,
+                        version: '4.0',
+                        speed: '0.7'
+                    }, position)
+                }, 200)
             }
         }
     ]

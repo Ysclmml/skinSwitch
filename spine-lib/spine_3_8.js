@@ -5134,7 +5134,7 @@ var spine3_8;
 
 			if (slot) {
 				let n = clip.worldVerticesLength;
-				let vertices = Utils.setArraySize(this.clippingPolygon, n);
+				let vertices = spine3_8.Utils.setArraySize(this.clippingPolygon, n);
 				clip.computeWorldVertices(slot, 0, n, vertices, 0, 2);
 			} else {
 				this.clippingPolygon = clip.vertices.concat();

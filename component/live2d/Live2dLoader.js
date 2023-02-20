@@ -98,6 +98,8 @@ var CustomLive2dLoader = class Live2dLoader {
             this.model.scale.set(Math.min(scaleX, scaleY) * config.scaleFactor);
         }
 
+        console.log(this.model, '<<<<<<<--')
+
         if (config.x) {
             this.model.x = config.x
         }
@@ -125,7 +127,8 @@ var CustomLive2dLoader = class Live2dLoader {
 
     async changeModel(config) {
         if (this.model) {
-            this.model.destroy()
+            this.app.stage.removeChild(this.model)
+            // this.model.destroy()
         }
         this.initModel(config)
     }

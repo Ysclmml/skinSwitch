@@ -17,7 +17,7 @@ window.pfqhLive2dSettings = {
         // y: yyy  // y坐标 可以重新定义
     },
     models: {
-        // 配置所有的模型, 基础信息皆可覆盖
+        // 对于每个模型都可以覆盖上面配置, 基础信息皆可覆盖
         dafeng_4: {
             role: 'dafeng_4/dafeng_4.model3.json',
             name: 'dafeng_4',  // 显示在选项上的, 默认为key
