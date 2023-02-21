@@ -166,39 +166,39 @@ function playSkin(am, data) {
 				let setNewScale = () => {
 					if (sprite.qhlxBigAvatar && modifyQhlxPreview) {
 						dynamic.update({
-							width: player.divPos.width,
-							height: player.divPos.height,
+							//width: player.divPos.width,
+							//height: player.divPos.height,
 							dpr: dpr,
 						})
-						let oldScale = player.scale / player.largeFactor
-						let fact = qhlxFactor
-						let mul = Math.min( player.divPos.width / 120 , player.divPos.height / 200) * oldScale
-						sprite.scale = mul * fact
-						player.scale = mul * fact
-
-						if (sprite.x[1] < 0) {
-							sprite.x[1] += (-mul * player.divPos.width * sprite.x[1] / fact * 0.6) / (mul * fact * player.divPos.width)
-						}  else {
-							sprite.x[1] += qhlxFactor * 0.1
-						}
-						if (sprite.y[1] < 0) {
-							let yy = -sprite.y[1]
-
-							if (yy < 0.1) {
-								yy = yy * 3
-							} else if (yy < 0.2) {
-
-							}else if(yy < 0.35){
-								yy *= 0.8
-							} else if(yy < 0.5) {
-								yy = yy * 0.6
-							} else {
-								yy = yy * 0.4
-							}
-							sprite.y[1] += (mul * player.divPos.height * yy / fact * 0.6) / (mul * fact * player.divPos.height)
-						} else {
-							sprite.y[1] += qhlxFactor * 0.15
-						}
+						// let oldScale = player.scale / player.largeFactor
+						// let fact = qhlxFactor
+						// let mul = Math.min( player.divPos.width / 120 , player.divPos.height / 200) * oldScale
+						// sprite.scale = mul * fact
+						// player.scale = mul * fact
+						//
+						// if (sprite.x[1] < 0) {
+						// 	sprite.x[1] += (-mul * player.divPos.width * sprite.x[1] / fact * 0.6) / (mul * fact * player.divPos.width)
+						// }  else {
+						// 	sprite.x[1] += qhlxFactor * 0.1
+						// }
+						// if (sprite.y[1] < 0) {
+						// 	let yy = -sprite.y[1]
+						//
+						// 	if (yy < 0.1) {
+						// 		yy = yy * 3
+						// 	} else if (yy < 0.2) {
+						//
+						// 	}else if(yy < 0.35){
+						// 		yy *= 0.8
+						// 	} else if(yy < 0.5) {
+						// 		yy = yy * 0.6
+						// 	} else {
+						// 		yy = yy * 0.4
+						// 	}
+						// 	sprite.y[1] += (mul * player.divPos.height * yy / fact * 0.6) / (mul * fact * player.divPos.height)
+						// } else {
+						// 	sprite.y[1] += qhlxFactor * 0.15
+						// }
 
 					}
 				}

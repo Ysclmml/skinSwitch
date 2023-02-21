@@ -353,7 +353,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     if (_status.currentPhase != player) return false;
                                     if (event.card.name == "huogong") return false;
                                     let type = get.type(event.card);
-                                    return ((type == 'basic' || type == 'trick') && get.tag(event.card, 'damage') > 0) && !player.GongJi;
+                                    return ((type == 'basic' || type == 'trick') && get.tag(event.card, 'damage') > 0)
                                 },
                                 content: function () {
                                     // player.GongJi = true;
@@ -616,6 +616,24 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 },
                                 content: function () {
                                     skinSwitch.skinSwitchCheckYH(player)
+                                }
+                            }
+
+                            lib.skill._check_die_yh = {
+                                trigger: {
+                                    player: "dieBegin",
+                                },
+                                silent: true,
+                                charlotte: true,
+                                forced: true,
+                                filter(event, player) {
+                                    return player.dynamic
+                                },
+                                content: function () {
+                                    let skinYh = player.getElementsByClassName("skinYh");
+                                    if (skinYh.length > 0) {
+                                        player.removeChild(skinYh[0]);
+                                    }
                                 }
                             }
 
@@ -1109,8 +1127,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 skinSwitch.chukuangPlayerInit(this, !deputy, animation.player)
 
                             }
-
-                            window.duilib = newDuilib
                             // 先初步进行初始化
                             if (!lib.config['extension_千幻聆音_enable'] || lib.config['extension_千幻聆音_qhly_decadeCloseDynamic'] || !(lib.config.qhly_currentViewSkin === 'decade' || lib.config.qhly_currentViewSkin === 'shousha')) {
                                 overrides(lib.element.player, Player)
@@ -1160,12 +1176,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 }
 
                 skinSwitch.waitUntil(() => {
-                    return window.decadeUI && window.decadeModule
+                    return window.decadeUI && window.decadeModule && decadeUI.dynamicSkin && lib.skill._decadeUI_usecardBegin
                 }, () => {
                     updateDecadeDynamicSkin()
-                    modifyDecadeUIContent()
-                    console.log('替换结束')
                 })
+
+                skinSwitch.waitUntil(() => {
+                    return window.duilib && window.newDuilib
+                }, () => {
+                    window.duilib = newDuilib
+                })
+                modifyDecadeUIContent()
 
             }
 
@@ -1200,7 +1221,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'cugDynamicBg': 'extension_皮肤切换_cugDynamicBg',  // 是否裁剪动态背景
                     'replaceDecadeAni': 'extension_皮肤切换_replaceDecadeAni',  // 是否替换十周年ui的动画播放器对象
                    // 'adjustQhlyFact': 'extension_皮肤切换_adjustQhlyFact',  // 调整预览参数
-                   'modifyQhlxPreview': 'extension_皮肤切换_modifyQhlxPreview',  // 调整预览大小
+                   // 'modifyQhlxPreview': 'extension_皮肤切换_modifyQhlxPreview',  // 调整预览大小
                    'l2dEnable': 'extension_皮肤切换_l2dEnable',  // 是否允许l2d
                    'l2dSetting': 'extension_皮肤切换_l2dSetting',  // l2d配置
                 },
@@ -2640,7 +2661,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             return
                         }
                         skinSwitch.chukuangWorkerInit()
-
                         // 添加如果当前是国战模式隐藏状态下, 不允许出框
                         skinSwitch.chukuangWorker.postMessage({
                             message: 'isChuKuang',
@@ -2702,7 +2722,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     },
                     getPlayerById: function(id, isQhlx) {
                         if (isQhlx) {
-                            return document.getElementById('mainView')
+                            let p = document.getElementById('mainView')
+                            if (p && p.dynamic) return p
+                            else {
+                                return p.childNodes && p.childNodes[0]  // 否则返回第0个节点
+                            }
                         }
                         for (let p of game.players) {
                             if (p.dynamic && p.dynamic.id === id) {
@@ -2725,7 +2749,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (_status.currentPhase !== player && data.action === 'TeShu' && !avatar.player.shizhounian) {
                             return
                         }
-
                         player.dynamic.renderer.postMessage({
                             message: 'hideAllNode',
                             id: dynamic.id,
@@ -2848,16 +2871,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     })
 
                     // 检查只有当前是player或者是千幻大屏预览才会进行初始化
-                    if (!(get.itemtype(player) === 'player' || player.classList.contains('qh-shousha-big-avatar'))) {
+                    if (!(get.itemtype(player) === 'player' || player.classList.contains('qh-shousha-big-avatar') || player.getElementsByClassName('qhdynamic-decade-big-wrap').length || player.getElementsByClassName('qhdynamic-big-wrap').length)) {
                         return
                     }
                     skinSwitch.chukuangWorkerInit()
                     if (!isPrimary && player.dynamic.deputy) {
-                        console.log('初始化preload deputy...')
                         skinSwitch.chukuangWorkerApi.preLoad(player.dynamic.id, player.dynamic.deputy.id, playParams)
                     }
                     else if (isPrimary && player.dynamic.primary) {
-                        console.log('初始化preload primary...')
                         skinSwitch.chukuangWorkerApi.preLoad(player.dynamic.id, player.dynamic.primary.id, playParams)
                     }
                 },
@@ -3831,7 +3852,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         y = 0.5 * canvasSize.height
                         scaleSlider.value = 0.5
                         document.getElementById('scale').value = 0.5
-                        console.log(activeSkeleton.premultipliedAlpha = document.getElementById('premultipliedAlpha'))
                         currentNode.premultipliedAlpha = document.getElementById('premultipliedAlpha').checked
                         currentNode.flipX = document.getElementById('flipX').checked
                         currentNode.flipY = document.getElementById('flipY').checked
@@ -3925,7 +3945,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 return window.spine
             }, () => {
                 lib.init.js(skinSwitch.url, 'spine', function () {
-                    console.log('替换spine成功')
                     lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
                         lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {
                             lib.init.js(skinSwitch.url, 'animations', function () {
@@ -5085,11 +5104,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 clear: true,
                 info: '动皮文件夹结构是 --> 武将中文名(武将id也行)/皮肤名称/骨骼  <--- 形式的话, 可以自动根据当前已填写的参数动态生成动皮模板'
             },
-            'modifyQhlxPreview': {
-                name: "调整千幻大屏预览待机大小",
-                init: true,
-                intro: '默认的千幻大屏预览大小太大了, 我调整的小一些'
-            },
+            // 'modifyQhlxPreview': {
+            //     name: "调整千幻大屏预览待机大小",
+            //     init: true,
+            //     intro: '默认的千幻大屏预览大小太大了, 我调整的小一些'
+            // },
             'l2dEnable': {
                 name: "是否开启l2d",
                 init:  false,
