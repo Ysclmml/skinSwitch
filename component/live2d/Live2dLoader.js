@@ -71,6 +71,13 @@ var CustomLive2dLoader = class Live2dLoader {
             canvas.style.backgroundSize = "cover";
         }
 
+        let dpr = Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1);
+
+        canvas.style.height = '40%'
+        canvas.style.width = '20%'
+        config.height = config.height * skinSwitch.bodySize().height * dpr
+        config.width = config.width * skinSwitch.bodySize().width * dpr
+
         // console.log(app.renderer.type); // 回傳目前 PixiJS app 的renderer 模式：
         // PIXI.RENDERER_TYPE，值為 0、1、2
 

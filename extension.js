@@ -621,7 +621,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                             lib.skill._check_die_yh = {
                                 trigger: {
-                                    player: "dieBegin",
+                                    player: "dieBefore",
                                 },
                                 silent: true,
                                 charlotte: true,
@@ -2725,7 +2725,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             let p = document.getElementById('mainView')
                             if (p && p.dynamic) return p
                             else {
-                                return p.childNodes && p.childNodes[0]  // 否则返回第0个节点
+                                return p && p.childNodes && p.childNodes[0]  // 否则返回第0个节点
                             }
                         }
                         for (let p of game.players) {
@@ -3169,27 +3169,31 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
                     
                     /* 内容宽度*/ 
-                     @media (max-height: 1200px) {
-                         .filesHeight {
-                            overflow-y: auto;
-                            height: 600px;
-                         }
-                    }
+                    /* @media (max-height: 1200px) {*/
+                    /*     .filesHeight {*/
+                    /*        overflow-y: auto;*/
+                    /*        height: 600px;*/
+                    /*     }*/
+                    /*}*/
                     
-                     @media (max-height: 600px) {
-                        .filesHeight {
+                    /* @media (max-height: 600px) {*/
+                    /*    .filesHeight {*/
+                    /*        overflow-y: auto;*/
+                    /*        height: 320px;*/
+                    /*    }*/
+                    /*}*/
+                    
+                    
+                    /*@media (max-height: 380px) {*/
+                    /*    .filesHeight {*/
+                    /*        overflow-y: auto;*/
+                    /*        height: 260px;*/
+                    /*    }*/
+                    /*}*/
+                    .filesHeight {
                             overflow-y: auto;
-                            height: 320px;
+                            height: 70vh;
                         }
-                    }
-                    
-                    
-                    @media (max-height: 380px) {
-                        .filesHeight {
-                            overflow-y: auto;
-                            height: 260px;
-                        }
-                    }
                     
                     </style>
                     <canvas id="preview-canvas"></canvas>
@@ -4048,22 +4052,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 let arena = document.getElementById('arena')
 
-
-                let at = new AnyTouch(editBox, )
-
-                editBox.style.top = '30px'
-                editBox.style.right = '60px'
-
-                at.on('panstart', () => {
-                    skinSwitch.allowTouchEvent(false)
-                })
-                at.on('panmove', (e) => {
-                    editBox.style.top = parseInt(editBox.style.top) + e.deltaY + 'px'
-                    editBox.style.right = parseInt(editBox.style.right) - e.deltaX + 'px'``
-                })
-                at.on('panend', () => {
-                    skinSwitch.allowTouchEvent(true)
-                })
+                // 删除可以拖动的功能, 比较鸡肋
+                // let at = new AnyTouch(editBox, )
+                //
+                // editBox.style.top = '30px'
+                // editBox.style.right = '60px'
+                //
+                // at.on('panstart', () => {
+                //     skinSwitch.allowTouchEvent(false)
+                // })
+                // at.on('panmove', (e) => {
+                //     editBox.style.top = parseInt(editBox.style.top) + e.deltaY + 'px'
+                //     editBox.style.right = parseInt(editBox.style.right) - e.deltaX + 'px'``
+                // })
+                // at.on('panend', () => {
+                //     skinSwitch.allowTouchEvent(true)
+                // })
 
                 // 控制位置的方向键
                 let adjustDirection = ui.create.div('.adjustDirection .hidden-adjust', arena)
@@ -4082,12 +4086,18 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         <button id="rightbtn"><i class="right"></i></button>
                     </div>
                 `
+
+                let upTimer
+                let leftTimer
+                let bottomTimer
+                let rightTimer
+
                 let adjustXYRate = function (direction) {
-                    let time
+                    let t
                     let downFunc =  function () {
                         // 改变骨骼的位置
                         //获取鼠标按下时的时间
-                        time = setInterval(function () {
+                        t = setInterval(function () {
                             //如果此时检测到的时间与第一次获取的时间差有1000毫秒
                             let dat = currentPlay === 'daiji' || currentPlay === 'beijing' ? daijiXYPos : chukuangXYPos
                             let step = 0.01  // step暂时写死
@@ -4119,11 +4129,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                         }, 50)
 
-
+                        if (direction === 'up') {
+                            clearInterval(upTimer)
+                            upTimer = t
+                        } else if (direction === 'left') {
+                            clearInterval(leftTimer)
+                            leftTimer = t
+                        } else if (direction === 'bottom') {
+                            clearInterval(bottomTimer)
+                            bottomTimer = t
+                        } else if (direction === 'right') {
+                            clearInterval(rightTimer)
+                            rightTimer = t
+                        }
                     }
                     downFunc.holdUp = function () {
                         //如果按下时间不到1000毫秒便弹起，
-                        clearInterval(time);
+                        clearInterval(t);
                     }
 
                     return downFunc
@@ -4137,7 +4159,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 let downEvent =  lib.config.touchscreen ? 'touchstart' : 'mousedown'
                 let upEvent =  lib.config.touchscreen ? 'touchend' : 'mouseup'
-
                 adjustDirection.querySelector('#upbtn').addEventListener(downEvent, uf)
                 adjustDirection.querySelector('#upbtn').addEventListener(upEvent, uf.holdUp)
                 adjustDirection.querySelector('#leftbtn').addEventListener(downEvent, lf)
@@ -5003,8 +5024,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         base[k] = pfqhLive2dSettings.models[curVal][k]
                                     }
                                     base.role = lib.assetURL + base.basePath + base.role
-                                    base.height = base.height * skinSwitch.bodySize().height
-                                    base.width = base.width * skinSwitch.bodySize().width
+                                    // base.height = base.height * skinSwitch.bodySize().height
+                                    // base.width = base.width * skinSwitch.bodySize().width
                                     skinSwitch.l2dLoader = new CustomLive2dLoader([
                                         base
                                     ]);
@@ -5135,8 +5156,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         base[k] = pfqhLive2dSettings.models[value][k]
                     }
                     base.role = lib.assetURL + base.basePath + base.role
-                    base.height = base.height * skinSwitch.bodySize().height
-                    base.width = base.width * skinSwitch.bodySize().width
+                    // base.height = base.height * skinSwitch.bodySize().height
+                    // base.width = base.width * skinSwitch.bodySize().width
                     game.saveConfig(skinSwitch.configKey.l2dSetting, value)
                     if (skinSwitch.l2dLoader) {
                         skinSwitch.l2dLoader.changeModel(base)
