@@ -1,5 +1,6 @@
 'use strict';
-importScripts('spine.js', './spine-lib/spine_4_0_64.js', './spine-lib/spine_3_8.js', 'animation.js', 'settings.js', 'animations.js' );
+importScripts('spine.js', './spine-lib/spine_4_0_64.js', './spine-lib/spine_3_8.js',
+	'./spine-lib/spine_3_5_35.js', './spine-lib/spine_3_7.js', 'animation.js', 'settings.js', 'animations.js' );
 
 console.log('new worker...')
 

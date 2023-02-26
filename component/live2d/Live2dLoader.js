@@ -105,8 +105,6 @@ var CustomLive2dLoader = class Live2dLoader {
             this.model.scale.set(Math.min(scaleX, scaleY) * config.scaleFactor);
         }
 
-        console.log(this.model, '<<<<<<<--')
-
         if (config.x) {
             this.model.x = config.x
         }
@@ -235,49 +233,49 @@ var CustomLive2dLoader = class Live2dLoader {
             //     offsetY < this.app.view.height
             // )
             {
-                let po = this.model.toModelPosition(new PIXI.Point(offsetX, offsetY)),
-                    hitAreas,
-                    ifRandom;
+                // let po = this.model.toModelPosition(new PIXI.Point(offsetX, offsetY)),
+                //     hitAreas,
+                //     ifRandom;
+                //
+                // if (Object.keys(this.model.internalModel.hitAreas).length == 0) {
+                //     hitAreas = this.hitTest(po.x, po.y);
+                //     if (hitAreas.includes("TouchHead")) {
+                //         this.model.internalModel.motionManager.startMotion(
+                //             "",
+                //             motionIndex[0]
+                //         );
+                //     } else if (hitAreas.includes("TouchSpecial")) {
+                //         this.model.internalModel.motionManager.startMotion(
+                //             "",
+                //             motionIndex[1]
+                //         );
+                //     } else if (hitAreas.includes("TouchBody")) {
+                //         this.model.internalModel.motionManager.startMotion(
+                //             "",
+                //             motionIndex[2]
+                //         );
+                //     } else ifRandom = true;
+                // } else {
+                //     hitAreas = this.model.internalModel.hitTest(po.x, po.y);
+                //     if (hitAreas.includes("head") || hitAreas.includes("Head")) {
+                //         this.model.expression();
+                //         this.model.motion("Tap");
+                //     } else if (hitAreas.includes("body") || hitAreas.includes("Body")) {
+                //         this.model.motion("tap_body");
+                //         this.model.motion("Tap");
+                //     } else ifRandom = true;
+                // }
 
-                if (Object.keys(this.model.internalModel.hitAreas).length == 0) {
-                    hitAreas = this.hitTest(po.x, po.y);
-                    if (hitAreas.includes("TouchHead")) {
-                        this.model.internalModel.motionManager.startMotion(
-                            "",
-                            motionIndex[0]
-                        );
-                    } else if (hitAreas.includes("TouchSpecial")) {
-                        this.model.internalModel.motionManager.startMotion(
-                            "",
-                            motionIndex[1]
-                        );
-                    } else if (hitAreas.includes("TouchBody")) {
-                        this.model.internalModel.motionManager.startMotion(
-                            "",
-                            motionIndex[2]
-                        );
-                    } else ifRandom = true;
-                } else {
-                    hitAreas = this.model.internalModel.hitTest(po.x, po.y);
-                    if (hitAreas.includes("head") || hitAreas.includes("Head")) {
-                        this.model.expression();
-                        this.model.motion("Tap");
-                    } else if (hitAreas.includes("body") || hitAreas.includes("Body")) {
-                        this.model.motion("tap_body");
-                        this.model.motion("Tap");
-                    } else ifRandom = true;
-                }
-
-                if (ifRandom === true) {
+                // if (ifRandom === true) {
                     let keys = Object.keys(
                         this.model.internalModel.motionManager.motionGroups
                     );
                     this.model.internalModel.motionManager.startRandomMotion(
                         keys[Math.floor(Math.random() * keys.length)]
                     );
-                }
+                // }
 
-                console.log("Start motion: ", hitAreas.join(" / ") || "random");
+                console.log("Start motion: random");
             }
         }
         this.canvas.addEventListener(cn, eve);

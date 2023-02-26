@@ -38,6 +38,14 @@ window.pfqhLive2dSettings = {
             role: 'dujiaoshou_4/dujiaoshou_4.model3.json',
             name: 'dujiaoshou_4',  //
         },
+        live2dnewgunpa157501: {
+            role: 'live2dnewgunpa157501/live2dnewgunpa157501.model3.json',
+            name: 'live2dnewgunpa157501',  //
+        },
+        yorktown: {
+            role: 'Yorktown_l2d/yorktown_stand.model3.json',
+            name: 'yorktown',  //
+        },
 
     }
 }

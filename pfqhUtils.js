@@ -113,7 +113,13 @@ window.pfqhUtils = {
                 let v = m[0]
                 if (v.startsWith('3.6')) {
                     version =  '3.6'
-                } else if (v.startsWith('3.7')) {
+                } else if(v.startsWith('3.5')) {
+                    if (v <= '3.5.35') {
+                        version = '3.5.35'
+                    } else {
+                        version =  '3.6'
+                    }
+                }else if (v.startsWith('3.7')) {
                     version =  '3.7'
                 } else if (v.startsWith('3.8')) {
                     version =  '3.8'
@@ -121,6 +127,8 @@ window.pfqhUtils = {
                     version =  '4.0'
                 } else if (v.startsWith('4.1')) {
                     version =  '4.1'
+                } else {
+                    version = v
                 }
             }
             callback(version)

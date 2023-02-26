@@ -1126,6 +1126,8 @@ var newDuilib;
 			this.BUILT_ID = 0;  // 管理当前对象的动图spriteId, 每个sprite是动皮的播放参数
 			this.BUILT_4_0_ID = 40000 //  版本4.0以上的动皮起始id, 和默认的3.6版本区分
 			this.BUILT_3_8_ID = 50000 //  版本4.0以上的动皮起始id, 和默认的3.6版本区分
+			this.BUILT_3_5_35_ID = 60000 //  版本3.5.35的动皮起始id, 和默认的3.6版本区分
+			this.BUILT_3_7_ID = 70000 //  版本3.7的动皮起始id, 和默认的3.6版本区分
 
 			var offscreen = self.OffscreenCanvas != undefined;
 			if (offscreen) {
@@ -1197,6 +1199,12 @@ var newDuilib;
 						break
 					case '3.8':
 						sprite.id = this.BUILT_3_8_ID++
+						break
+					case '3.5.35':
+						sprite.id = this.BUILT_3_5_35_ID++
+						break
+					case '3.7':
+						sprite.id = this.BUILT_3_7_ID++
 						break
 					default:
 						sprite.id = this.BUILT_ID++;

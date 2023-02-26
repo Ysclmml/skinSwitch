@@ -1224,6 +1224,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                    // 'modifyQhlxPreview': 'extension_皮肤切换_modifyQhlxPreview',  // 调整预览大小
                    'l2dEnable': 'extension_皮肤切换_l2dEnable',  // 是否允许l2d
                    'l2dSetting': 'extension_皮肤切换_l2dSetting',  // l2d配置
+                   'lastPreviewPath': 'extension_皮肤切换_lastPreviewPath',  // 上一次预览的位置
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -3281,8 +3282,18 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let scale = 0.5
                     // 开始监视el上的手势变化
                     const at = new AnyTouch(canvas)
+                    let currentPath = lib.config[skinSwitch.configKey.lastPreviewPath]
+                    if (!currentPath) {
+                        game.saveConfig(skinSwitch.configKey.lastPreviewPath, 'extension/皮肤切换/assets')
+                        currentPath = 'extension/皮肤切换/assets';
+                    }
+                    // 检查文件夹是否存在, 不存在初始化为默认文件夹
+                    skinSwitch.qhly_checkFileExist(currentPath, (exists) => {
+                        if (!exists) {
+                            currentPath = 'extension/皮肤切换/assets'
+                        }
+                    })
 
-                    let currentPath = 'extension/皮肤切换/assets'
                     // 获取模态框文件夹和文件列表dom
                     let foldsEle = document.getElementById('pfqhFoldList')
                     let filesEle = document.getElementById('pfqhFilesList')
@@ -3326,6 +3337,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     // 返回上一级事件
                     document.getElementById('pfqhLastDir').addEventListener(clickName, function (e) {
                         currentPath = currentPath === '' ? '' : currentPath.substring(0, currentPath.lastIndexOf('/'));
+                        game.saveConfig(skinSwitch.configKey.lastPreviewPath, currentPath)
                         initFoldsInfo()
                         e.stopPropagation()
                     })
@@ -3399,6 +3411,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         } else {
                                             currentPath = this.getAttribute('fold')
                                         }
+                                        game.saveConfig(skinSwitch.configKey.lastPreviewPath, currentPath)
 
                                         initFoldsInfo()
                                         e.stopPropagation()
@@ -3451,7 +3464,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             if (version == null) {
                                 version = '3.6'
                             }
-                            if ((!['3.6', '3.8', '4.0'].includes(version))) {
+                            if ((!['3.5.35', '3.6', '3.7', '3.8', '4.0'].includes(version))) {
                                 skinSwitchMessage.show({
                                     'type': 'warning',
                                     'text': `当前不支持${version}版本的骨骼文件播放`,
@@ -3962,6 +3975,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                             })
 
+                            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_5_35', function (){})
+                            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_7', function (){})
                         })
                     })
                 })
@@ -3971,6 +3986,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 for (let k in pfqhSkillEffect) {
                     for (let i=0; i<pfqhSkillEffect[k].length; i++) {
                         lib.skill[`__pfqh_${k}_${i}`] = pfqhSkillEffect[k][i]
+                        console.log('skill====', pfqhSkillEffect[k][i])
                     }
                 }
             })
@@ -4159,14 +4175,19 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 let downEvent =  lib.config.touchscreen ? 'touchstart' : 'mousedown'
                 let upEvent =  lib.config.touchscreen ? 'touchend' : 'mouseup'
+                let cancelEvent =  lib.config.touchscreen ? 'touchcancel' : 'mouseleave'
                 adjustDirection.querySelector('#upbtn').addEventListener(downEvent, uf)
                 adjustDirection.querySelector('#upbtn').addEventListener(upEvent, uf.holdUp)
+                adjustDirection.querySelector('#upbtn').addEventListener(cancelEvent, uf.holdUp)
                 adjustDirection.querySelector('#leftbtn').addEventListener(downEvent, lf)
                 adjustDirection.querySelector('#leftbtn').addEventListener(upEvent, lf.holdUp)
+                adjustDirection.querySelector('#leftbtn').addEventListener(cancelEvent, lf.holdUp)
                 adjustDirection.querySelector('#bottombtn').addEventListener(downEvent, bf)
                 adjustDirection.querySelector('#bottombtn').addEventListener(upEvent, bf.holdUp)
+                adjustDirection.querySelector('#bottombtn').addEventListener(cancelEvent, bf.holdUp)
                 adjustDirection.querySelector('#rightbtn').addEventListener(downEvent, rf)
                 adjustDirection.querySelector('#rightbtn').addEventListener(upEvent, rf.holdUp)
+                adjustDirection.querySelector('#rightbtn').addEventListener(cancelEvent, rf.holdUp)
 
                 // adjustDirection.querySelector('#upbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('up'))
                 // adjustDirection.querySelector('#leftbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('left'))
