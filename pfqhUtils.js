@@ -123,11 +123,13 @@ window.pfqhUtils = {
                     version =  '3.7'
                 } else if (v.startsWith('3.8')) {
                     version =  '3.8'
-                } else if (v.startsWith('4.0')) {
+                } else if (v.startsWith('4.')) {
                     version =  '4.0'
-                } else if (v.startsWith('4.1')) {
-                    version =  '4.1'
-                } else {
+                }
+                // else if (v.startsWith('4.1')) {
+                //     version =  '4.1'
+                // }
+                else {
                     version = v
                 }
             }

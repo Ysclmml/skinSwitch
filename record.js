@@ -112,3 +112,7 @@ game.playShoushaAvatar = function (node) {
         }
     }
 }
+
+
+player添加点击事件, 防止影响选择游戏选择事件, 需要过滤.
+// 49399行 if(_status.event.name=='chooseTarget'||_status.event.name=='chooseToUse'||_status.event.name=='chooseCardTarget'){

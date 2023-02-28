@@ -3935,6 +3935,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
             skinSwitch.lib = lib
             skinSwitch.game = game
+            skinSwitch.ui = ui
+            skinSwitch.get = get
 
             skinSwitch.dynamic.selectSkin.cd = true;
 

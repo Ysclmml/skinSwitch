@@ -2,8 +2,8 @@ window.pfqhLive2dSettings = {
 
     // 默认的配置,每个模型可以覆盖配置
     baseSetting:{
-        width: 0.2,
-        height: 0.4,
+        width: 0.2,  // 占屏幕的百分比
+        height: 0.4,  // 占屏幕的宽度
         left: "120px",
         bottom: "180px",
         basePath: 'extension/皮肤切换/live2d_assets/',  // 存放基础的路径
@@ -25,6 +25,10 @@ window.pfqhLive2dSettings = {
         dafeng_2: {
             role: 'dafeng_2/dafeng_2.model3.json',
             name: 'dafeng_2',  //
+            width: 0.2,  // 可以覆盖默认的宽度'
+            height: 0.4,
+            left: "120px",
+            bottom: "180px",
         },
         pinghai_6: {
             role: 'pinghai_6/pinghai_6.model3.json',
@@ -46,6 +50,10 @@ window.pfqhLive2dSettings = {
             role: 'Yorktown_l2d/yorktown_stand.model3.json',
             name: 'yorktown',  //
         },
+        dnewgunpa: {
+            role: 'dnewgunpa/dnewgunpa155802.model3.json',
+            name: 'dnewgunpa',  //
+        }
 
     }
 }

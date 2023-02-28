@@ -18,7 +18,7 @@ var live2d = PIXI.live2d;
 
 var CustomLive2dLoader = class Live2dLoader {
     constructor(models) {
-        let config = models[this.getLive2dIndex(models)];
+        let config = models[0];
         if (!config.mobile && this.isMobile()) return;
         this.load(config);
     }
@@ -72,9 +72,8 @@ var CustomLive2dLoader = class Live2dLoader {
         }
 
         let dpr = Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1);
-
-        canvas.style.height = '40%'
-        canvas.style.width = '20%'
+        canvas.style.height = config.height * 100 + '%'
+        canvas.style.width = config.width * 100 + '%'
         config.height = config.height * skinSwitch.bodySize().height * dpr
         config.width = config.width * skinSwitch.bodySize().width * dpr
 
@@ -90,6 +89,72 @@ var CustomLive2dLoader = class Live2dLoader {
             autoStart: true,
         });
         this.initModel(config)
+        this.initMotionSelectDiv(config)
+    }
+
+    initMotionSelectDiv(config){
+        // 初始化表情选择样式
+        const ui = skinSwitch.ui
+        const lib = skinSwitch.lib
+        let box = ui.create.div('.l2d-hoverBox', document.body)
+        let rect = this.canvas.getBoundingClientRect()
+        box.id = 'l2dHoverBox'
+        box.style.left = (parseInt(config.left) || 0) + rect.width / 3 + 'px'
+        box.style.bottom = (parseInt(config.bottom) || 0) + rect.height / 2 + 'px'
+
+        let toolBtn = ui.create.div('.l2d-hoverBtn', box)
+        let img = document.createElement('img')
+        img.style.width = '95%'
+        img.style.height = '95%'
+        toolBtn.appendChild(img)
+        img.src = lib.assetURL + 'extension/皮肤切换/images/other/l2d-tool.png'
+
+        toolBtn.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', () => {
+
+        })
+
+        let toolDiv = ui.create.div('.l2d-tool-background', document.body)
+        toolDiv.innerHTML = `
+            <div class="model-setting" id="l2d-model-setting">
+                <div class="cur-model" id="l2d-cur-model">当前model: xxxx</div>
+                <div class="l2d-button1" id="l2d-button1" style="background-image: url(&quot;extension/千幻聆音/theme/wz/newui_button_selected_wz.png&quot;);">显示
+                </div>
+                <div class="l2d-button2" id="l2d-button2" style="background-image: url(&quot;extension/千幻聆音/theme/wz/newui_button_wz.png&quot;);">动作
+                </div>
+                <div class="l2d-button3" id="l2d-button3" style="background-image: url(&quot;extension/千幻聆音/theme/wz/newui_button_wz.png&quot;);">表情
+                </div>
+                <div class="model-set-cont1" id="l2d-model-cont1">
+                    <div style="display: flex; width: 100%; height: 100%">
+                        <div>
+                            <img alt="" style="width: 28px; height: 28px">
+                            <input type="range" class="slider-input" >
+                        </div>
+<!--                        <div>-->
+<!--                            <img alt="" style="width: 28px; height: 28px">-->
+<!--                            <input type="range" class="slider-input">-->
+<!--                        </div>-->
+                    </div>
+                </div>
+                <div class="model-set-cont2" id="l2d-model-cont2"></div>
+                <div class="model-set-cont3" id="l2d-model-cont3"></div>
+            </div>
+        `
+        let l2dModelSetting = document.getElementById('l2d-model-setting')
+        let disBtn = document.getElementById('l2d-button1')
+        let motionBtn = document.getElementById('l2d-button2')
+        let expBtn = document.getElementById('l2d-button3')
+        let displayContent = document.getElementById('l2d-model-cont1')
+        let motionContent = document.getElementById('l2d-model-cont2')
+        let expressionContent = document.getElementById('l2d-model-cont3')
+
+        let size = skinSwitch.bodySize()
+        l2dModelSetting.style.height = size.height * 0.5 + 'px'
+        l2dModelSetting.style.width = size.width * 0.5 + 'px'
+
+        let images = displayContent.getElementsByTagName('img')
+        images[0].src = lib.assetURL + 'extension/皮肤切换/images/other/change-cale.png'
+        images[1].src = lib.assetURL + 'extension/皮肤切换/images/other/change-cale.png'
+
     }
 
     async initModel(config) {
@@ -210,73 +275,14 @@ var CustomLive2dLoader = class Live2dLoader {
 
             if (!Number.isFinite(offsetX) || !Number.isFinite(offsetY)) return
             event.stopPropagation();
-            // if (config.pierceThrough !== false) {
-            //     // 鼠标穿透, 先把 canvas 设为可穿透
-            //     canvas.style.pointerEvents = "none";
-            //     // 为该元素派发点击事件 https://www.blogwxb.cn/js%E4%B8%AD%E7%94%A8x%EF%BC%8Cy%E5%9D%90%E6%A0%87%E6%9D%A5%E5%AE%9E%E7%8E%B0%E6%A8%A1%E6%8B%9F%E7%82%B9%E5%87%BB%E5%8A%9F%E8%83%BD/
-            //
-            //     document.elementsFromPoint(cn === 'touchend' ? event.changedTouches[0].pageX : event.clientX,
-            //         cn === 'touchend' ? event.changedTouches[0].pageY : event.clientY)[0]
-            //         .dispatchEvent(
-            //             new MouseEvent(cn, {
-            //                 bubbles: true, // 事件冒泡
-            //                 cancelable: true, // 默认事件
-            //                 view: window,
-            //             })
-            //         );
-            //     canvas.style.pointerEvents = "auto";
-            // }
-            // if (
-            //     0 < offsetX &&
-            //     offsetX < this.app.view.width &&
-            //     0 < offsetY &&
-            //     offsetY < this.app.view.height
-            // )
-            {
-                // let po = this.model.toModelPosition(new PIXI.Point(offsetX, offsetY)),
-                //     hitAreas,
-                //     ifRandom;
-                //
-                // if (Object.keys(this.model.internalModel.hitAreas).length == 0) {
-                //     hitAreas = this.hitTest(po.x, po.y);
-                //     if (hitAreas.includes("TouchHead")) {
-                //         this.model.internalModel.motionManager.startMotion(
-                //             "",
-                //             motionIndex[0]
-                //         );
-                //     } else if (hitAreas.includes("TouchSpecial")) {
-                //         this.model.internalModel.motionManager.startMotion(
-                //             "",
-                //             motionIndex[1]
-                //         );
-                //     } else if (hitAreas.includes("TouchBody")) {
-                //         this.model.internalModel.motionManager.startMotion(
-                //             "",
-                //             motionIndex[2]
-                //         );
-                //     } else ifRandom = true;
-                // } else {
-                //     hitAreas = this.model.internalModel.hitTest(po.x, po.y);
-                //     if (hitAreas.includes("head") || hitAreas.includes("Head")) {
-                //         this.model.expression();
-                //         this.model.motion("Tap");
-                //     } else if (hitAreas.includes("body") || hitAreas.includes("Body")) {
-                //         this.model.motion("tap_body");
-                //         this.model.motion("Tap");
-                //     } else ifRandom = true;
-                // }
+            let keys = Object.keys(
+                this.model.internalModel.motionManager.motionGroups
+            );
+            this.model.internalModel.motionManager.startRandomMotion(
+                keys[Math.floor(Math.random() * keys.length)]
+            );
 
-                // if (ifRandom === true) {
-                    let keys = Object.keys(
-                        this.model.internalModel.motionManager.motionGroups
-                    );
-                    this.model.internalModel.motionManager.startRandomMotion(
-                        keys[Math.floor(Math.random() * keys.length)]
-                    );
-                // }
-
-                console.log("Start motion: random");
-            }
+            console.log("Start motion: random");
         }
         this.canvas.addEventListener(cn, eve);
     }

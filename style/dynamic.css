@@ -294,3 +294,200 @@
     left: 0;
     top: 0;
 }
+
+
+/* l2d的配置*/
+.l2d-hoverBox {
+    position: fixed;
+    /*z-index: 3;*/
+    width: 180px;
+    height: 180px;
+    background-color: rgba(0,0,0,0.1);
+}
+
+.l2d-hoverBox .l2d-hoverBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-left: 70px;
+    margin-top: 20px;
+    background-color: rgb(78 71 59);
+}
+
+
+/* 以下样式来自于千幻聆音 */
+.l2d-tool-background{
+    /*z-index: 40;*/
+    position: absolute;
+    background-size: cover;
+    top: 50%;
+    left: 50%;
+    display: block;
+    min-width: 100%;
+    min-height: 100%;
+    transform: translate(-50%, -50%);
+}
+
+.l2d-tool-background .l2d-tool-dialog {
+    /*z-index: 40;*/
+    display: block;
+    left: 50%;
+    top: 50%;
+    width: 60%;
+    height: 50%;
+    transform: translate(-50%, -50%);
+    /*background-size: 100% 100%;*/
+    /* background-image: url(image/qhly_skin_out_background.png); */
+}
+
+.l2d-tool-background .model-setting{
+    position: absolute;
+    height: 780px;
+    width: 548px;
+    left: 50%;
+    top: 50%;
+    display: block;
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    transform: translate(-50%, -50%);
+    background-image: url(wz/newui_background_wz.png);
+    /*z-index: 30;*/
+}
+
+.l2d-tool-background .l2d-button1 {
+    z-index: 31;
+    left: calc(9.54%);
+    top: calc(14.65%);
+    width: calc(14.05%);
+    height: calc(9.13%);
+    background-image: url(wz/newui_button_wz.png);
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: justify;
+    color: white;
+    font-family: 'qh_youyuan';
+    line-height: 100%;
+    font-size: 1.3em;
+}
+
+.l2d-tool-background .l2d-button2 {
+    z-index: 31;
+    left: calc(23.44%);
+    top: calc(14.65%);
+    width: calc(14.05%);
+    height: calc(9.13%);
+    background-image: url(wz/newui_button_wz.png);
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: justify;
+    color: white;
+    font-family: 'qh_youyuan';
+    line-height: 100%;
+    font-size: 1.3em;
+}
+
+.l2d-tool-background .l2d-button3 {
+    z-index: 31;
+    left: calc(37.34%);
+    top: calc(14.65%);
+    width: calc(14.05%);
+    height: calc(9.13%);
+    background-image: url(wz/newui_button_wz.png);
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: justify;
+    color: white;
+    font-family: 'qh_youyuan';
+    line-height: 100%;
+    font-size: 1.3em;
+}
+
+.l2d-tool-background .model-set-cont1 {
+    z-index: 31;
+    left: calc(39.84%);
+    top: calc(23.52%);
+    width: calc(54.41%);
+    height: calc(67.10%);
+    display: block;
+}
+.l2d-tool-background .model-set-cont2 {
+    z-index: 31;
+    left: calc(39.84%);
+    top: calc(23.52%);
+    width: calc(54.41%);
+    height: calc(67.10%);
+    display: block;
+}
+
+.l2d-tool-background .model-set-cont3 {
+    z-index: 31;
+    left: calc(39.84%);
+    top: calc(23.52%);
+    width: calc(54.41%);
+    height: calc(67.10%);
+    display: block;
+}
+
+.l2d-tool-background .cur-model {
+    font-size: 1.2em;
+    font-weight: 400;
+    letter-spacing: normal;
+}
+
+.l2d-tool-background .slider-input {
+    -webkit-appearance: none;
+    width: 100%;
+    margin: 0;
+    background-color: #ebecf1;
+    background: -webkit-linear-gradient(#2492fc, #2492fc) no-repeat, #ebecf1;
+    border: 0px;
+    object-fit: contain;
+    border-radius: 5px;
+
+}
+
+/*可以修改容器的若干样式*/
+.l2d-tool-background .slider-input::-webkit-slider-container {
+}
+
+.l2d-tool-background .slider-input::-webkit-slider-runnable-track {
+    height: 10px;
+    border-radius: 5px;
+}
+
+.l2d-tool-background .slider-input:hover {
+    cursor: pointer;
+}
+.l2d-tool-background .slider-input:focus {
+    outline: none;
+}
+/*可以修改滑块的若干样式*/
+.l2d-tool-background .slider-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 100px;
+    box-shadow: 0 4px 8px 0 rgba(36, 146, 252, 0.2);
+    border: solid 3px #fff;
+    background-color: #2492fc;
+    margin-top: -5px; /*使滑块超出轨道部分的偏移量相等*/
+    position: relative;
+}
+
+.l2d-tool-background .slider-input::-webkit-slider-thumb:hover {
+    cursor: grab;
+}
+

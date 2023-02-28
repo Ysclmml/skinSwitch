@@ -1455,7 +1455,7 @@ class Animation3_8 extends BaseAnimation {
         super()
         if (!self.spine) return console.error('spine 未定义.');
 
-        let config = { alpha: true };
+        let config = { alpha: true, };
         let gl = canvas.getContext('webgl2', config);
         if (gl == null) {
             gl = canvas.getContext('webgl', config) || canvas.getContext('experimental-webgl', config);
