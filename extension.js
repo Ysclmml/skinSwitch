@@ -511,7 +511,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 },
                                 content: function () {
                                     // 添加监听按压角色框, 更换皮肤事件
-
                                     player._at = new AnyTouch(player)
                                     player._at.on('press', (e) => {
                                         skinSwitch.postMsgApi.changeSkelSkin(player)
@@ -3908,10 +3907,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 // 覆盖menu菜单
                 overrideExtL2dMenuItem: function () {
-                    // 修改配置
+                    // 修改配置, 只获取前10个
+                    let count = 10
                     if (window.pfqhLive2dSettings) {
                         let newItem = {};
                         for (let k in pfqhLive2dSettings.models) {
+                            if (!count) break
+                            count--
                             newItem[k] = pfqhLive2dSettings.models[k].name || k
                         }
                         lib.extensionMenu.extension_皮肤切换.l2dSetting.item = newItem
@@ -5034,27 +5036,28 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             })
 
             // 加载l2d
+            lib.arenaReady.push(function() {
+                let curVal = lib.config[skinSwitch.configKey.l2dSetting]
+                if (curVal in pfqhLive2dSettings.models) {
+                    let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
+                    for (let k in pfqhLive2dSettings.models[curVal]) {
+                        base[k] = pfqhLive2dSettings.models[curVal][k]
+                    }
+                    base.role = lib.assetURL + base.basePath + base.role
+                    base.key = curVal
+                    // base.height = base.height * skinSwitch.bodySize().height
+                    // base.width = base.width * skinSwitch.bodySize().width
+                    skinSwitch.l2dLoader = new CustomLive2dLoader([
+                        base
+                    ]);
+                }
+            })
             if (lib.config[skinSwitch.configKey.l2dEnable]) {
                 lib.init.js(skinSwitch.url + 'component/live2d', 'live2dcubismcore.min', () => {
                     lib.init.js(skinSwitch.url + 'component/live2d', 'pixi.min', () => {
                         lib.init.js(skinSwitch.url + 'component/live2d', 'Live2dLoader', () => {
                             // 读取l2d配置
-                            lib.init.js(skinSwitch.url, 'l2dSettings', function () {
-                                let curVal = lib.config[skinSwitch.configKey.l2dSetting]
-                                if (curVal in pfqhLive2dSettings.models) {
-                                    let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
-                                    for (let k in pfqhLive2dSettings.models[curVal]) {
-                                        base[k] = pfqhLive2dSettings.models[curVal][k]
-                                    }
-                                    base.role = lib.assetURL + base.basePath + base.role
-                                    // base.height = base.height * skinSwitch.bodySize().height
-                                    // base.width = base.width * skinSwitch.bodySize().width
-                                    skinSwitch.l2dLoader = new CustomLive2dLoader([
-                                        base
-                                    ]);
-                                }
-
-                            });
+                            lib.init.js(skinSwitch.url, 'l2dSettings', function () {});
                         })
                     })
                 })
@@ -5179,6 +5182,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         base[k] = pfqhLive2dSettings.models[value][k]
                     }
                     base.role = lib.assetURL + base.basePath + base.role
+                    base.key = value
                     // base.height = base.height * skinSwitch.bodySize().height
                     // base.width = base.width * skinSwitch.bodySize().width
                     game.saveConfig(skinSwitch.configKey.l2dSetting, value)

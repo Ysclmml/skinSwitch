@@ -299,25 +299,37 @@
 /* l2d的配置*/
 .l2d-hoverBox {
     position: fixed;
-    /*z-index: 3;*/
+    z-index: 60;
     width: 180px;
     height: 180px;
-    background-color: rgba(0,0,0,0.1);
+    background-color: rgba(0,0,0,0.4);
 }
 
 .l2d-hoverBox .l2d-hoverBtn {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    margin-left: 70px;
+    margin-left: 50px;
     margin-top: 20px;
     background-color: rgb(78 71 59);
+    text-align: center;
+    line-height: 40px;
 }
 
+.l2d-hoverBox .l2d-next-hoverBtn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-left: 107px;
+    margin-top: 64px;
+    background-color: rgb(78 71 59);
+    text-align: center;
+    line-height: 40px;
+}
 
 /* 以下样式来自于千幻聆音 */
 .l2d-tool-background{
-    /*z-index: 40;*/
+    z-index: 40;
     position: absolute;
     background-size: cover;
     top: 50%;
@@ -326,10 +338,11 @@
     min-width: 100%;
     min-height: 100%;
     transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.3);
 }
 
 .l2d-tool-background .l2d-tool-dialog {
-    /*z-index: 40;*/
+    z-index: 40;
     display: block;
     left: 50%;
     top: 50%;
@@ -351,11 +364,11 @@
     background-repeat: no-repeat;
     transform: translate(-50%, -50%);
     background-image: url(wz/newui_background_wz.png);
-    /*z-index: 30;*/
+    z-index: 40;
 }
 
 .l2d-tool-background .l2d-button1 {
-    z-index: 31;
+    z-index: 40;
     left: calc(9.54%);
     top: calc(14.65%);
     width: calc(14.05%);
@@ -375,7 +388,7 @@
 }
 
 .l2d-tool-background .l2d-button2 {
-    z-index: 31;
+    z-index: 40;
     left: calc(23.44%);
     top: calc(14.65%);
     width: calc(14.05%);
@@ -395,7 +408,7 @@
 }
 
 .l2d-tool-background .l2d-button3 {
-    z-index: 31;
+    z-index: 40;
     left: calc(37.34%);
     top: calc(14.65%);
     width: calc(14.05%);
@@ -413,32 +426,65 @@
     line-height: 100%;
     font-size: 1.3em;
 }
+.l2d-tool-background .l2d-button4 {
+    z-index: 40;
+    left: calc(51.24%);
+    top: calc(14.65%);
+    width: calc(14.05%);
+    height: calc(9.13%);
+    background-image: url(wz/newui_button_wz.png);
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: justify;
+    color: white;
+    font-family: 'qh_youyuan';
+    line-height: 100%;
+    font-size: 1.3em;
+}
+
 
 .l2d-tool-background .model-set-cont1 {
-    z-index: 31;
-    left: calc(39.84%);
+    z-index: 40;
+    left: calc(9.84%);
     top: calc(23.52%);
-    width: calc(54.41%);
+    width: calc(70.41%);
     height: calc(67.10%);
     display: block;
+    overflow-y: auto;
 }
 .l2d-tool-background .model-set-cont2 {
-    z-index: 31;
-    left: calc(39.84%);
+    z-index: 40;
+    left: calc(9.84%);
     top: calc(23.52%);
-    width: calc(54.41%);
+    width: calc(70.41%);
     height: calc(67.10%);
     display: block;
+    overflow-y: auto;
 }
 
 .l2d-tool-background .model-set-cont3 {
-    z-index: 31;
-    left: calc(39.84%);
+    z-index: 40;
+    left: calc(9.84%);
     top: calc(23.52%);
-    width: calc(54.41%);
+    width: calc(70.41%);
     height: calc(67.10%);
     display: block;
+    overflow-y: auto;
 }
+.l2d-tool-background .model-set-cont4 {
+    z-index: 40;
+    left: calc(9.84%);
+    top: calc(23.52%);
+    width: calc(70.41%);
+    height: calc(67.10%);
+    display: block;
+    overflow-y: auto;
+}
+
 
 .l2d-tool-background .cur-model {
     font-size: 1.2em;
@@ -448,7 +494,7 @@
 
 .l2d-tool-background .slider-input {
     -webkit-appearance: none;
-    width: 100%;
+    width: 75%;
     margin: 0;
     background-color: #ebecf1;
     background: -webkit-linear-gradient(#2492fc, #2492fc) no-repeat, #ebecf1;
@@ -489,5 +535,64 @@
 
 .l2d-tool-background .slider-input::-webkit-slider-thumb:hover {
     cursor: grab;
+}
+
+.l2d-tool-background .slider-group-input {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-top: 5%;
+}
+
+.l2d-tool-background .slider-group {
+    width: 100%
+}
+
+.l2d-tool-background .slider-group .input-value {
+    margin-top: 15%;
+    margin-left: 2%;
+    font-size: 16px;
+}
+
+.l2d-tool-background .motion-group {
+    width: 100%;
+    display: block;
+    position: relative;
+}
+
+.l2d-tool-background .motion-group > .motion-group-name{
+    font-weight: 600;
+    color: white;
+    position: relative;
+}
+
+.l2d-tool-background .motion-list{
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+}
+
+.l2d-tool-background .motion-list > .motion-btn{
+    height: 32px;
+    line-height: 32px;
+    position: relative;
+    border-radius: 4px;
+    padding: 0 14px;
+    border: none;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+    background-color: #689832;
+    margin: 5px;
 }
 

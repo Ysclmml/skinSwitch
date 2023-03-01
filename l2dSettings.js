@@ -12,6 +12,7 @@ window.pfqhLive2dSettings = {
         draggable: true,  // 是否可拖拽
         pierceThrough: true,
         scaleFactor: 1.5,
+        volume: 0.3,  // 默认的语音播放音量大小  0-1
         // scale: xxx,  // 不写自适应
         // x: xxx  // x坐标
         // y: yyy  // y坐标 可以重新定义
@@ -50,10 +51,46 @@ window.pfqhLive2dSettings = {
             role: 'Yorktown_l2d/yorktown_stand.model3.json',
             name: 'yorktown',  //
         },
-        dnewgunpa: {
-            role: 'dnewgunpa/dnewgunpa155802.model3.json',
-            name: 'dnewgunpa',  //
-        }
+        c000_10: {
+            role: 'c000_10/MOC.c000_10.json',
+            name: 'c000_10',  //
+        },
+        c086_02: {
+            role: 'c086_02/MOC.c086_02.json',
+            name: 'c086_02',  //
+        },
+        sc065_01: {
+            role: 'sc065_01/MOC.sc065_01.json',
+            name: 'sc065_01',  //
+        },
+        sc394_01: {
+            role: 'sc394_01/MOC.sc394_01.json',
+            name: 'sc394_01',  //
+        },
+        test: {
+            role: 'test/model.json',
+            name: 'test',  //
+        },
+        test2: {
+            role: 'test2/model.json',
+            name: 'test2',  //
+        } ,
+        dafeng_3: {
+            role: 'dafeng_3/dafeng_3.model3.json',
+            name: 'dafeng_3',  //
+        },
+        daofeng_4_hx: {
+            role: 'daofeng_4_hx/daofeng_4_hx.model3.json',
+            name: 'daofeng_4_hx',  //
+        },
+        daofeng_5: {
+            role: 'daofeng_5/daofeng_5.model3.json',
+            name: 'daofeng_5',  //
+        },
+        daofeng_5_hx: {
+            role: 'daofeng_5_hx/daofeng_5_hx.model3.json',
+            name: 'daofeng_5_hx',  //
+        },
 
     }
 }
