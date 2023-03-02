@@ -487,6 +487,92 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 }
                             };
 
+                            lib.skill._initPlayerChangeSkin = {
+                                trigger: {
+                                    global: 'gameStart'
+                                },
+                                forced: true,
+                                filter: function (event, player) {
+                                    return game.me === player
+                                },
+                                content: function() {
+                                    for (let p of game.players) {
+                                        // 添加一个隐藏的窗口,放入player下面
+                                        let box = ui.create.div('.playerToolBox .hidden', p)
+                                        let skinHoverBtn = ui.create.div('.skinHoverBtn', box)
+                                        let img = document.createElement('img')
+                                        img.style.width = '95%'
+                                        img.style.height = '95%'
+                                        skinHoverBtn.appendChild(img)
+                                        img.src = lib.assetURL + 'extension/皮肤切换/images/other/change-model.png'
+
+                                        let timer
+
+                                        p.node.avatar.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', (e) => {
+                                            e.stopPropagation()
+                                            if(timer){
+                                                // 表示是双击事件
+                                                clearTimeout(timer)
+                                                timer = null
+                                                return
+                                            }
+                                            timer = setTimeout(() => {
+                                                if (_status.playOpenTool) {
+                                                    if ( _status.playOpenTool !== p)_status.playOpenTool.getElementsByClassName('playerToolBox')[0].classList.add('hidden')
+                                                    else return
+                                                }
+                                                box.classList.remove('hidden')
+                                                _status.playOpenTool = p
+                                                timer = null
+                                                skinHoverBtn.name = p.name
+                                                skinHoverBtn.isPrimary = true
+                                            }, 200)
+
+                                        })
+                                        if (p.node.avatar2) {
+                                            p.node.avatar2.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', (e) => {
+                                                e.stopPropagation()
+                                                if(timer){
+                                                    // 表示是双击事件
+                                                    clearTimeout(timer)
+                                                    timer = null
+                                                    return
+                                                }
+                                                timer = setTimeout(() => {
+                                                    if (_status.playOpenTool) {
+                                                        if ( _status.playOpenTool !== p)_status.playOpenTool.getElementsByClassName('playerToolBox')[0].classList.add('hidden')
+                                                        else return
+                                                    }
+                                                    box.classList.remove('hidden')
+                                                    _status.playOpenTool = p
+                                                    timer = null
+                                                    skinHoverBtn.name = p.name2
+                                                    skinHoverBtn.isPrimary = false
+                                                }, 200)
+                                            })
+                                        }
+                                        skinHoverBtn.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', (e) => {
+                                            e.stopPropagation()
+                                            if (_status.playOpenTool) {
+                                                if ( _status.playOpenTool !== p)_status.playOpenTool.getElementsByClassName('playerToolBox')[0].classList.add('hidden')
+                                            }
+                                            delete _status.playOpenTool
+                                            box.classList.add('hidden')
+                                            console.log('打开皮肤窗口')
+                                            skinSwitch.qhly_open_small(skinHoverBtn.name, p, skinHoverBtn.isPrimary)
+
+                                        })
+                                    }
+
+                                    document.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', () => {
+                                        if (_status.playOpenTool) {
+                                            _status.playOpenTool.getElementsByClassName('playerToolBox')[0].classList.add('hidden')
+                                            delete _status.playOpenTool
+                                        }
+                                    })
+                                }
+                            }
+
                             // 只有主动发动技能才会触发这个
                             lib.skill._ts = {
                                 trigger: {
@@ -1496,6 +1582,304 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }, 1000);
                     }
                 },
+                // 样式代码来自于千幻经典小窗换肤修改
+                qhly_open_small: function (name, player, isPrimary) {
+                    if (_status.qhly_open) return;
+                    _status.qhly_open = true;
+                    var background = ui.create.div('.pfqh-qh-skinchange-background', document.body);
+                    var backgroundBack = ui.create.div('.pfqh-qh-skinchange-background', background);
+                    var dialog = ui.create.div('.pfqh-qh-skinchange-dialog', background);
+                    var exit = ui.create.div('.pfqh-qh-skinchange-exit', dialog);
+                    var cover = ui.create.div('.pfqh-qh-skinchange-cover', dialog);
+                    var content = ui.create.div('.pfqh-qh-skinchange-area', cover);
+                    var enlarge = ui.create.div('.pfqh-qh-skinchange-enlarge', dialog);
+                    var swipe_up = lib.config.swipe_up;
+                    lib.config.swipe_up = '';
+                    var swipe_down = lib.config.swipe_down;
+                    lib.config.swipe_down = '';
+                    var swipe_left = lib.config.swipe_left;
+                    lib.config.swipe_left = '';
+                    var swipe_right = lib.config.swipe_right;
+                    lib.config.swipe_right = '';
+                    var exitListener = function () {
+                        lib.config.swipe_up = swipe_up;
+                        lib.config.swipe_down = swipe_down;
+                        lib.config.swipe_left = swipe_left;
+                        lib.config.swipe_right = swipe_right;
+                        if (!_status.qhly_open) return;
+                        background.delete();
+                        game.qhly_playQhlyAudio('qhly_voc_press', null, true);
+                        delete _status.qhly_open;
+                    };
+                    var viewState = {
+                        offset: 0,
+                        skinTotalWidth: 500,
+                        skinPerWidth: 120,
+                        skinPerHeight: 180,
+                        jingdongWidth: 100,
+                        jingdongHeight: 44,
+                        skinGap: 10,
+                        skins: [],
+                        skinViews: [],
+                        visibleWidth: function () {
+                            var rect = cover.getBoundingClientRect();
+                            return rect.width;
+                        },
+                        content: content,
+                        refresh: function () {
+                            this.content.style.width = Math.round(this.skinTotalWidth) + 'px';
+                            this.content.style.left = Math.round(this.offset) + "px";
+                        },
+                        refreshSkins: function () {
+                            for (var i = 0; i < this.skinViews.length; i++) {
+                                var skinView = this.skinViews[i];
+                                var skin = this.skins[i];
+                                if (game.qhly_skinIs(name, skin)) {
+                                    skinView.style.filter = "saturate(100%)";
+                                    skinView.belowText.style.textShadow = '.2rem 0rem .5rem red,-.2rem 0rem .5rem red,0rem .2rem .5rem red,0rem -.2rem .5rem red';
+                                } else {
+                                    // skinView.style.filter = "saturate(40%)";
+                                    skinView.belowText.style.textShadow = '.2rem 0rem .5rem blue,-.2rem 0rem .5rem blue,0rem .2rem .5rem blue,0rem -.2rem .5rem blue';
+                                }
+                            }
+                        },
+                        handleMouseDown: function (x, y) {
+                            if (this.skinTotalWidth <= this.visibleWidth()) {
+                                return;
+                            }
+                            this.mouseDownX = x;
+                            this.mouseDownY = y;
+                            this.isTouching = true;
+                            this.cancelClick = false;
+                        },
+                        handleMouseMove: function (x, y) {
+                            if (this.isTouching) {
+                                var slideX = x - this.mouseDownX;
+                                this.tempoffset = this.offset + slideX;
+                                if (this.tempoffset > 0) {
+                                    this.tempoffset = 0;
+                                } else if (this.skinTotalWidth - this.visibleWidth() < -this.tempoffset) {
+                                    this.tempoffset = -(this.skinTotalWidth - this.visibleWidth());
+                                }
+                                this.content.style.left = Math.round(this.tempoffset) + "px";
+                                return true;
+                            }
+                        },
+                        handleMouseUp: function (x, y) {
+                            if (this.isTouching) {
+                                this.isTouching = false;
+                                if (x && y) {
+                                    var slideX = x - this.mouseDownX;
+                                    this.tempoffset = this.offset + slideX;
+                                    if (this.tempoffset > 0) {
+                                        this.tempoffset = 0;
+                                    } else if (this.skinTotalWidth - this.visibleWidth() < -this.tempoffset) {
+                                        this.tempoffset = -(this.skinTotalWidth - this.visibleWidth());
+                                    }
+                                }
+                                this.cancelClick = Math.abs(this.offset - this.tempoffset) > 50;
+                                this.content.style.left = Math.round(this.tempoffset) + "px";
+                                this.offset = this.tempoffset;
+                            } else {
+                                this.cancelClick = false;
+                            }
+                            this.previousX = this.mouseDownX;
+                            this.previousY = this.mouseDownY;
+                            delete this.mouseDownX;
+                            delete this.mouseDownY;
+                        }
+                    };
+                    if (lib.config.touchscreen) {
+                        content.addEventListener('touchstart', function (event) {
+                            if (event.touches && event.touches.length) {
+                                viewState.handleMouseDown(event.touches[0].clientX, event.touches[0].clientY);
+                            }
+                        });
+                        content.addEventListener('touchend', function (event) {
+                            viewState.handleMouseUp();
+                        });
+                        content.addEventListener('touchcancel', function (event) {
+                            viewState.handleMouseUp();
+                        });
+                        content.addEventListener('touchmove', function (event) {
+                            if (event.touches && event.touches.length)
+                                viewState.handleMouseMove(event.touches[0].clientX, event.touches[0].clientY);
+                        });
+                    } else {
+                        content.addEventListener('mousewheel', function (event) {
+                            viewState.handleMouseDown(event.clientX, event.clientY);
+                            if (event.wheelDelta > 0) {
+                                viewState.handleMouseMove(event.clientX - 30, event.clientY);
+                                viewState.handleMouseUp(event.clientX - 30, event.clientY);
+                            } else {
+                                viewState.handleMouseMove(event.clientX + 30, event.clientY);
+                                viewState.handleMouseUp(event.clientX + 30, event.clientY);
+                            }
+                        });
+                        content.addEventListener('mousedown', function (event) {
+                            viewState.handleMouseDown(event.clientX, event.clientY);
+                        });
+                        content.addEventListener('mouseup', function (event) {
+                            viewState.handleMouseUp(event.clientX, event.clientY);
+                        });
+                        content.addEventListener('mouseleave', function (event) {
+                            viewState.handleMouseUp(event.clientX, event.clientY);
+                        });
+                        content.addEventListener('mousemove', function (event) {
+                            viewState.handleMouseMove(event.clientX, event.clientY);
+                        });
+                    }
+                    game.qhly_getSkinList(name, function (ret, list) {
+                        let pkg = game.qhly_foundPackage(name);
+                        if (!list) list = [];
+                        list.sort(function (a, b) {
+                            var orderA = game.qhly_getOrder(name, a, pkg);
+                            var orderB = game.qhly_getOrder(name, b, pkg);
+                            if (orderA > orderB) return 1;
+                            if (orderA == orderB) return 0;
+                            return -1;
+                        });
+                        let skinList = [null];
+                        if (list && list.length) {
+                            skinList.addArray(list);
+                        }
+                        viewState.skins = skinList;
+                        viewState.skinTotalWidth = (viewState.skinPerWidth + viewState.skinGap) * skinList.length - viewState.skinGap;
+
+                        const dskins = dui.dynamicSkin;
+                        const skins = dskins[name];
+                        let keys = skins && Object.keys(skins);
+
+                        let dynamicSkinKey = skinSwitch.configKey.dynamicSkin
+
+                        for (let i = 0; i < skinList.length; i++) {
+                            let skin = skinList[i];
+                            let skinView = ui.create.div('.pfqh-qh-skinchange-skin', content);
+                            viewState.skinViews.push(skinView);
+                            skinView.style.left = Math.round((viewState.skinPerWidth + viewState.skinGap) * i) + "px";
+                            skinView.style.width = Math.round(viewState.skinPerWidth) + "px";
+                            skinView.classList.add('qh-not-replace');
+                            skinView.belowText = ui.create.div('.pfqh-qh-skinchange-skin-text', skinView);
+                            if (i != skinList.length - 1) {
+                                var border = ui.create.div('.pfqh-qh-skinchange-border', content);
+                                border.style.width = Math.round(viewState.skinGap) + "px";
+                                border.style.left = Math.round((viewState.skinPerWidth + viewState.skinGap) * i + viewState.skinPerWidth) + "px";
+                            }
+
+                            let curSkinKey = skin && skin.replace('.jpg', '').replace('.png', '')
+                            let jingdong
+                            if (skin && keys && keys.includes(curSkinKey)) {
+                                let isDynamic = false;
+                                // 将皮肤的相关参数保存起来
+                                if (lib.config[dynamicSkinKey]) {
+                                    let ps = lib.config[dynamicSkinKey][name];
+                                    if (ps === 'none') isDynamic = false // 主动设置为静皮的
+                                    // else if (ps) {
+                                    else isDynamic = true
+                                    // }
+                                }
+                                // 添加上静动素材图片
+                                jingdong = ui.create.div(isDynamic ? '.pfqh-skin-dong' : '.pfqh-skin-jing', skinView)
+                                jingdong.isDynamic = isDynamic
+                                jingdong.listen((e) => {
+                                    // 当前是动皮, 切换为静皮
+                                    if (!jingdong.isDynamic) {
+                                        jingdong.classList.remove('pfqh-skin-jing')
+                                        jingdong.classList.add('pfqh-skin-dong')
+                                        jingdong.isDynamic = true
+                                        skinSwitch.dynamic.selectSkinV3(curSkinKey, player, isPrimary)
+                                        if (skinSwitch.qhly_hasExtension('千幻聆音')) {
+                                            skinSwitch.dynamic.qhly_callback.setDynamic = true
+                                            game.qhly_setCurrentSkin(name, skin, function () {
+                                                viewState.refreshSkins();
+                                                skinSwitch.dynamic.qhly_callback.setDynamic = false
+                                                if (lib.config.qhly_smallwinclosewhenchange) {
+                                                    exitListener();
+                                                }
+                                            });
+                                        }
+                                    } else {
+                                        jingdong.classList.add('pfqh-skin-jing')
+                                        jingdong.classList.remove('pfqh-skin-dong')
+                                        jingdong.isDynamic = false
+                                        // 设置动皮对应的静皮
+                                        if (viewState.cancelClick) return;
+                                        game.qhly_playQhlyAudio('qhly_voc_fanshu', null, true);
+
+                                        // 设置当前皮肤的背景和语音, 调用千幻聆音
+                                        if (skinSwitch.qhly_hasExtension('千幻聆音')) {
+                                            game.qhly_setCurrentSkin(name, skin, function () {
+                                                viewState.refreshSkins();
+                                                if (lib.config.qhly_smallwinclosewhenchange) {
+                                                    exitListener();
+                                                }
+                                            });
+                                        }
+
+                                    }
+                                    e.stopPropagation();
+                                })
+                            }
+
+                            if (skin) {
+                                let info = game.qhly_getSkinInfo(name, skin);
+                                if (info) {
+                                    skinView.belowText.innerHTML = info.translation;
+                                }
+                            } else {
+                                skinView.belowText.innerHTML = "初始皮肤";
+                            }
+                            if (game.qhly_skinIs(name, skin)) {
+                                skinView.belowText.style.textShadow = '.2rem 0rem .5rem red,-.2rem 0rem .5rem red,0rem .2rem .5rem red,0rem -.2rem .5rem red';
+                            } else {
+                                skinView.belowText.style.textShadow = '.2rem 0rem .5rem blue,-.2rem 0rem .5rem blue,0rem .2rem .5rem blue,0rem -.2rem .5rem blue';
+                            }
+                            (function (name, skin, view) {
+                                view.listen(function () {
+                                    if (viewState.cancelClick) return;
+                                    if (game.qhly_skinIs(name, skin)) return;
+                                    game.qhly_playQhlyAudio('qhly_voc_fanshu', null, true);
+
+                                    if (jingdong && jingdong.isDynamic) {
+                                        skinSwitch.dynamic.selectSkinV3(curSkinKey, player, isPrimary)
+                                        if (skinSwitch.qhly_hasExtension('千幻聆音')) {
+                                            skinSwitch.dynamic.qhly_callback.setDynamic = true
+                                            game.qhly_setCurrentSkin(name, skin, function () {
+                                                viewState.refreshSkins();
+                                                skinSwitch.dynamic.qhly_callback.setDynamic = false
+                                                if (lib.config.qhly_smallwinclosewhenchange) {
+                                                    exitListener();
+                                                }
+                                            });
+                                        }
+                                    } else {
+                                        game.qhly_setCurrentSkin(name, skin, function () {
+                                            viewState.refreshSkins();
+                                            if (lib.config.qhly_smallwinclosewhenchange) {
+                                                exitListener();
+                                            }
+                                        });
+                                    }
+                                });
+                            })(name, skin, skinView);
+                            if (skin) {
+                                let file = game.qhly_getSkinFile(name, skin);
+                                skinView.qhly_origin_setBackgroundImage(file);
+                            } else {
+                                skinView.qhly_origin_setBackground(name, 'character');
+                            }
+                        }
+                        viewState.refresh();
+                    }, false);
+                    backgroundBack.listen(function (event) {
+                        exitListener();
+                    });
+                    exit.listen(exitListener);
+                    enlarge.listen(function () {
+                        exitListener();
+                        game.qhly_open_new(name, lib.config.qhly_doubledefaultpage ? lib.config.qhly_doubledefaultpage : 'skill', player);
+                    });
+                },
                 selectSkinData: {
                     temp: "",
                     value: "",
@@ -1931,6 +2315,44 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             //     skinSwitch.dynamic.selectSkin.cd = true;
                             // }, 1000);
 
+                        }
+
+                    },
+                    // 选择皮肤v3
+                    selectSkinV3: function (skinName, player, isPrimary) {
+                        if (!skinName) return
+                        if (!player || !player.isAlive()) return
+
+                        let dskins = decadeUI.dynamicSkin
+                        const avatarName = isPrimary ? player.name1 : player.name2
+                        const skins = dskins[avatarName]
+                        let skin = skins[skinName]
+                        if (!skin) return
+
+                        player.stopDynamic(isPrimary, !isPrimary)
+                        skin.player = skin
+                        dcdAnim.playSpine(skinSwitch.huanfu, { scale: 0.5, parent: player })
+                        skin.deputy = !isPrimary
+                        player.playDynamic(skin, !isPrimary);
+
+                        if (skin.background) {
+                            player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skin.background + '")';
+                        } else {
+                            player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/皮肤切换/images/card/card.png")'
+                        }
+                        player.classList.add(!isPrimary ? 'd-skin2' : 'd-skin');
+
+                        if (!lib.config[skinSwitch.configKey.dynamicSkin]) lib.config[skinSwitch.configKey.dynamicSkin] = {};
+                        if (lib.config[skinSwitch.configKey.dynamicSkin]) {
+                            let cg = lib.config[skinSwitch.configKey.dynamicSkin];
+                            cg[avatarName] = skinName;
+                            game.saveConfig(skinSwitch.configKey.dynamicSkin, cg);
+                        }
+                        skinSwitch.dynamic.startPlay2Random(player)
+
+                        // 皮肤变化了, 修改编辑的全局变量
+                        if (isPrimary && window.dynamicEditBox && player === game.me) {
+                            dynamicEditBox.updateGlobalParams()
                         }
 
                     },

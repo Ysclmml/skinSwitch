@@ -90,7 +90,7 @@ var CustomLive2dLoader = class Live2dLoader {
         });
 
         await this.initModel(config)
-        await this.initMotionSelectDiv(config)
+        this.initMotionSelectDiv(config)
     }
 
     initMotionSelectDiv(config) {
@@ -492,7 +492,7 @@ var CustomLive2dLoader = class Live2dLoader {
         // 事先销毁原来的选择框
         document.getElementById('l2d-tool-div')?.remove()
         document.getElementById('l2dHoverBox')?.remove()
-        await this.initMotionSelectDiv(config)
+        this.initMotionSelectDiv(config)
     }
 
     changeScale(scale) {
