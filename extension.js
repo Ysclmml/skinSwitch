@@ -510,6 +510,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                                         p.node.avatar.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', (e) => {
                                             e.stopPropagation()
+                                            // 过滤掉选择角色事件
+                                            console.log('___statussss', _status.event)
+                                            if(_status.event.name !== "chooseToUse" && _status.clicked !== false){
+                                                return
+                                            }
                                             if(timer){
                                                 // 表示是双击事件
                                                 clearTimeout(timer)
@@ -532,6 +537,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         if (p.node.avatar2) {
                                             p.node.avatar2.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', (e) => {
                                                 e.stopPropagation()
+                                                // 防止选择事件触发
+                                                if(_status.event.name=='chooseTarget'||_status.event.name=='chooseCardTarget'||_status.event.name.startsWith('useCard')||_status.event.name.startsWith('_')){
+                                                    return
+                                                }
                                                 if(timer){
                                                     // 表示是双击事件
                                                     clearTimeout(timer)
@@ -1586,22 +1595,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 qhly_open_small: function (name, player, isPrimary) {
                     if (_status.qhly_open) return;
                     _status.qhly_open = true;
-                    var background = ui.create.div('.pfqh-qh-skinchange-background', document.body);
-                    var backgroundBack = ui.create.div('.pfqh-qh-skinchange-background', background);
-                    var dialog = ui.create.div('.pfqh-qh-skinchange-dialog', background);
-                    var exit = ui.create.div('.pfqh-qh-skinchange-exit', dialog);
-                    var cover = ui.create.div('.pfqh-qh-skinchange-cover', dialog);
-                    var content = ui.create.div('.pfqh-qh-skinchange-area', cover);
-                    var enlarge = ui.create.div('.pfqh-qh-skinchange-enlarge', dialog);
-                    var swipe_up = lib.config.swipe_up;
+                    let background = ui.create.div('.pfqh-qh-skinchange-background', document.body);
+                    let backgroundBack = ui.create.div('.pfqh-qh-skinchange-background', background);
+                    let dialog = ui.create.div('.pfqh-qh-skinchange-dialog', background);
+                    let exit = ui.create.div('.pfqh-qh-skinchange-exit', dialog);
+                    let cover = ui.create.div('.pfqh-qh-skinchange-cover', dialog);
+                    let content = ui.create.div('.pfqh-qh-skinchange-area', cover);
+                    let enlarge = ui.create.div('.pfqh-qh-skinchange-enlarge', dialog);
+                    let swipe_up = lib.config.swipe_up;
                     lib.config.swipe_up = '';
-                    var swipe_down = lib.config.swipe_down;
+                    let swipe_down = lib.config.swipe_down;
                     lib.config.swipe_down = '';
-                    var swipe_left = lib.config.swipe_left;
+                    let swipe_left = lib.config.swipe_left;
                     lib.config.swipe_left = '';
-                    var swipe_right = lib.config.swipe_right;
+                    let swipe_right = lib.config.swipe_right;
                     lib.config.swipe_right = '';
-                    var exitListener = function () {
+                    let exitListener = function () {
                         lib.config.swipe_up = swipe_up;
                         lib.config.swipe_down = swipe_down;
                         lib.config.swipe_left = swipe_left;
@@ -1611,11 +1620,24 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         game.qhly_playQhlyAudio('qhly_voc_press', null, true);
                         delete _status.qhly_open;
                     };
-                    var viewState = {
+
+                    // 创建canvas
+                    let d = ui.create.div('.pfqh-small-dynamic-skin-wrap', cover)
+                    
+                    let skinCanvas = document.createElement('canvas')
+                    skinCanvas.style.height = '100%'
+                    skinCanvas.style.width = '100%'
+                    d.appendChild(skinCanvas)
+
+                    let am = new AnimationManager(lib.assetURL + 'extension/十周年UI/assets/dynamic/', skinCanvas, 33321, {offscreen: false})
+                    let coverSize = cover.getBoundingClientRect()
+                    am.updateSpineAll({width: coverSize.width, height: coverSize.height, dpr: Math.max(self.devicePixelRatio * (self.documentZoom ? self.documentZoom : 1), 1)})
+
+                    let viewState = {
                         offset: 0,
                         skinTotalWidth: 500,
                         skinPerWidth: 120,
-                        skinPerHeight: 180,
+                        skinPerHeight: 200,  // 默认露头
                         jingdongWidth: 100,
                         jingdongHeight: 44,
                         skinGap: 10,
@@ -1631,15 +1653,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             this.content.style.left = Math.round(this.offset) + "px";
                         },
                         refreshSkins: function () {
-                            for (var i = 0; i < this.skinViews.length; i++) {
-                                var skinView = this.skinViews[i];
-                                var skin = this.skins[i];
-                                if (game.qhly_skinIs(name, skin)) {
-                                    skinView.style.filter = "saturate(100%)";
-                                    skinView.belowText.style.textShadow = '.2rem 0rem .5rem red,-.2rem 0rem .5rem red,0rem .2rem .5rem red,0rem -.2rem .5rem red';
+                            for (let i = 0; i < this.skinViews.length; i++) {
+                                let skinView = this.skinViews[i];
+                                let skin = this.skins[i];
+
+                                if (skinSwitch.qhly_hasExtension('千幻聆音')) {
+                                    if (game.qhly_skinIs(name, skin)) {
+                                        skinView.belowText.style.textShadow = '.2rem 0rem .5rem red,-.2rem 0rem .5rem red,0rem .2rem .5rem red,0rem -.2rem .5rem red';
+                                    } else {
+                                        skinView.belowText.style.textShadow = '.2rem 0rem .5rem blue,-.2rem 0rem .5rem blue,0rem .2rem .5rem blue,0rem -.2rem .5rem blue';
+                                    }
                                 } else {
-                                    // skinView.style.filter = "saturate(40%)";
-                                    skinView.belowText.style.textShadow = '.2rem 0rem .5rem blue,-.2rem 0rem .5rem blue,0rem .2rem .5rem blue,0rem -.2rem .5rem blue';
+                                    if (skin === currentSelect) {
+                                        skinView.belowText.style.textShadow = '.2rem 0rem .5rem red,-.2rem 0rem .5rem red,0rem .2rem .5rem red,0rem -.2rem .5rem red';
+                                    } else {
+                                        skinView.belowText.style.textShadow = '.2rem 0rem .5rem blue,-.2rem 0rem .5rem blue,0rem .2rem .5rem blue,0rem -.2rem .5rem blue';
+                                    }
                                 }
                             }
                         },
@@ -1729,67 +1758,350 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             viewState.handleMouseMove(event.clientX, event.clientY);
                         });
                     }
-                    game.qhly_getSkinList(name, function (ret, list) {
-                        let pkg = game.qhly_foundPackage(name);
-                        if (!list) list = [];
-                        list.sort(function (a, b) {
-                            var orderA = game.qhly_getOrder(name, a, pkg);
-                            var orderB = game.qhly_getOrder(name, b, pkg);
-                            if (orderA > orderB) return 1;
-                            if (orderA == orderB) return 0;
-                            return -1;
-                        });
-                        let skinList = [null];
-                        if (list && list.length) {
-                            skinList.addArray(list);
+
+                    // 首先所有动皮
+                    const dskins = dui.dynamicSkin;
+                    const skins = dskins[name];
+                    let keys = skins && Object.keys(skins) || []
+                    let dynamicSkinKey = skinSwitch.configKey.dynamicSkin
+                    let build_id = 0
+                    let beijing_id = 888888
+
+                    let skinInfoMap = {'__default': {skinName: null}}
+
+                    let currentSelect  // 当前选择的动皮名称
+                    if (lib.config[dynamicSkinKey]) {
+                        let ps = lib.config[dynamicSkinKey][name];
+                        if (ps !== 'none') currentSelect = ps
+                    }
+                    // 没有包含千幻, 暂时不设置静皮, 静皮用小杀代替, 以后可能用系统默认皮肤代替, 或者系统默认的皮肤系统代替
+                    keys.map(name => {
+                        skinInfoMap[name] = {
+                            staticImg: "url(" + skinSwitch.url + "/images/character/小杀.png)",
+                            dynamic: true,
+                            dynamicState: true,  // 当前是否处于动皮小窗状态
+                            imgName: name + '.jpg',  // 默认的图片设置
+                            skinName: skins[name].skinName || name,
+                            isDefault: true,
                         }
-                        viewState.skins = skinList;
-                        viewState.skinTotalWidth = (viewState.skinPerWidth + viewState.skinGap) * skinList.length - viewState.skinGap;
+                    })
 
-                        const dskins = dui.dynamicSkin;
-                        const skins = dskins[name];
-                        let keys = skins && Object.keys(skins);
+                    let updateSkinInfo = staticImgs => {
+                        if (!staticImgs) staticImgs = []
+                        // 将动皮放上.
+                        let skinSet = new Set()
+                        staticImgs.map(img => {
+                            let imgKey = img.substring(0, img.lastIndexOf("."))
+                            if (skinSet.has(imgKey)) return
+                            skinSet.add(imgKey)
+                            if (imgKey in skinInfoMap) {
+                                skinInfoMap[imgKey].imgName = img  // 更新一下图片背景
+                                skinInfoMap[imgKey].isDefault = false
+                            } else {
+                                skinInfoMap[imgKey] = {
+                                    // staticImg: "url(" + skinSwitch.url + "/images/character/小杀.png)",
+                                    dynamic: false,
+                                    imgName: img,  // 这个是用于千幻这种的
+                                    skinName: imgKey
+                                }
+                            }
+                        })
+                    }
 
-                        let dynamicSkinKey = skinSwitch.configKey.dynamicSkin
+                    let playDynamic = (skinView, skinParams) => {
+                        let sprite = Object.assign({}, skinParams)
+                        sprite.loop = true
+                        sprite.viewportNode = skinView
+                        sprite.id = build_id++
+                        if (sprite.beijing) {
+                            sprite.beijing = Object.assign({}, sprite.beijing)
+                            sprite.beijing.viewportNode = skinView
+                        }
 
-                        for (let i = 0; i < skinList.length; i++) {
-                            let skin = skinList[i];
+                        sprite.player = sprite;
+                        skinView.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + sprite.background + '")'
+
+                        let dynamic = am.getAnimation(sprite.player.version)
+                        let beijingDynamic
+                        if (sprite.player && sprite.player.beijing != null) {
+                            beijingDynamic = am.getAnimation(sprite.player.beijing.version || sprite.player.version)
+                        }
+
+                        let loadDaiJi = () => {
+                            if (!dynamic.hasSpine(sprite.name)) {
+                                dynamic.loadSpine(sprite.name, sprite.player.json ? 'json' : 'skel', () => {
+                                    // 加载后播放背景和待机
+                                    if (sprite.player.beijing) {
+                                        runBeijing()
+                                    } else {
+                                        run()
+                                    }
+                                })
+                            } else {
+                                if (sprite.player.beijing) {
+                                    runBeijing()
+                                } else {
+                                    run()
+                                }
+                            }
+                        }
+                        let loadBeiJingDaiJi = () => {
+                            if (!beijingDynamic.hasSpine(sprite.player.beijing.name)) {
+                                beijingDynamic.loadSpine(sprite.player.beijing.name, sprite.player.beijing.json ? 'json' : 'skel', () => {
+                                    // 加载后播放背景和待机
+                                    loadDaiJi()
+                                })
+                            } else {
+                                loadDaiJi()
+                            }
+                        }
+                        let run = function (beijingNode) {
+                            let t = dynamic.playSpine(sprite)
+                            t.opacity = 0
+                            t.beijingNode = beijingNode
+
+                            let skins = t.skeleton.data.skins
+                            if (sprite.player.skin) {
+                                for (let i = 0; i < skins.length; i++) {
+                                    if (skins[i].name === sprite.player.skin) {
+                                        // 设置skin
+                                        t.skeleton.setSkinByName(skins[i].name);
+                                        t.skeleton.setSlotsToSetupPose();
+                                    }
+                                }
+                            }
+
+                            let labels = getAllActionLabels(t)
+                            if (labels.includes('ChuChang')) {
+                                // 清空原来的state状态, 添加出场
+                                t.skeleton.state.setEmptyAnimation(0,0);
+                                t.skeleton.state.setAnimation(0,"ChuChang",false,0);
+                                for (let defaultDaiJi of ['DaiJi', 'play']) {
+                                    let da = getLabelIgnoreCase(t, defaultDaiJi)
+                                    if (da) {
+                                        t.skeleton.state.addAnimation(0, da,true,-0.01);
+                                        t.player.action = da
+                                        t.action = da
+                                    }
+                                }
+                            }
+                            // 重置一下背景和待机的时间
+                            if (beijingNode) {
+                                beijingNode.skeleton.state.tracks[0].trackTime = 0
+                                t.skeleton.state.tracks[0].trackTime = 0
+                                beijingNode.opacity = 1
+                            }
+                            sortNodes();
+                            t.opacity = 1;
+
+                            // 保存当前view的node节点
+                            skinView.node = t
+                        }
+
+                        // 获取骨骼的所有action标签
+                        let getAllActionLabels = node => {
+                            // 获取所有actions
+                            let animations = node.skeleton.data.animations;
+                            let res = []
+                            for (let ani of animations) {
+                                res.push(ani.name)
+                            }
+                            return res
+                        }
+
+                        // 获取标签, 忽略大小写
+                        let getLabelIgnoreCase = (node, label) => {
+                            if (!label) return ''
+                            let animations = node.skeleton.data.animations;
+                            let lowerCaseLabel = label.toLowerCase()
+                            for (let ani of animations) {
+                                if (ani.name.toLowerCase() === lowerCaseLabel) {
+                                    return ani.name
+                                }
+                            }
+                            return ''
+                        }
+
+                        let runBeijing = () => {
+                            sprite.player.beijing.loop = true
+                            sprite.player.beijing.id = beijing_id++
+                            if (sprite.player.beijing.alpha == null)
+                                sprite.player.beijing.alpha = sprite.player.alpha
+
+                            // 如果是双将的话, 复制裁剪.
+                            if (!sprite.player.beijing.clip && sprite.clip) {
+                                sprite.player.beijing.clip = sprite.clip
+                            }
+                            let node
+                            try {
+                                node = beijingDynamic.playSpine(sprite.player.beijing)
+                                node.isbeijing = true
+                            } catch (e) {
+                                console.error(e)
+                            }
+
+                            // 获取所有actions
+                            let chuChangLabel = ''
+                            let labels = getAllActionLabels(node)
+                            for (let label of labels) {
+                                let lowerLabel = label.toLowerCase()
+                                if (lowerLabel === 'chuchang') {
+                                    chuChangLabel = label
+                                    break
+                                }
+                            }
+                            // 查找背景是否也有出场标签
+                            if (chuChangLabel) {
+                                node.skeleton.state.setAnimation(0, chuChangLabel, false, 0);
+                                // 获取所有actions
+
+                                for (let label of labels) {
+                                    let lowerLabel = label.toLowerCase()
+                                    for (let daijiName of ['DaiJi', 'BeiJing', 'play']) {
+                                        if (daijiName.toLowerCase() === lowerLabel) {
+                                            node.skeleton.state.addAnimation(0, label,true,-0.01);
+                                            node.action = label
+                                            break
+                                        }
+                                    }
+                                }
+                            }
+                            // 检查当前节点是否存在位于背景层下的node, 提上来
+                            sortNodes()
+                            run(node)
+                        }
+
+                        let sortNodes = () => {
+                            dynamic.nodes.sort((a, b) => {
+                                return b.id - a.id
+                            })
+                        }
+                        if (sprite.beijing) {
+                            loadBeiJingDaiJi()
+                        } else {
+                            loadDaiJi()
+                        }
+                    }
+
+                    let initSkinViews = () => {
+                        // 去除了千幻自带的排序功能.
+                        let skinKeys = Object.keys(skinInfoMap)
+                        // viewState.skins = skinList;
+                        viewState.skinTotalWidth = (viewState.skinPerWidth + viewState.skinGap) * skinKeys.length - viewState.skinGap;
+                        for (let i = 0; i < skinKeys.length; i++) {
+                            let skinKey = skinKeys[i]
+
+                            let skinInfo = skinInfoMap[skinKey]
+                            let skin = skinInfo.imgName
+                            if (i === 0) {
+                                viewState.skins.push(null)
+                                skin = null
+                            } else {
+                                viewState.skins.push(skin)
+                            }
+
                             let skinView = ui.create.div('.pfqh-qh-skinchange-skin', content);
                             viewState.skinViews.push(skinView);
                             skinView.style.left = Math.round((viewState.skinPerWidth + viewState.skinGap) * i) + "px";
                             skinView.style.width = Math.round(viewState.skinPerWidth) + "px";
+                            skinView.style.height = Math.round(viewState.skinPerHeight) + "px";
                             skinView.classList.add('qh-not-replace');
                             skinView.belowText = ui.create.div('.pfqh-qh-skinchange-skin-text', skinView);
-                            if (i != skinList.length - 1) {
-                                var border = ui.create.div('.pfqh-qh-skinchange-border', content);
+                            if (i !== skinKeys.length - 1) {
+                                let border = ui.create.div('.pfqh-qh-skinchange-border', content);
                                 border.style.width = Math.round(viewState.skinGap) + "px";
                                 border.style.left = Math.round((viewState.skinPerWidth + viewState.skinGap) * i + viewState.skinPerWidth) + "px";
                             }
-
-                            let curSkinKey = skin && skin.replace('.jpg', '').replace('.png', '')
-                            let jingdong
-                            if (skin && keys && keys.includes(curSkinKey)) {
-                                let isDynamic = false;
-                                // 将皮肤的相关参数保存起来
-                                if (lib.config[dynamicSkinKey]) {
-                                    let ps = lib.config[dynamicSkinKey][name];
-                                    if (ps === 'none') isDynamic = false // 主动设置为静皮的
-                                    // else if (ps) {
-                                    else isDynamic = true
-                                    // }
-                                }
+                            let skinSprite = Object.assign({}, skins[skinKey])
+                            // 只有包含千幻聆音扩展才支持设置静皮
+                            if (skinInfo.dynamic) {
+                                skinView.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skinSprite.background + '")';
+                                playDynamic(skinView, skinSprite)
+                            }
+                            if (skinSwitch.qhly_hasExtension('千幻聆音')) {
                                 // 添加上静动素材图片
-                                jingdong = ui.create.div(isDynamic ? '.pfqh-skin-dong' : '.pfqh-skin-jing', skinView)
-                                jingdong.isDynamic = isDynamic
-                                jingdong.listen((e) => {
-                                    // 当前是动皮, 切换为静皮
-                                    if (!jingdong.isDynamic) {
-                                        jingdong.classList.remove('pfqh-skin-jing')
-                                        jingdong.classList.add('pfqh-skin-dong')
-                                        jingdong.isDynamic = true
-                                        skinSwitch.dynamic.selectSkinV3(curSkinKey, player, isPrimary)
-                                        if (skinSwitch.qhly_hasExtension('千幻聆音')) {
+                                let jingdong
+                                if (skinInfo.dynamic) {
+                                    let isDynamic = skinInfo.dynamicState;
+                                    jingdong = ui.create.div(isDynamic ? '.pfqh-skin-dong' : '.pfqh-skin-jing', skinView)
+                                    jingdong.isDynamic = isDynamic
+                                    jingdong.listen((e) => {
+                                        // 当前是动皮, 切换为静皮
+                                        if (!jingdong.isDynamic) {
+                                            jingdong.classList.add('pfqh-skin-dong')
+                                            jingdong.classList.remove('pfqh-skin-jing')
+                                            jingdong.isDynamic = true
+                                            skinSwitch.dynamic.selectSkinV3(skinKey, player, isPrimary)
                                             skinSwitch.dynamic.qhly_callback.setDynamic = true
+                                            game.qhly_setCurrentSkin(name, skin, function () {
+                                                viewState.refreshSkins();
+                                                skinSwitch.dynamic.qhly_callback.setDynamic = false
+
+                                            })
+                                            if (!skinView.node) {
+                                                skinView.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skinSprite.background + '")';
+                                                playDynamic(skinView, skinSprite)
+                                            }
+
+                                            // 背景修改
+                                            if (skinSprite.background) {
+                                                skinView.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + skinSprite.background + '")';
+                                            } else {
+                                                skinView.style.backgroundImage = null;
+                                            }
+                                        } else {
+                                            jingdong.classList.remove('pfqh-skin-dong')
+                                            jingdong.classList.add('pfqh-skin-jing')
+                                            jingdong.isDynamic = false
+                                            // 设置动皮对应的静皮
+                                            if (viewState.cancelClick) return;
+                                            game.qhly_playQhlyAudio('qhly_voc_fanshu', null, true);
+
+                                            // 设置当前皮肤的背景和语音, 调用千幻聆音
+                                            // 恢复原来的静态背景
+                                            if (!skinInfo.isDefault) {
+                                                let file = game.qhly_getSkinFile(name, skin);
+                                                skinView.qhly_origin_setBackgroundImage(file);
+                                                game.qhly_setCurrentSkin(name, skin, function () {
+                                                    viewState.refreshSkins();
+                                                })
+                                            } else {
+                                                skinView.backgroundImage = skinInfo.staticImg
+                                            }
+                                            // 停止播放动画.
+                                            if (skinView.node) {
+                                                let file = game.qhly_getSkinFile(name, skin);
+                                                skinView.qhly_origin_setBackgroundImage(file);
+                                                am.getAnimation(skinView.node.version).stopSpine(skinView.node)
+                                                if (skinView.node.beijingNode) {
+                                                    am.getAnimation(skinView.node.beijingNode.version).stopSpine(skinView.node.beijingNode)
+                                                }
+                                                skinView.node = null;
+                                            }
+                                        }
+                                        e.stopPropagation();
+                                    })
+                                }
+                                if (skin) {
+                                    // 这里不使用千幻皮肤名称了, 直接使用图片的名称
+                                    skinView.belowText.innerHTML = skinInfo.skinName
+                                } else {
+                                    skinView.belowText.innerHTML = "初始皮肤";
+                                }
+                                if (game.qhly_skinIs(name, skin)) {
+                                    skinView.belowText.style.textShadow = '.2rem 0rem .5rem red,-.2rem 0rem .5rem red,0rem .2rem .5rem red,0rem -.2rem .5rem red';
+                                } else {
+                                    skinView.belowText.style.textShadow = '.2rem 0rem .5rem blue,-.2rem 0rem .5rem blue,0rem .2rem .5rem blue,0rem -.2rem .5rem blue';
+                                }
+                                (function (name, skin, view) {
+                                    view.listen(function () {
+                                        if (viewState.cancelClick) return;
+                                        if (skin !== '__default_dynamic' && game.qhly_skinIs(name, skin)) return;
+                                        game.qhly_playQhlyAudio('qhly_voc_fanshu', null, true);
+                                        if (jingdong && jingdong.isDynamic) {
+                                            skinSwitch.dynamic.selectSkinV3(skinKey, player, isPrimary)
+                                            skinSwitch.dynamic.qhly_callback.setDynamic = true
+                                            currentSelect = skinKey
                                             game.qhly_setCurrentSkin(name, skin, function () {
                                                 viewState.refreshSkins();
                                                 skinSwitch.dynamic.qhly_callback.setDynamic = false
@@ -1797,17 +2109,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                     exitListener();
                                                 }
                                             });
-                                        }
-                                    } else {
-                                        jingdong.classList.add('pfqh-skin-jing')
-                                        jingdong.classList.remove('pfqh-skin-dong')
-                                        jingdong.isDynamic = false
-                                        // 设置动皮对应的静皮
-                                        if (viewState.cancelClick) return;
-                                        game.qhly_playQhlyAudio('qhly_voc_fanshu', null, true);
-
-                                        // 设置当前皮肤的背景和语音, 调用千幻聆音
-                                        if (skinSwitch.qhly_hasExtension('千幻聆音')) {
+                                        } else {
                                             game.qhly_setCurrentSkin(name, skin, function () {
                                                 viewState.refreshSkins();
                                                 if (lib.config.qhly_smallwinclosewhenchange) {
@@ -1815,70 +2117,75 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                 }
                                             });
                                         }
-
+                                    })
+                                })(name, skin, skinView);
+                                if (skin) {
+                                    if (!skinInfo.dynamic) {
+                                        if (skinInfo.isDefault) {
+                                            skinView.backgroundImage = skinInfo.staticImg
+                                        } else {
+                                            let file = game.qhly_getSkinFile(name, skin);
+                                            skinView.qhly_origin_setBackgroundImage(file);
+                                        }
                                     }
-                                    e.stopPropagation();
-                                })
-                            }
 
-                            if (skin) {
-                                let info = game.qhly_getSkinInfo(name, skin);
-                                if (info) {
-                                    skinView.belowText.innerHTML = info.translation;
+                                } else {
+                                    skinView.qhly_origin_setBackground(name, 'character');
                                 }
                             } else {
-                                skinView.belowText.innerHTML = "初始皮肤";
-                            }
-                            if (game.qhly_skinIs(name, skin)) {
-                                skinView.belowText.style.textShadow = '.2rem 0rem .5rem red,-.2rem 0rem .5rem red,0rem .2rem .5rem red,0rem -.2rem .5rem red';
-                            } else {
-                                skinView.belowText.style.textShadow = '.2rem 0rem .5rem blue,-.2rem 0rem .5rem blue,0rem .2rem .5rem blue,0rem -.2rem .5rem blue';
-                            }
-                            (function (name, skin, view) {
-                                view.listen(function () {
-                                    if (viewState.cancelClick) return;
-                                    if (game.qhly_skinIs(name, skin)) return;
-                                    game.qhly_playQhlyAudio('qhly_voc_fanshu', null, true);
+                                if (skin) {
+                                    skinView.belowText.innerHTML = skinInfo.skinName
+                                } else {
+                                    skinView.belowText.innerHTML = "初始皮肤"
+                                }
 
-                                    if (jingdong && jingdong.isDynamic) {
-                                        skinSwitch.dynamic.selectSkinV3(curSkinKey, player, isPrimary)
-                                        if (skinSwitch.qhly_hasExtension('千幻聆音')) {
-                                            skinSwitch.dynamic.qhly_callback.setDynamic = true
-                                            game.qhly_setCurrentSkin(name, skin, function () {
-                                                viewState.refreshSkins();
-                                                skinSwitch.dynamic.qhly_callback.setDynamic = false
-                                                if (lib.config.qhly_smallwinclosewhenchange) {
-                                                    exitListener();
-                                                }
-                                            });
-                                        }
-                                    } else {
-                                        game.qhly_setCurrentSkin(name, skin, function () {
-                                            viewState.refreshSkins();
-                                            if (lib.config.qhly_smallwinclosewhenchange) {
-                                                exitListener();
-                                            }
-                                        });
-                                    }
-                                });
-                            })(name, skin, skinView);
-                            if (skin) {
-                                let file = game.qhly_getSkinFile(name, skin);
-                                skinView.qhly_origin_setBackgroundImage(file);
-                            } else {
-                                skinView.qhly_origin_setBackground(name, 'character');
+                                if (skinKey === currentSelect) {
+                                    skinView.belowText.style.textShadow = '.2rem 0rem .5rem red,-.2rem 0rem .5rem red,0rem .2rem .5rem red,0rem -.2rem .5rem red';
+                                } else {
+                                    skinView.belowText.style.textShadow = '.2rem 0rem .5rem blue,-.2rem 0rem .5rem blue,0rem .2rem .5rem blue,0rem -.2rem .5rem blue';
+                                }
+                                (function (name, skin, view) {
+                                    view.listen(function () {
+                                        if (viewState.cancelClick) return;
+                                        if (skinKey === currentSelect) return;
+                                        // game.qhly_playQhlyAudio('qhly_voc_fanshu', null, true);
+                                        skinSwitch.dynamic.selectSkinV3(skinKey, player, isPrimary)
+                                        currentSelect = skinKey
+                                    })
+                                })(name, skin, skinView);
+                                if (skin) {
+                                    skinView.backgroundImage = skinInfo.staticImg
+                                } else {
+                                    skinView.setBackground(name, 'character');
+                                }
                             }
                         }
                         viewState.refresh();
-                    }, false);
+                    }
+
+                    let handleSkinInfo = () => {
+                        if (skinSwitch.qhly_hasExtension('千幻聆音')) {
+                            game.qhly_getSkinList(name, function (ret, list) {
+                                updateSkinInfo(list)
+                                initSkinViews()
+                            }, false)
+                        } else {
+                            initSkinViews()
+                        }
+                    }
+
+                    handleSkinInfo()
+
                     backgroundBack.listen(function (event) {
                         exitListener();
                     });
                     exit.listen(exitListener);
                     enlarge.listen(function () {
                         exitListener();
-                        game.qhly_open_new(name, lib.config.qhly_doubledefaultpage ? lib.config.qhly_doubledefaultpage : 'skill', player);
-                    });
+                        if (skinSwitch.qhly_hasExtension('千幻聆音')) {
+                            game.qhly_open_new(name, lib.config.qhly_doubledefaultpage ? lib.config.qhly_doubledefaultpage : 'skill', player);
+                        }
+                    })
                 },
                 selectSkinData: {
                     temp: "",
@@ -2242,6 +2549,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
                         }
                     },
+                    // 修改eng选择皮肤框的写法
                     selectSkinV2: function (skinName, target) {
                         if (!skinName) return
                         game.playAudio("..", "extension", "皮肤切换/audio/game", "Notice02.mp3")
@@ -2318,7 +2626,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                     },
-                    // 选择皮肤v3
+                    // 以千幻聆音小窗扩展形式的选择皮肤功能
                     selectSkinV3: function (skinName, player, isPrimary) {
                         if (!skinName) return
                         if (!player || !player.isAlive()) return
@@ -2356,6 +2664,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                     },
+                    // 老eng的选择皮肤
                     selectSkin: function (e) {
                         game.playAudio("..", "extension", "皮肤切换/audio/game", "Notice02.mp3");
                         let temp = skinSwitch.selectSkinData.temp;
@@ -5474,6 +5783,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     ]);
                 }
             })
+
             if (lib.config[skinSwitch.configKey.l2dEnable]) {
                 lib.init.js(skinSwitch.url + 'component/live2d', 'live2dcubismcore.min', () => {
                     lib.init.js(skinSwitch.url + 'component/live2d', 'pixi.min', () => {

@@ -8,9 +8,7 @@ window.pfqhLive2dSettings = {
         bottom: "180px",
         basePath: 'extension/皮肤切换/live2d_assets/',  // 存放基础的路径
         opacity: 1,   // 透明度
-        mobile: true,
         draggable: true,  // 是否可拖拽
-        pierceThrough: true,
         scaleFactor: 1.5,
         volume: 0.3,  // 默认的语音播放音量大小  0-1
         // scale: xxx,  // 不写自适应

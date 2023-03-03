@@ -624,7 +624,7 @@
     width: 100px;
     height: 44px;
     left: 7%;
-    bottom: -38%;
+    bottom: -35%;
     cursor: pointer;
 }
 
@@ -692,7 +692,7 @@
     left: 50%;
     top: 50%;
     width: 729px;
-    height: 288px;
+    height: 315px;
     transform: translate(-50%, -50%);
     background-size: 100% 75%;
     background-repeat: no-repeat;
@@ -711,7 +711,7 @@
 }
 
 .pfqh-qh-skinchange-area {
-    z-index: 9;
+    /*z-index: 9;*/
     display: block;
     text-align: left;
     left: 0px;
@@ -723,13 +723,12 @@
 }
 
 .pfqh-qh-skinchange-skin {
-    z-index: 10;
+    /*z-index: 10;*/
     display: block;
     left: 0px;
     top: 0px;
-    /*width: 150px;*/
-    /*height: 100%;*/
-    height: 180px;
+    /*width: 120px;*/
+    /*height: 180px;*/
     background-size: cover;
     background-position: center;
     border-radius: 10px;
@@ -744,8 +743,15 @@
     font-size: 18px;
     font-family: 'qh_songhei';
     color: white;
+    z-index: 1;
     text-shadow: .2rem 0rem .5rem blue, -.2rem 0rem .5rem blue, 0rem .2rem .5rem blue, 0rem -.2rem .5rem blue;
 }
 
 
 /* 搬运千幻聆音经典换肤样式 结束 */
+
+.pfqh-small-dynamic-skin-wrap {
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
