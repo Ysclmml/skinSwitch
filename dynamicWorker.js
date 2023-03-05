@@ -27,6 +27,8 @@ let isMobile = false
 let dpr = 1
 let modifyQhlxPreview
 
+let isQhlxDecade = false  // 标明当前是否是千幻的十周年样式.
+
 /**
  * 获取动皮管理对象DynamicPlayer
  * @param id  DynamicPlayer对象的id
@@ -845,20 +847,15 @@ function position(data) {
 	if (data.mode === 'daiji') {
 		window.postMessage({id: data.id, type: 'position', x: apnode.player.x, y: apnode.player.y, scale: apnode.player.scale, angle: apnode.player.angle})
 	} else if (data.mode === 'beijing') {
-		console.log('apnode====', apnode, apnode.beijingNode)
 		if (apnode.beijingNode) {
-			window.postMessage({id: data.id, type: 'position', x: apnode.beijingNode.x, y: apnode.beijingNode.y, scale: apnode.beijingNode.scale, angle: apnode.beijingNode.angle})
+			window.postMessage({id: data.id, type: 'position', x: apnode.player.beijing.x, y: apnode.player.beijing.y, scale: apnode.player.beijing.scale, angle: apnode.player.beijing.angle})
 		}
 	}else {
-		if (apnode.chukuangNode) {
-			window.postMessage({id: data.id, type: 'position', x: apnode.chukuangNode.x, y: apnode.chukuangNode.y, scale: apnode.chukuangNode.scale})
-		} else {
-			// 否则以配置中的pos作为出框的位置
-			if (!apnode.player.gongjiAction) window.postMessage(false)
-			let actionParams = apnode.player.gongjiAction
-			if (!actionParams) window.postMessage(false)
-			window.postMessage({id: data.id, type: 'position', x: actionParams.x, y: actionParams.y, scale: actionParams.scale, })
-		}
+		// 否则以配置中的pos作为出框的位置
+		let actionParams = apnode.player.gongjiAction
+		if (!actionParams)
+			return
+		window.postMessage({id: data.id, type: 'position', x: actionParams.x, y: actionParams.y, scale: actionParams.scale,})
 	}
 }
 
@@ -925,7 +922,6 @@ function debug(data) {
 
 				let actualPlayNode = playNode ? playNode : apnode
 				setPos(actualPlayNode, data);
-				console.log('debug: actualPlayNode', actualPlayNode)
 				actualPlayNode.angle = undefined
 				setTimeout(() => {
 					if (playNode) {
@@ -1123,6 +1119,138 @@ function adjust(data) {
 	}
 }
 
+// 调整动皮v2
+function resize(data) {
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let apnode = am.getNodeBySkinId(data.skinID);
+	if (!apnode) return
+	completeParams(apnode)
+
+	if (data.mode === 'daiji') {
+		if (data.x != null && data.y != null) {
+			apnode.x = data.x
+			apnode.y = data.y
+			apnode.player.x = data.x
+			apnode.player.y = data.y
+		}
+		if (data.scale != null) {
+			apnode.scale = data.scale
+			apnode.player.scale = data.scale
+		}
+		if (data.angle != null) {
+			apnode.angle = data.angle
+			apnode.player.angle = data.angle
+		}
+	} else if (data.mode === 'chukuang') {
+		let actionParams = apnode.player.gongjiAction
+		if (!actionParams) return
+
+		if (data.x != null && data.y != null) {
+			if (apnode.chukuangNode) {
+				apnode.chukuangNode.x = data.x
+				apnode.chukuangNode.y = data.y
+			} else {
+				// 说明是同一节点
+				apnode.x = data.x
+				apnode.y = data.y
+			}
+			// 修改参数
+			actionParams.x = data.x
+			actionParams.y = data.y
+		}
+		if (data.scale != null) {
+			if (apnode.chukuangNode) {
+				apnode.chukuangNode.scale = data.scale
+				actionParams.scale = data.scale
+			} else {
+				apnode.scale = data.scale
+				// 同一个动皮出框通过调整静态大小即可.
+				actionParams.scale = data.scale
+			}
+		}
+		if (data.angle != null) {
+			if (apnode.chukuangNode) {
+				apnode.chukuangNode.angle = data.angle
+				actionParams.angle = data.angle
+			} else {
+				apnode.angle = data.angle
+				actionParams.angle = data.angle
+			}
+		}
+		actionParams.posAuto = false
+	} else if (data.mode === 'beijing') {
+		if (apnode.beijingNode == null) {
+			return
+		}
+		if (data.x != null && data.y != null) {
+			apnode.beijingNode.x = data.x
+			apnode.beijingNode.y = data.y
+			apnode.player.beijing.x = data.x
+			apnode.player.beijing.y = data.y
+
+		} else if (data.scale != null) {
+			apnode.beijingNode.scale = data.scale
+			apnode.player.beijing.scale = data.scale
+		} else if (data.angle != null) {
+			apnode.beijingNode.angle = data.angle
+			apnode.player.beijing.angle = data.angle
+		}
+	}
+}
+
+// 获取动皮的所有参数信息
+function getNodeInfo(data) {
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let apnode = am.getNodeBySkinId(data.skinID);
+	if (!apnode) return
+	completeParams(apnode)
+
+	// 获取当前动皮的参数信息, daiji/gongji/beijing
+	let retData = {
+		id: data.id,
+		type: 'getNodeInfo',
+		daiji: {
+			x: apnode.player.x,
+			y: apnode.player.y,
+			scale: apnode.player.scale,
+			angle: apnode.player.angle
+		},
+
+	}
+
+	// 获取所有的部件名字
+	let slots = {
+		daiji: {}
+	}
+
+	let hideSlots = new Set(apnode.player.hideSlots || [])
+	apnode.skeleton.slots.forEach((slot) => {
+		let slotName = slot.data.name
+		slots.daiji[slotName] = hideSlots.has(slotName)
+	})
+
+	let gongjiInfo = null, beijingInfo = null
+	if (apnode.player.gongjiAction) {
+		let actionParams = apnode.player.gongjiAction
+		gongjiInfo = {
+			x: actionParams.x, y: actionParams.y, scale: actionParams.scale, angle: actionParams.angle
+		}
+	}
+	if (apnode.beijingNode) {
+		beijingInfo = {
+			x: apnode.player.beijing.x, y: apnode.player.beijing.y, scale: apnode.player.beijing.scale, angle: apnode.player.beijing.angle
+		}
+	}
+	retData.gongji = gongjiInfo
+	retData.beijing = beijingInfo
+	retData.slots = slots
+
+	window.postMessage(retData)
+
+}
+
 function find(data) {
 	let am = animationManagers.getById(data.id);
 	if (!am) return;
@@ -1261,6 +1389,31 @@ function changeQhlxFactor(data) {
 	}
 }
 
+function getDefaultParam(dynamic, t) {
+	// 这里尝试自动适配骨骼, 让骨骼能居中显示在canvas中.
+	let canvasW = dynamic.canvas.width
+	let canvasH = dynamic.canvas.height
+	let bounds = t.skeleton.bounds
+	let centerX = bounds.offset.x + bounds.size.x / 2;
+	let centerY = bounds.offset.y + bounds.size.y / 2;
+	let scaleX = bounds.size.x / canvasW;
+	let scaleY = bounds.size.y / canvasH;
+	let scale = Math.max(scaleX, scaleY);
+	if (scale > 1) scale = 1 / scale;
+	scale *= canvasH / canvasW
+	let width = canvasW / scale;
+	let height = canvasH / scale;
+
+	// 手动设置x和y值.
+	let xx = -(centerX - width / 2) / width
+	let yy = 1-(centerY + height / 2) / height
+	// t.scale = scale
+	// t.x = [0, xx]
+	// t.y = [0, yy]
+
+	console.log('scale', 'x', 'y', scale, xx, yy)
+}
+
 
 // 获取需要隐藏的apnode
 function getHideDynamic(d, hideSkinId) {
@@ -1284,6 +1437,9 @@ function getFullName(localePath, name) {
 
 // 补全配置参数
 function completeParams(node) {
+	if (node.isCompleteParams) {
+		return
+	}
 	let player = node.player  // 这个是播放待机动作存取的配置参数
 	if (!player) return
 
@@ -1436,8 +1592,9 @@ function completeParams(node) {
 
 	node.player.gongjiAction = gongjiAction
 	node.player.teshuAction = teshuAction
-}
 
+	node.isCompleteParams = true
+}
 
 function setRenderClip(d, node) {
 	function calc(value, refer, dpr) {
@@ -1687,6 +1844,12 @@ onmessage = function (e) {
 			break
 		case 'changeQhlxFactor':
 			changeQhlxFactor(data)
+			break
+		case 'RESIZE':
+			resize(data)
+			break
+		case 'GET_NODE_INFO':
+			getNodeInfo(data)
 			break
 
 	}

@@ -14,6 +14,7 @@ window.pfqhLive2dSettings = {
         // scale: xxx,  // 不写自适应
         // x: xxx  // x坐标
         // y: yyy  // y坐标 可以重新定义
+        // idle: 'xxx'  // 手动指定待机播放的动作组
     },
     models: {
         // 对于每个模型都可以覆盖上面配置, 基础信息皆可覆盖
@@ -41,6 +42,10 @@ window.pfqhLive2dSettings = {
             role: 'dujiaoshou_4/dujiaoshou_4.model3.json',
             name: 'dujiaoshou_4',  //
         },
+        // dnewgunzb264703: {
+        //     role: 'dnewgunzb264703/dnewgunzb264703.model3.json',
+        //     name: 'dnewgunzb',  //
+        // },
         live2dnewgunpa157501: {
             role: 'live2dnewgunpa157501/live2dnewgunpa157501.model3.json',
             name: 'live2dnewgunpa157501',  //
@@ -89,6 +94,18 @@ window.pfqhLive2dSettings = {
             role: 'daofeng_5_hx/daofeng_5_hx.model3.json',
             name: 'daofeng_5_hx',  //
         },
+        type_5604_des: {
+            role: '95type_5604/destroy/destroy.model3.json',
+            name: '5604_破坏版',  //
+        },
+        type_5604: {
+            role: '95type_5604/normal/normal.model3.json',
+            name: '5604_正常',  //
+        },
+        shizuku: {
+            role: 'shizuku/shizuku.model.json',
+            name: 'shizuku',  //
+        }
 
     }
 }

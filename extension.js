@@ -33,7 +33,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     } else if (typeof gongji !== 'object') {
                                         gongji = {}
                                     }
-                                    gongji = Object.assign(gongji, skinSwitch.saveSkinParams[k][m].gongji)
+                                    if (gongji) {
+                                        gongji = Object.assign(gongji, skinSwitch.saveSkinParams[k][m].gongji)
+                                    }
+
                                 }
                                 for (let assignK of ['x', 'y', 'scale', 'angle']) {
                                     if (skinSwitch.saveSkinParams[k][m][assignK] != null) {
@@ -44,7 +47,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     decadeUI.dynamicSkin[k][m].beijing = Object.assign(decadeUI.dynamicSkin[k][m].beijing, skinSwitch.saveSkinParams[k][m].beijing)
                                 }
                                 // decadeUI.dynamicSkin[k][m] = Object.assign(decadeUI.dynamicSkin[k][m], skinSwitch.saveSkinParams[k][m])
-                                decadeUI.dynamicSkin[k][m].gongji = gongji
+                                if (gongji) {
+                                    decadeUI.dynamicSkin[k][m].gongji = gongji
+                                }
 
                                 // 添加上千幻雷修的调整参数
                                 if (skinSwitch.saveSkinParams[k][m].qhlx) {
@@ -511,7 +516,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         p.node.avatar.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', (e) => {
                                             e.stopPropagation()
                                             // 过滤掉选择角色事件
-                                            console.log('___statussss', _status.event)
                                             if(_status.event.name !== "chooseToUse" && _status.clicked !== false){
                                                 return
                                             }
@@ -1270,7 +1274,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 }
 
                 skinSwitch.waitUntil(() => {
-                    return window.decadeUI && window.decadeModule && decadeUI.dynamicSkin && lib.skill._decadeUI_usecardBegin
+                    return window.decadeUI && window.decadeModule && decadeUI.dynamicSkin
                 }, () => {
                     updateDecadeDynamicSkin()
                 })
@@ -3269,6 +3273,63 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             skinID: skinId
                         });
                     },
+                    /**
+                     player: 当前动皮角色
+                     mode: 当前编辑的模式
+                     posData: {x: [0, 0.5], y: [0, 0.5], scale: 1, angle: 25}
+                     */
+                    resizePos: function (player, mode, posData) {
+                        if (!(player.dynamic && player.dynamic.primary)) {
+                            skinSwitchMessage.show({
+                                type: 'error',
+                                text: '只有当前角色是动皮时才可以编辑动皮参数',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
+                        if (!player.dynamic.renderer.postMessage) {
+                            skinSwitchMessage.show({
+                                type: 'warning',
+                                text: '当前动皮过多',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
+                        player.dynamic.renderer.postMessage({
+                            message: "RESIZE",
+                            id: player.dynamic.id,
+                            skinID: player.dynamic.primary.id,
+                            mode: mode,
+                            ...posData
+                        })
+                        if (mode === 'chukuang') {
+                            skinSwitch.chukuangWorkerApi.adjust(player, posData)
+                        }
+                    },
+                    getNodeInfo: function (player) {
+                        if (!(player.dynamic && player.dynamic.primary)) {
+                            skinSwitchMessage.show({
+                                type: 'error',
+                                text: '只有当前角色是动皮时才可以编辑动皮参数',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
+                        if (!player.dynamic.renderer.postMessage) {
+                            skinSwitchMessage.show({
+                                type: 'warning',
+                                text: '当前动皮过多',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        }
+                        player.dynamic.renderer.postMessage({
+                            message: "GET_NODE_INFO",
+                            id: player.dynamic.id,
+                            skinID: player.dynamic.primary.id,
+                        })
+                    },
+
                     startPlay: function (player, data) {
                         if (!player.dynamic) return
                         skinSwitch.rendererOnMessage.addListener(player, 'logMessage', function (data) {
@@ -3452,19 +3513,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
                     },
                     getPlayerById: function(id, isQhlx) {
-                        if (isQhlx) {
-                            let p = document.getElementById('mainView')
-                            if (p && p.dynamic) return p
-                            else {
-                                return p && p.childNodes && p.childNodes[0]  // 否则返回第0个节点
-                            }
-                        }
                         for (let p of game.players) {
                             if (p.dynamic && p.dynamic.id === id) {
                                 return p
                             }
                         }
-                        // 再查找一下千幻雷修的大屏预览是否包含
+                        // 千幻雷修的手杀大屏预览
+                        let p = document.getElementById('mainView')
+                        // 尝试查找手杀大屏的node
+                        if (p) {
+                            let _canvas = p.getElementsByClassName('animation-player')
+                            if (_canvas.length) {
+                                return _canvas[0].parentNode.parentNode
+                            }
+
+                        }
+                        // 查找十周年样式的出框样式
                         return null
                     },
                     chukuangStart: function (data) {
@@ -3604,6 +3668,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     // 检查只有当前是player或者是千幻大屏预览才会进行初始化
                     if (!(get.itemtype(player) === 'player' || player.classList.contains('qh-shousha-big-avatar') || player.getElementsByClassName('qhdynamic-decade-big-wrap').length || player.getElementsByClassName('qhdynamic-big-wrap').length)) {
                         return
+                    }
+                    if (!(get.itemtype(player) === 'player')) {
+                        playParams.qhlxBigAvatar = true
+                        // 标明当前的样式是十周年的还是手杀的.
+                        playParams.isDecade = lib.config.qhly_currentViewSkin === 'decade'
+                        playParams.divPos = skinSwitch.getCoordinate(player, true)
+
                     }
                     skinSwitch.chukuangWorkerInit()
                     if (!isPrimary && player.dynamic.deputy) {
@@ -4727,276 +4798,441 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             })
 
             let editBox  // 编辑动皮参数的弹窗
-            let adjustPos  // 显示动画的相对位置. 这个是相对全局window, 用于辅助调试pos位置
             let player   // 当前角色
             let dynamic   // 当前角色的apnode对象, 包含皮肤id
             let renderer  // 当前动皮与worker的通信中继
+
 
             // 创建UI
             function editBoxInit() {
                 if (editBox) return
 
-                editBox = ui.create.div('.editDynamic .draggable', ui.window)
-                let daijiGroup = ui.create.div('.group', editBox)
-                let chukuangGroup = ui.create.div('.group', editBox)
+                const downEvent =  lib.config.touchscreen ? 'touchstart' : 'mousedown'
+                const upEvent =  lib.config.touchscreen ? 'touchend' : 'mouseup'
+                const cancelEvent =  lib.config.touchscreen ? 'touchcancel' : 'mouseleave'
 
-                let daijiEdit = ui.create.div('.btn .pointer .flexItems', daijiGroup)
-                let daijiAdjust = ui.create.div('.btn .pointe .flexItems', daijiGroup)
-                let daijiScale = ui.create.div('.btn', daijiGroup)
-                let daijiAngle = ui.create.div('.btn', daijiGroup)
-
-                let daijiXPosNum = ui.create.div('.btn .posNum', daijiGroup)
-                let daijiYPosNum = ui.create.div('.btn .posNum', daijiGroup)
-                let daijiPos = ui.create.div('.btn', daijiGroup)  // 位置参数显示
-                let daijiSave = ui.create.div('.btn .pointer', daijiGroup)
-
-                let chuKuangEdit = ui.create.div('.btn .pointer', chukuangGroup)
-                let chuKuangAdjust = ui.create.div('.btn .pointer', chukuangGroup)
-                let chuKuangScale = ui.create.div('.btn', chukuangGroup)
-                // let empty = ui.create.div('.btn', chukuangGroup)  // 占位
-                let qhlxAdjust = ui.create.div('.btn', chukuangGroup)  // 调整千幻雷修版本的待机和出框
-                let chuKuangXPosNum = ui.create.div('.btn .posNum', chukuangGroup)
-                let chuKuangYPosNum = ui.create.div('.btn .posNum', chukuangGroup)
-                let chuKuangPos = ui.create.div('.btn', chukuangGroup)
-                let chuKuangSave = ui.create.div('.btn .pointer', chukuangGroup)
-
-                let currentPlay = 'daiji'
-                let daijiXYPos = {
-                    x: [0, 0.5],
-                    y: [0, 0.5]
+                // 当前支持调整的模式
+                const modes = {
+                    daiji: 'daiji',
+                    chukuang: 'chukuang',
+                    beijing: 'beijing',
                 }
-                let chukuangXYPos = {
-                    x: [0, 0.5],
-                    y: [0, 0.5]
+                const funcs = {
+                    player: 'player',
+                    qhShouSha: 'qhShouSha',  // 千幻手杀大屏
+                    qhDecade: 'qhDecade'  // 千幻十周年大屏
                 }
+                let currentFunc = funcs.player  // 定义当前正在调整的功能
+                // 定义一些变量调整参数
+                let currentMode = modes.daiji  // 默认调整待机模式
+                let adjustX
+                let adjustY   // 用于存储当前角色的位置
+                let adjustScale
+                let adjustAngle = 0 // 调整的角度
 
-                if (lib.config[skinSwitch.configKey.closeXYPosAdjust]) {
-                    daijiXPosNum.classList.add('hidden-adjust')
-                    daijiYPosNum.classList.add('hidden-adjust')
-                    chuKuangXPosNum.classList.add('hidden-adjust')
-                    chuKuangYPosNum.classList.add('hidden-adjust')
-                }
+                editBox = ui.create.div('.editDynamic', ui.window)
 
-                daijiEdit.innerHTML = '<div id="playdaiji" style="position: relative;">播放待机</div><div id="playbeijing" style="position: relative;">动态背景</div>'
-                daijiAdjust.innerHTML = '<div id="adjustdaiji" style="position: relative;">调整待机</div><div id="adjustbeijing" style="position: relative;">调整背景</div>'
-                daijiScale.innerHTML = `大小: <input type="text" value="" style="width:32px;border-radius: 4px;">`
-                daijiAngle.innerHTML = `角度: <input type="text" value="" style="width:32px;border-radius: 4px;">`
-                daijiXPosNum.innerHTML = `<span>x</span><i class="minus">-</i><input value="0"><i class="plus">+</i>`
-                daijiYPosNum.innerHTML = `<span>y</span><i class="minus">-</i><input value="0"><i class="plus">+</i>`
-                daijiPos.innerHTML = `<span style="font-size: 12px;font-weight: bold;">位置</span>`
-                daijiSave.innerHTML = `保存参数`
+                const funcContent = ui.create.div('.funcContent', editBox)
+                const funcTitle = ui.create.div('.titleDiv', funcContent)
+                // 功能页.
+                const btnGroup = ui.create.div('.btnGroup', funcContent)
+                const playerBtn = ui.create.div('.funcBtn .btnItem', btnGroup)
+                const qhShouShaBtn = ui.create.div('.funcBtn .btnItem', btnGroup)
+                const qhDecadeBtn = ui.create.div('.funcBtn .btnItem', btnGroup)
+                funcTitle.innerText = '功能页'
+                playerBtn.innerText = '角色调整'
+                qhShouShaBtn.innerText = '千幻手杀'
+                qhDecadeBtn.innerText = '千幻十周年'
 
-                chuKuangEdit.innerHTML = '播放出框'
-                chuKuangAdjust.innerHTML = '调整出框'
-                chuKuangScale.innerHTML = `大小: <input type="text" value="" style="width:32px;border-radius: 4px;">`
-                qhlxAdjust.innerHTML = `调整千幻`
-                chuKuangXPosNum.innerHTML = `<span>x</span><i class="minus">-</i><input value="0"><i class="plus">+</i>`
-                chuKuangYPosNum.innerHTML = `<span>y</span><i class="minus">-</i><input value="0"><i class="plus">+</i>`
-                chuKuangPos.innerHTML = `<span style="font-size: 12px;font-weight: bold;">位置</span>`
-                chuKuangSave.innerHTML = `保存参数`
+                // 角色调整页
+                const adjustContent = ui.create.div('.playerContent .hidden', editBox)
+                const adjustTitle = ui.create.div('.titleDiv', adjustContent)
+                adjustTitle.innerText = '角色调整'
+                const adjustBtnGroup = ui.create.div('.btnGroup', adjustContent)
+                const daijiBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
+                const beijingBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
+                const chukuangBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
+                // const slotHiddenBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
+                // const slotClipBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
+                // const showParamsBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
+                const saveBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
+                const retBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
 
+                daijiBtn.innerText = '调整待机'
+                beijingBtn.innerText = '调整背景'
+                chukuangBtn.innerText = '调整出框'
+                // slotHiddenBtn.innerText = '部件隐藏'
+                // slotClipBtn.innerText = '部件裁剪'
+                // showParamsBtn.innerText = '复制参数'
+                saveBtn.innerText = '保存'
+                retBtn.innerText = '返回'
 
-                let playdaiji = daijiEdit.querySelector('#playdaiji')
-                let adjustdaiji = daijiAdjust.querySelector('#adjustdaiji')
-                let playbeijing = daijiEdit.querySelector('#playbeijing')
-                let adjustbeijing = daijiAdjust.querySelector('#adjustbeijing')
-
-                let arena = document.getElementById('arena')
-
-                // 删除可以拖动的功能, 比较鸡肋
-                // let at = new AnyTouch(editBox, )
-                //
-                // editBox.style.top = '30px'
-                // editBox.style.right = '60px'
-                //
-                // at.on('panstart', () => {
-                //     skinSwitch.allowTouchEvent(false)
-                // })
-                // at.on('panmove', (e) => {
-                //     editBox.style.top = parseInt(editBox.style.top) + e.deltaY + 'px'
-                //     editBox.style.right = parseInt(editBox.style.right) - e.deltaX + 'px'``
-                // })
-                // at.on('panend', () => {
-                //     skinSwitch.allowTouchEvent(true)
-                // })
-
-                // 控制位置的方向键
-                let adjustDirection = ui.create.div('.adjustDirection .hidden-adjust', arena)
-                adjustDirection.classList.add('adjustDirection')
-                adjustDirection.innerHTML = `
-                    <div class="directionDiv" style="top:0;left:32.3%">
-                        <button id="upbtn"><i class="up"></i></button>
-                    </div>
-                    <div class="directionDiv" style="top:26.3%;left:-30.3%">
-                        <button id="leftbtn"><i class="left"></i></button>
-                    </div>  
-                    <div class="directionDiv" style="top:18.3%;left:32.3%">
-                        <button id="bottombtn"><i class="down"></i></button>
-                    </div>
-                    <div class="directionDiv" style="top:-7%;left:23.3%">
-                        <button id="rightbtn"><i class="right"></i></button>
-                    </div>
-                `
-
-                let upTimer
-                let leftTimer
-                let bottomTimer
-                let rightTimer
-
-                let adjustXYRate = function (direction) {
-                    let t
+                // 封装连续按事件
+                let continuousClick = function (dom, func) {
                     let downFunc =  function () {
                         // 改变骨骼的位置
                         //获取鼠标按下时的时间
-                        t = setInterval(function () {
-                            //如果此时检测到的时间与第一次获取的时间差有1000毫秒
-                            let dat = currentPlay === 'daiji' || currentPlay === 'beijing' ? daijiXYPos : chukuangXYPos
-                            let step = 0.01  // step暂时写死
-                            switch (direction) {
-                                case 'up':
-                                    dat.y[1] += step
-                                    dat.y[1] = Number(dat.y[1].toFixed(2))
-                                    break
-                                case 'left':
-                                    dat.x[1] -= step
-                                    dat.x[1] = Number(dat.x[1].toFixed(2))
-                                    break
-                                case 'bottom':
-                                    dat.y[1] -= step
-                                    dat.y[1] = Number(dat.y[1].toFixed(2))
-                                    break
-                                case 'right':
-                                    dat.x[1] += step
-                                    dat.x[1] = Number(dat.x[1].toFixed(2))
-                                    break
-                            }
-                            skinSwitch.postMsgApi.adjust(player, currentPlay, {x: dat.x, y: dat.y})
-
-                            // 改变文本值
-                            if (currentPlay === 'daiji' || currentPlay === 'beijing') {
-                                daijiPos.querySelector('span').innerHTML = `x:${dat.x}<br/>y:${dat.y}`
-                            } else {
-                                chuKuangPos.querySelector('span').innerHTML = `x:${dat.x}<br/>y:${dat.y}`
-                            }
-                        }, 50)
-
-                        if (direction === 'up') {
-                            clearInterval(upTimer)
-                            upTimer = t
-                        } else if (direction === 'left') {
-                            clearInterval(leftTimer)
-                            leftTimer = t
-                        } else if (direction === 'bottom') {
-                            clearInterval(bottomTimer)
-                            bottomTimer = t
-                        } else if (direction === 'right') {
-                            clearInterval(rightTimer)
-                            rightTimer = t
-                        }
+                        let t = setInterval(func, 80)
+                        clearInterval(downFunc.timer)
+                        downFunc.timer = t
+                        func()  // 立马执行一次
                     }
-                    downFunc.holdUp = function () {
-                        //如果按下时间不到1000毫秒便弹起，
-                        clearInterval(t);
+                    let holdUp = function () {
+                        clearInterval(downFunc.timer);
                     }
 
-                    return downFunc
+                    dom.addEventListener(downEvent, downFunc)
+                    dom.addEventListener(upEvent, holdUp)
+                    dom.addEventListener(cancelEvent, holdUp)
 
                 }
 
-                let uf = adjustXYRate('up')
-                let lf = adjustXYRate('left')
-                let bf = adjustXYRate('bottom')
-                let rf = adjustXYRate('right')
+                let initBlackBg = () => {
+                    // 添加调整工具箱
+                    blackbg = ui.create.div('.pfqh_qhly_blackbg .hidden', document.body);
+                    let buttonbar = ui.create.div('.pfqh_qhly_bigeditbar', blackbg);
+                    let buttons = new Array(8);
+                    for (let i = 0; i < 6; i++) {
+                        buttons[i] = ui.create.div('.pfqh_qhly_bigeditbutton' + i, buttonbar);
+                        buttons[i].id = 'pfqh_qhly_bigedit' + i;
 
-                let downEvent =  lib.config.touchscreen ? 'touchstart' : 'mousedown'
-                let upEvent =  lib.config.touchscreen ? 'touchend' : 'mouseup'
-                let cancelEvent =  lib.config.touchscreen ? 'touchcancel' : 'mouseleave'
-                adjustDirection.querySelector('#upbtn').addEventListener(downEvent, uf)
-                adjustDirection.querySelector('#upbtn').addEventListener(upEvent, uf.holdUp)
-                adjustDirection.querySelector('#upbtn').addEventListener(cancelEvent, uf.holdUp)
-                adjustDirection.querySelector('#leftbtn').addEventListener(downEvent, lf)
-                adjustDirection.querySelector('#leftbtn').addEventListener(upEvent, lf.holdUp)
-                adjustDirection.querySelector('#leftbtn').addEventListener(cancelEvent, lf.holdUp)
-                adjustDirection.querySelector('#bottombtn').addEventListener(downEvent, bf)
-                adjustDirection.querySelector('#bottombtn').addEventListener(upEvent, bf.holdUp)
-                adjustDirection.querySelector('#bottombtn').addEventListener(cancelEvent, bf.holdUp)
-                adjustDirection.querySelector('#rightbtn').addEventListener(downEvent, rf)
-                adjustDirection.querySelector('#rightbtn').addEventListener(upEvent, rf.holdUp)
-                adjustDirection.querySelector('#rightbtn').addEventListener(cancelEvent, rf.holdUp)
+                        if (i >= 0 && i < 4) {
+                            switch (i) {
+                                case 0: {
+                                    // 放大, 每次scale+0.01, 支持连点
+                                    continuousClick(buttons[i], (e) => {
+                                        adjustScale += 0.02
+                                        skinSwitch.postMsgApi.resizePos(player, currentMode, {scale: adjustScale})
+                                    })
+                                    break;
+                                }
+                                case 1: {
+                                    // 缩小, 每次scale-0.01,
+                                    continuousClick(buttons[i], (e) => {
+                                        adjustScale -= 0.02
+                                        if (adjustScale <= 0) adjustScale = 0.01
+                                        skinSwitch.postMsgApi.resizePos(player, currentMode, {scale: adjustScale})
+                                    })
+                                    break;
+                                }
+                                case 2: {
+                                    continuousClick(buttons[i], (e) => {
+                                        adjustAngle++
+                                        skinSwitch.postMsgApi.resizePos(player, currentMode, {angle: adjustAngle})
+                                    })
+                                    break;
+                                }
+                                case 3: {
+                                    continuousClick(buttons[i], (e) => {
+                                        adjustAngle--
+                                        skinSwitch.postMsgApi.resizePos(player, currentMode, {angle: adjustAngle})
+                                    })
+                                    break;
+                                }
+                            }
+                        } else {
+                            buttons[i].listen(function () {
+                                switch (this.id) {
+                                    case 'pfqh_qhly_bigedit4': {
+                                        // 显示十字键辅助微调
+                                        this._show = !adjustDirection || adjustDirection.classList.contains('hidden')
+                                        showShizi(!this._show)
+                                        break;
+                                    }
+                                    case 'pfqh_qhly_bigedit5': {
+                                        // 调整后返回
+                                        showAdjustBar(true)
+                                        show(editBox)
+                                        // 恢复播放待机动画
+                                       // currentMode = modes.daiji
+                                       //  initPosParams()
+                                        selfLoopPlay(modes.daiji)
+                                        break;
+                                    }
+                                    case 'pfqh_qhly_bigedit6': {
 
-                // adjustDirection.querySelector('#upbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('up'))
-                // adjustDirection.querySelector('#leftbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('left'))
-                // adjustDirection.querySelector('#bottombtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click',  adjustXYRate('bottom'))
-                // adjustDirection.querySelector('#rightbtn').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', adjustXYRate('right'))
-
-
-                let updateAdjustPos = function (pos, mode) {
-                    let bodyH = decadeUI.get.bodySize().height
-                    let bodyW = decadeUI.get.bodySize().width
-                    if (mode === 'daiji' || mode === 'beijing') {
-                        if (!Array.isArray(pos.x)) {
-                            // 转化为百分比
-                            pos.x = [0, Number((pos.x / bodyW).toFixed(2))]
-                            pos.y = [0, Number((pos.y / bodyH).toFixed(2))]
-                        }
-                        daijiXYPos.x = pos.x
-                        daijiXYPos.y = pos.y
-                    } else {
-                        if (!Array.isArray(pos.x)) {
-                            pos.x = [0, Number((pos.x / bodyW).toFixed(2))]
-                            pos.y = [0, Number((pos.y / bodyH).toFixed(2))]
-                        }
-                        chukuangXYPos.x = pos.x
-                        chukuangXYPos.y = pos.y
-                    }
-                }
-
-                qhlxAdjust.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                    // 必须保证当前已经打开了千幻的皮肤选择界面.
-                    if (qhlxAdjust.isAdjust) {
-                        // 判断当前是在调整页面还是在游戏画面中.
-                        qhlxAdjust.isAdjust = false
-                        editBox.updateGlobalParams()  // 更新一下参数状态
-
-                        daijiAdjust.classList.remove('adjust-select')
-                        chuKuangAdjust.classList.remove('adjust-select')
-                        qhlxAdjust.classList.remove('adjust-select')
-                        currentPlay = 'daiji'
-
-                    } else {
-                        let nodePlayer = document.getElementById('mainView')
-                        if (!nodePlayer || !nodePlayer.dynamic || !nodePlayer.dynamic.primary) {
-                            skinSwitchMessage.show({
-                                'type': 'error',
-                                'text': '必须打开皮肤预览页面且选择的是动皮才可以进行编辑调整'
+                                    }
+                                }
                             })
-                            return
                         }
-                        // 停止原来的自动播放攻击动画和待机..
-                        clearInterval(_status.texiaoTimer);
-                        clearTimeout(_status.texiaoTimer2);
-
-                        daijiAdjust.classList.remove('adjust-select')
-                        chuKuangAdjust.classList.remove('adjust-select')
-                        qhlxAdjust.classList.add('adjust-select')
-                        qhlxAdjust.isAdjust = true
-
-
-                        // 检查全局参数的引用是否发生变化. 如果发生变化需要进行重新初始化
-                        player = nodePlayer
-                        player.isQhlx = true // 表示当前动皮角色是千幻雷修版本的
-
-                        player.GongJi = false
-                        renderer = player.dynamic.renderer;
-                        dynamic = player.dynamic.primary  // 这个是指代主将的sprite也就是APNode对象
-                        setTimeout(() => {
-                            // 给一个发消息的缓冲时间
-                            getCurPosition('daiji')
-                            setTimeout(() => {
-                                getCurPosition('chukuang')
-                            }, 100)
-                        }, 100)
                     }
+
+                    // 绑定全局可以滑动调整
+
+                    function mouseupEvent(event) {
+                        blackbg._mouseup(event);
+                    }
+                    function mousemoveEvent(event) {
+                        if (event) {
+                            if (event.touches && event.touches.length) {
+                                blackbg._mousemove(event.touches[0].clientX, event.touches[0].clientY);
+                            }
+                            else blackbg._mousemove(event.clientX, event.clientY);
+                        }
+                    }
+                    function mousedownEvent(event) {
+                        if (event) {
+                            // 清空之前的数据
+                            if (this.posX) delete this.posX
+                            if (this.posY) delete this.posY
+                            if (event.touches && event.touches.length) blackbg._mousedown(event.touches[0].clientX, event.touches[0].clientY);
+                            else blackbg._mousedown(event.clientX, event.clientY);
+                        }
+                    }
+                    blackbg._mousedown = function (x, y) {
+                        this.posX = x
+                        this.posY = y
+                        this.isTouching = true
+                    }
+                    blackbg._mousemove = function (x, y) {
+                        if (!this.isTouching) return;
+                        let slideX = x - this.posX;
+                        let slideY = y - this.posY;
+                        if (currentMode === modes.chukuang) {
+                            adjustX[1] += slideX * 0.0007;
+                            adjustY[1] -= slideY * 0.0007;
+                        } else {
+                            adjustX[1] += slideX * 0.003;
+                            adjustY[1] -= slideY * 0.003;
+                        }
+                        skinSwitch.postMsgApi.resizePos(player, currentMode, {
+                            message: 'RESIZE',
+                            x: adjustX,
+                            y: adjustY,
+                        })
+                        this.posX = x
+                        this.posY = y
+                    }
+                    blackbg._mouseup = function (event) {
+                        this.isTouching = false;
+                        delete this.posX;
+                        delete this.posY;
+                    }
+                    blackbg.addEventListener('touchstart', mousedownEvent, true);
+                    blackbg.addEventListener('touchend', mouseupEvent, true);
+                    blackbg.addEventListener('touchcancel', mouseupEvent, true);
+                    blackbg.addEventListener('touchmove', mousemoveEvent, true);
+                    blackbg.addEventListener('mousedown', mousedownEvent, true);
+                    blackbg.addEventListener('mouseup', mouseupEvent, true);
+                    blackbg.addEventListener('mouseleave', mouseupEvent, true);
+                    blackbg.addEventListener('mousemove', mousemoveEvent, true);
+                }
+
+                let blackbg
+                let showAdjustBar = hidden => {
+                    if (!blackbg) {
+                        initBlackBg()
+                    }
+                    if (hidden) {
+                        blackbg.classList.add('hidden')
+                        showShizi(true)
+                    }
+                    else blackbg.classList.remove('hidden')
+                }
+
+                let initPosParams = () => {
+                    getDynamicPos(currentMode, (data) => {
+                        adjustX = data.x
+                        adjustY = data.y
+                        adjustScale = data.scale
+                        adjustAngle = data.angle || 0
+                    })
+                }
+
+                let refreshBtnState = (selectDiv) => {
+                    for (let item of [daijiBtn, beijingBtn, chukuangBtn]) {
+                        if (item === selectDiv) {
+                            item.classList.add('btnSelect')
+                        } else {
+                            item.classList.remove('btnSelect')
+                        }
+                    }
+                }
+
+                retBtn.listen(() => {
+                    funcContent.classList.remove('hidden')
+                    adjustContent.classList.add('hidden')
+                    showShizi(true)
+                    showAdjustBar(true)
+                    refreshBtnState(null)  // 清空所有状态
+                })
+
+                // 调整角色功能页功能
+                playerBtn.listen(() => {
+                    editBox.updateGlobalParams()
+                    funcContent.classList.add('hidden')
+                    adjustContent.classList.remove('hidden')
+                    currentMode = modes.daiji
+                    initPosParams()
+                    showShizi(true)
+                    currentFunc = funcs.player
+                    // 清理其他
+                })
+
+                daijiBtn.listen(() => {
+                    currentMode = modes.daiji
+                    showAdjustBar()
+                    showShizi(true)
+                    initPosParams()
+                    selfLoopPlay(currentMode)
+                    refreshBtnState(daijiBtn)
+                    hide(editBox)
+                })
+
+                beijingBtn.listen(() => {
+                    let playerParams = player.dynamic.primary.player
+                    if (!playerParams.beijing) {
+                        skinSwitchMessage.show({
+                            type: 'warning',
+                            text: '当前皮肤没有设置动态背景',
+                            duration: 1500,    // 显示时间
+                            closeable: false, // 可手动关闭
+                        })
+                        return
+                    }
+
+                    currentMode = modes.beijing
+                    showAdjustBar()
+                    showShizi(true)
+                    initPosParams()
+                    selfLoopPlay(currentMode)
+                    refreshBtnState(beijingBtn)
+                    hide(editBox)
+                })
+
+                chukuangBtn.listen(() => {
+                    console.log('调整出框======')
+                    currentMode = modes.chukuang
+                    showAdjustBar()
+                    showShizi(true)
+                    initPosParams()
+                    selfLoopPlay(currentMode)
+                    refreshBtnState(chukuangBtn)
+                    hide(editBox)
+                })
+
+                saveBtn.listen(() => {
+                    saveToFile()
+                })
+
+
+                let adjustDirection
+                let arena = document.getElementById('arena')
+
+                let showShizi = (hidden) => {
+                    // 初始化十字键
+                    if (!adjustDirection) {
+                        adjustDirection = ui.create.div('.adjustDirection', arena);
+                        adjustDirection.innerHTML = `
+                            <div class="directionDiv" style="top:0;left:32.3%">
+                                <button id="upbtn"><i class="up"></i></button>
+                            </div>
+                            <div class="directionDiv" style="top:26.3%;left:-30.3%">
+                                <button id="leftbtn"><i class="left"></i></button>
+                            </div>  
+                            <div class="directionDiv" style="top:18.3%;left:32.3%">
+                                <button id="bottombtn"><i class="down"></i></button>
+                            </div>
+                            <div class="directionDiv" style="top:-7%;left:23.3%">
+                                <button id="rightbtn"><i class="right"></i></button>
+                            </div>
+                        `
+
+                        continuousClick(adjustDirection.querySelector('#upbtn'), () => {
+                            adjustY[1] += 0.01
+                            skinSwitch.postMsgApi.resizePos(player, currentMode, {x: adjustX, y: adjustY})
+                        })
+
+                        continuousClick(adjustDirection.querySelector('#bottombtn'), () => {
+                            adjustY[1] -= 0.01
+                            skinSwitch.postMsgApi.resizePos(player, currentMode, {x: adjustX, y: adjustY})
+                        })
+
+                        continuousClick(adjustDirection.querySelector('#leftbtn'), () => {
+                            adjustX[1] -= 0.01
+                            skinSwitch.postMsgApi.resizePos(player, currentMode, {x: adjustX, y: adjustY})
+                        })
+
+                        continuousClick(adjustDirection.querySelector('#rightbtn'), () => {
+                            adjustX[1] += 0.01
+                            skinSwitch.postMsgApi.resizePos(player, currentMode, {x: adjustX, y: adjustY})
+                        })
+                    }
+                    if (hidden) adjustDirection.classList.add('hidden')
+                    else adjustDirection.classList.remove('hidden')
+
+                }
+
+                qhShouShaBtn.listen(function () {
+
+                    // 寻找千幻的节点,并更新当前player
+                    let qhNode
+                    let p = document.getElementById('mainView')
+                    // 尝试查找手杀大屏的node
+                    if (p) {
+                        let _canvas = p.getElementsByClassName('animation-player')
+                        if (_canvas.length) {
+                           qhNode =  _canvas[0].parentNode.parentNode
+                        }
+
+                    }
+                    if (!qhNode || !qhNode.dynamic || !qhNode.dynamic.primary) {
+                        skinSwitchMessage.show({
+                            'type': 'error',
+                            'text': '必须打开千幻大屏预览页且当前预览角色是动皮才可以进行编辑调整'
+                        })
+                        return
+                    }
+                    currentFunc = funcs.qhShouSha
+                    // 必须保证当前已经打开了千幻的皮肤选择界面.
+                    funcContent.classList.add('hidden')
+                    adjustContent.classList.remove('hidden')
+
+                    // 停止原来的自动播放攻击动画和待机..
+                    clearInterval(_status.texiaoTimer);
+                    clearTimeout(_status.texiaoTimer2);
+
+                    // 检查全局参数的引用是否发生变化. 如果发生变化需要进行重新初始化
+                    player = qhNode
+                    player.isQhlx = true; // 表示当前动皮角色是千幻雷修版本的
+                    renderer = player.dynamic.renderer;
+                    dynamic = player.dynamic.primary;  // 这个是指代主将的sprite也就是APNode对象
+                    currentMode = modes.daiji
+                    initPosParams()
+                })
+
+                qhDecadeBtn.listen(function () {
+
+                    // 寻找千幻的节点,并更新当前player
+                    let qhNode
+                    let p = document.getElementById('mainView')
+                    // 尝试查找手杀大屏的node
+                    if (p) {
+                        let _canvas = p.getElementsByClassName('animation-player')
+                        if (_canvas.length) {
+                            qhNode =  _canvas[0].parentNode.parentNode
+                        }
+
+                    }
+                    if (!qhNode || !qhNode.dynamic || !qhNode.dynamic.primary) {
+                        skinSwitchMessage.show({
+                            'type': 'error',
+                            'text': '必须打开千幻大屏预览页且当前预览角色是动皮才可以进行编辑调整'
+                        })
+                        return
+                    }
+                    currentFunc = funcs.qhDecade
+                    // 必须保证当前已经打开了千幻的皮肤选择界面.
+                    funcContent.classList.add('hidden')
+                    adjustContent.classList.remove('hidden')
+
+                    // 检查全局参数的引用是否发生变化. 如果发生变化需要进行重新初始化
+                    player = qhNode
+                    player.isQhlx = true; // 表示当前动皮角色是千幻雷修版本的
+                    renderer = player.dynamic.renderer;
+                    dynamic = player.dynamic.primary;  // 这个是指代主将的sprite也就是APNode对象
+                    currentMode = modes.daiji
+                    initPosParams()
                 })
 
                 let getDynamicPos = function (mode, func) {
@@ -5004,58 +5240,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     skinSwitch.rendererOnMessage.addListener(player, 'position', func)
                 }
 
-                let getCurPosition = function (mode) {
-                    getDynamicPos(mode, function (data) {
-                        if (data) {
-                            updateAdjustPos(data, mode)
-
-                            // 同时改变输入框的值
-                            if (mode === 'daiji' || mode === 'beijing') {
-                                daijiXPosNum.querySelector('input').value = data.x[0]
-                                daijiYPosNum.querySelector('input').value = data.y[0]
-                                daijiScale.querySelector('input').value = data.scale
-                                if (data.angle !== undefined) {
-                                    daijiAngle.querySelector('input').value = data.angle
-                                } else {
-                                    daijiAngle.querySelector('input').value = ''
-                                }
-                                daijiPos.querySelector('span').innerHTML = `x:${data.x}<br/>y:${data.y}`
-                            } else {
-                                chuKuangXPosNum.querySelector('input').value = data.x[0]
-                                chuKuangYPosNum.querySelector('input').value = data.y[0]
-                                chuKuangScale.querySelector('input').value = data.scale
-                                chuKuangPos.querySelector('span').innerHTML = `x:${data.x}<br/>y:${data.y}`
-                            }
-                        }
-                    })
-                }
-
                 let selfLoopPlay = function(mode) {
 
                     let canvas = player.getElementsByClassName("animation-player")[0];
                     let dynamicWrap
                     if (player.isQhlx) {
-                        dynamicWrap = player.getElementsByClassName("qhdynamic-big-wrap")[0];
+                        dynamicWrap = canvas.parentNode;
                     } else {
-                        // if (lib.config['extension_十周年UI_newDecadeStyle'] === "on") {
-                        //     dynamicWrap = player.getElementsByClassName("dynamicPlayerCanvas")[0]
-
-                        // } else {
-                            dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
-                        // }
-                    }
-                    if (player.isQhlx) {
-                        if (document.getElementsByClassName('qhdynamic-big-wrap').length === 0) {
-                            // 需要再次点击表示退出千幻动皮预览界面了.
-                            skinSwitchMessage.show({
-                                type: 'warning',
-                                text: '请取消调整千幻状态',
-                                duration: 1500,    // 显示时间
-                                closeable: false, // 可手动关闭
-                            })
-                            return
-
-                        }
+                        dynamicWrap = player.getElementsByClassName("dynamic-wrap")[0];
                     }
                     skinSwitch.postMsgApi.debug(player, mode)
                     skinSwitch.rendererOnMessage.addListener(player, 'debugChuKuang', function (e) {
@@ -5091,9 +5283,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     })
                     skinSwitch.rendererOnMessage.addListener(player, 'debugNoChuKuang', function (e) {
                         // 没有出框动画无法调整
-                        currentPlay = 'daiji'
-                        chuKuangAdjust.classList.remove('adjust-select')
-                        daijiAdjust.classList.add('adjust-select')
+                        // currentMode = modes.daiji
+                        showAdjustBar(true)
+                        show(editBox)
 
                         skinSwitchMessage.show({
                             type: 'warning',
@@ -5105,332 +5297,157 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     })
                 }
 
-                let changeXYPos = function(mode, xOrY, num) {
-                    return function () {
-                        let v
-                        let dom
-                        // 只能调整当前正在播放的动画
-                        if (currentPlay !== mode) {
-                            if (mode === 'daiji' && currentPlay === 'beijing') {
-                                mode = 'beijing'
-                            } else {
-                                return
-                            }
-                        }
-                        if (mode === 'daiji' || mode === 'beijing') {
-                            // 查找对应的输入框当前的值
-                            if (xOrY === 'x') {
-                                dom = daijiXPosNum.querySelector('input')
-                                v = dom.value
-                            } else {
-                                dom = daijiYPosNum.querySelector('input')
-                                v = dom.value
-                            }
-                        } else {
-                            if (xOrY === 'x') {
-                                dom = chuKuangXPosNum.querySelector('input')
-                                v = dom.value
-                            } else {
-                                dom = chuKuangYPosNum.querySelector('input')
-                                v = dom.value
-                            }
-                        }
-                        v = Number(v)
-                        if (isNaN(v)) {
-                            skinSwitchMessage.show({
-                                type: 'warning',
-                                text: '输入的数不正确',
-                                duration: 1500,    // 显示时间
-                                closeable: false, // 可手动关闭
-                            })
-                            return
-                        }
-                        dom.value = v + num
-                        let xyPos = {}
-                        xyPos[xOrY === 'x' ? 'x': 'y'] = v + num
-
-                        // 更新位置
-                        skinSwitch.postMsgApi.adjust(player, mode, {xyPos: xyPos})
-
-                        // 更新一下
-                        setTimeout(() => {
-                            getCurPosition(mode)
-                        }, 100)
-                    }
-                }
-
-                let changeScale = function (mode) {
-                    let onBlur = function () {
-                        let dom
-                        let isChange = false
-                        // 只能调整当前正在播放的动画
-                        if (currentPlay !== mode) {
-                            if (mode === 'daiji' && currentPlay === 'beijing') {
-                                mode = 'beijing'
-                            } else {
-                                return
-                            }
-                        }
-                        if (mode === 'daiji' || mode === 'beijing') {
-                            dom = daijiScale.querySelector('input')
-                            if (onBlur.value !== dom.value) {
-                                onBlur.value = dom.value
-                                isChange = true
-                            }
-                        } else {
-                            dom = chuKuangScale.querySelector('input')
-                            if (onBlur.value !== dom.value) {
-                                onBlur.value = dom.value
-                                isChange = true
-                            }
-                        }
-                        if (isChange) {
-                            let v = Number(onBlur.value)
-                            if (isNaN(v)) {
-                                // alert('输入的数不正确')
-                                skinSwitchMessage.show({
-                                    type: 'warning',
-                                    text: '输入的数不正确',
-                                    duration: 1500,    // 显示时间
-                                    closeable: false, // 可手动关闭
-                                })
-                                return
-                            }
-                            // 更新大小
-                            skinSwitch.postMsgApi.adjust(player, mode, {scale: v})
-                            setTimeout(() => {
-                                getCurPosition(mode)
-                            }, 100)
-                        }
-                    }
-                    onBlur.value = ''  // 第一次不赋值, 内部维护一个值, 来保存之前的输入值
-                    return onBlur
-                }
-
-                let changeAngle = function (mode) {
-                    let onBlur = function () {
-                        let dom
-                        let isChange = false
-                        // 只能调整当前正在播放的动画
-                        if (currentPlay !== mode) {
-                            if (mode === 'daiji' && currentPlay === 'beijing') {
-                                mode = 'beijing'
-                            } else {
-                                return
-                            }
-                        }
-                        if (mode === 'daiji' || mode === 'beijing') {
-                            dom = daijiAngle.querySelector('input')
-                            if (onBlur.value !== dom.value) {
-                                onBlur.value = dom.value
-                                isChange = true
-                            }
-                        } else {
-                            // dom = chuKuangScale.querySelector('input')
-                            // if (onBlur.value !== dom.value) {
-                            //     onBlur.value = dom.value
-                            //     isChange = true
-                            // }
-                        }
-                        if (isChange) {
-                            let v = Number(onBlur.value)
-                            if (isNaN(v)) {
-                                skinSwitchMessage.show({
-                                    type: 'warning',
-                                    text: '输入的数不正确',
-                                    duration: 1500,    // 显示时间
-                                    closeable: false, // 可手动关闭
-                                })
-                                return
-                            }
-                            // 更新位置
-                            skinSwitch.postMsgApi.adjust(player, mode, {angle: v})
-                            setTimeout(() => {
-                                getCurPosition(mode)
-                            }, 100)
-                        }
-                    }
-                    onBlur.value = ''  // 第一次不赋值, 内部维护一个值, 来保存之前的输入值
-                    return onBlur
-                }
-
-                daijiScale.querySelector('input').onblur = changeScale('daiji')
-                chuKuangScale.querySelector('input').onblur = changeScale('chukuang')
-                // 待机角度调整, 出框角度暂时不调整
-                daijiAngle.querySelector('input').onblur = changeAngle('daiji')
+                // 查看参数
+                // showParamsBtn.listen((e) => {
+                //     skinSwitch.postMsgApi.getNodeInfo(player)
+                //     skinSwitch.rendererOnMessage.addListener(player, 'getNodeInfo', (data) => {
+                //         console.log('dataInfo::::  ', data)
+                //         // 直接复制参数
+                //         // 弹出一个框查看参数信息, 也可以快速复制
+                //         // let modal = ui.create.div('.modalParent', document.body)
+                //         // modal.innerHTML = `
+                //         // <style>
+                //         //     .modalParent {
+                //         //       display: flex;
+                //         //       flex-direction: column;
+                //         //       align-items: center;
+                //         //       justify-content: center;
+                //         //       color: #222;
+                //         //       position: relative;
+                //         //       min-height: 100vh;
+                //         //     }
+                //         //
+                //         //     .modal {
+                //         //       display: flex;
+                //         //       flex-direction: column;
+                //         //       justify-content: center;
+                //         //       gap: 0.4rem;
+                //         //       width: 450px;
+                //         //       padding: 1.3rem;
+                //         //       min-height: 250px;
+                //         //       position: absolute;
+                //         //       top: 20%;
+                //         //       background-color: white;
+                //         //       border: 1px solid #ddd;
+                //         //       border-radius: 15px;
+                //         //     }
+                //         //
+                //         //     .modal .flex {
+                //         //       display: flex;
+                //         //       align-items: center;
+                //         //       justify-content: space-between;
+                //         //     }
+                //         //
+                //         //     .modal input {
+                //         //       padding: 0.7rem 1rem;
+                //         //       border: 1px solid #ddd;
+                //         //       border-radius: 5px;
+                //         //       font-size: 0.9em;
+                //         //     }
+                //         //
+                //         //     .modal p {
+                //         //       font-size: 0.9rem;
+                //         //       color: #777;
+                //         //       margin: 0.4rem 0 0.2rem;
+                //         //     }
+                //         //
+                //         //     button {
+                //         //       cursor: pointer;
+                //         //       border: none;
+                //         //       font-weight: 600;
+                //         //     }
+                //         //
+                //         //     .btn {
+                //         //       display: inline-block;
+                //         //       padding: 0.8rem 1.4rem;
+                //         //       font-weight: 700;
+                //         //       background-color: black;
+                //         //       color: white;
+                //         //       border-radius: 5px;
+                //         //       text-align: center;
+                //         //       font-size: 1em;
+                //         //     }
+                //         //
+                //         //     .btn-open {
+                //         //       position: absolute;
+                //         //       bottom: 150px;
+                //         //     }
+                //         //
+                //         //     .btn-close {
+                //         //       transform: translate(10px, -20px);
+                //         //       padding: 0.5rem 0.7rem;
+                //         //       background: #eee;
+                //         //       border-radius: 50%;
+                //         //     }
+                //         //
+                //         // </style>
+                //         // <section class="modal">
+                //         //   <div class="flex">
+                //         //     <img src="user.png" width="50px" height="50px" alt="user" />
+                //         //     <button class="btn-close">⨉</button>
+                //         //   </div>
+                //         //   <div>
+                //         //     <h3>Stay in touch</h3>（保持联系）
+                //         //     <p>
+                //         //       This is a dummy newsletter form so don't bother trying to test it. Not
+                //         //       that I expect you to, anyways.:)（这是一个虚拟的通讯表单，所以不要费心去测试它。反正我也不指望你这么做）
+                //         //     </p>
+                //         //   </div>
+                //         //
+                //         //   <input type="email" id="email" placeholder="brendaneich@js.com" />
+                //         //   <button class="btn">Submit</button>
+                //         // </section>
+                //         // `
+                //
+                //         // const closeModalBtn = modal.querySelector(".btn-close");
+                //         // closeModalBtn.addEventListener("click", () => {
+                //         //     modal.classList.add("hidden");
+                //         // })
+                //
+                //     })
+                // })
 
                 // 增加一个新的方法, 修改全局变量, 尤其是当皮肤也进行了变化
                 editBox.updateGlobalParams = function (){
                     // 检查全局参数的引用是否发生变化. 如果发生变化需要进行重新初始化
                     player = game.me
                     if (!player.dynamic) return
-                    player.GongJi = false
                     renderer = player.dynamic.renderer;
                     dynamic = player.dynamic.primary  // 这个是指代主将的sprite也就是APNode对象
-                    setTimeout(() => {
-                        // 给一个发消息的缓冲时间
-                        getCurPosition('daiji')
-                        setTimeout(() => {
-                            getCurPosition('chukuang')
-                        }, 100)
-                    }, 100)
-
+                    initPosParams()
                 }
 
-                // 给几个按钮添加移动位置事件
-                daijiXPosNum.querySelector('.minus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('daiji', 'x', -1))
-                daijiXPosNum.querySelector('.plus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('daiji', 'x', 1))
-                daijiYPosNum.querySelector('.minus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('daiji', 'y', -1))
-                daijiYPosNum.querySelector('.plus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('daiji', 'y', 1))
-                chuKuangXPosNum.querySelector('.minus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('chukuang', 'x', -1))
-                chuKuangXPosNum.querySelector('.plus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('chukuang', 'x', 1))
-                chuKuangYPosNum.querySelector('.minus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('chukuang', 'y', -1))
-                chuKuangYPosNum.querySelector('.plus').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', changeXYPos('chukuang', 'y', 1))
+                // let copyToClipboard = function (dataInfo) {
+                //     // 保存当前动皮参数
+                //     let copyData = `\t\t\t\tx: [${data.x}],\n\t\t\t\ty: [${data.y}],\n`
+                //     if (data.angle !== undefined) {
+                //         copyData += `\t\t\t\tangle: ${data.angle},\n`
+                //     }
+                //     if (data.scale !== undefined) {
+                //         copyData += `\t\t\t\tscale: ${data.scale},\n`
+                //     }
+                //     // 复制到剪切板, 复制代码来源: https://juejin.cn/post/6844903567480848391
+                //     const input = document.createElement('textarea');
+                //     input.setAttribute('readonly', 'readonly');
+                //     // input.setAttribute('value', copyData);
+                //     input.value = copyData
+                //     document.body.appendChild(input);
+                //     if (document.execCommand('copy')) {
+                //         input.select()
+                //         document.execCommand('copy')
+                //         console.log('复制成功');
+                //     }
+                //     document.body.removeChild(input);
+                // }
 
-                playdaiji.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                    selfLoopPlay('daiji')
-                    if (currentPlay !== 'daiji') {
-                        // 隐藏调整框
-                        hide(adjustDirection)
-                        chuKuangAdjust.classList.remove('adjust-select')
-                        // daijiAdjust.classList.remove('adjust-select')
-                        adjustdaiji.classList.remove('adjust-select')
-                        adjustbeijing.classList.remove('adjust-select')
-                    }
-                    getCurPosition('daiji')
-                    currentPlay = 'daiji'
-                })
-
-                adjustdaiji.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                    // 只有当前播放动画是出框的时候才可以调整位置
-                    if (currentPlay !== 'daiji') {
-                        return
-                    }
-                    adjustdaiji.classList.add('adjust-select')
-                    adjustbeijing.classList.remove('adjust-select')
-                    chuKuangAdjust.classList.remove('adjust-select')
-
-                    if (!isHide(adjustDirection)) {
-                        hide(adjustDirection)
-                    } else {
-                        getCurPosition('daiji')
-                        show(adjustDirection)
-                    }
-
-                })
-
-                playbeijing.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                    let playerParams = player.dynamic.primary.player
-                    if (!playerParams.beijing) {
-                        skinSwitchMessage.show({
-                            type: 'warning',
-                            text: '当前皮肤没有设置动态背景',
-                            duration: 1500,    // 显示时间
-                            closeable: false, // 可手动关闭
-                        })
-                        return
-                    }
-                    // 先获取一下背景的相关参数
-                    getCurPosition('beijing')
-                    selfLoopPlay('beijing')
-                    if (currentPlay !== 'beijing') {
-                        // 隐藏调整框
-                        hide(adjustDirection)
-                        chuKuangAdjust.classList.remove('adjust-select')
-                        adjustdaiji.classList.remove('adjust-select')
-                        adjustbeijing.classList.remove('adjust-select')
-                    }
-                    currentPlay = 'beijing'
-                })
-
-                adjustbeijing.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                    // 只有当前播放动画是出框的时候才可以调整位置
-                    if (currentPlay !== 'beijing') {
-                        return
-                    }
-                    adjustbeijing.classList.add('adjust-select')
-                    adjustdaiji.classList.remove('adjust-select')
-                    chuKuangAdjust.classList.remove('adjust-select')
-
-                    if (!isHide(adjustDirection)) {
-                        hide(adjustDirection)
-                    } else {
-                        getCurPosition('beijing')
-                        show(adjustDirection)
-                    }
-
-                })
-
-                chuKuangEdit.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                    // 先调整编辑出框
-                    selfLoopPlay('chukuang')
-
-                    if (currentPlay !== 'chukuang') {
-                        // 隐藏调整框
-                        hide(adjustDirection)
-                        chuKuangAdjust.classList.remove('adjust-select')
-                        // daijiAdjust.classList.remove('adjust-select')
-                        adjustdaiji.classList.remove('adjust-select')
-                        adjustbeijing.classList.remove('adjust-select')
-                    }
-
-                    currentPlay = 'chukuang'
-                })
-
-                chuKuangAdjust.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-
-                    // 只有当前播放动画是出框的时候才可以调整位置
-                    if (currentPlay === 'daiji') {
-                        return
-                    }
-                    adjustdaiji.classList.remove('adjust-select')
-                    adjustbeijing.classList.remove('adjust-select')
-                    // daijiAdjust.classList.remove('adjust-select')
-                    chuKuangAdjust.classList.add('adjust-select')
-
-                    if (!isHide(adjustDirection)) {
-                        hide(adjustDirection)
-                    } else {
-                        getCurPosition('chukuang')
-                        show(adjustDirection)
-                    }
-
-                    // if (!isHide(adjustPos)) {
-                    //     hide(adjustPos)
-                    // } else {
-                    //     getCurPosition('chukuang')
-                    //     show(adjustPos)
-                    // }
-                })
-
-                let copyToClipboard = function (data) {
-                    // 保存当前动皮参数
-                    let copyData = `\t\t\t\tx: [${data.x}],\n\t\t\t\ty: [${data.y}],\n`
-                    if (data.angle !== undefined) {
-                        copyData += `\t\t\t\tangle: ${data.angle},\n`
-                    }
-                    if (data.scale !== undefined) {
-                        copyData += `\t\t\t\tscale: ${data.scale},\n`
-                    }
-                    // 复制到剪切板, 复制代码来源: https://juejin.cn/post/6844903567480848391
-                    const input = document.createElement('textarea');
-                    input.setAttribute('readonly', 'readonly');
-                    // input.setAttribute('value', copyData);
-                    input.value = copyData
-                    document.body.appendChild(input);
-                    if (document.execCommand('copy')) {
-                        input.select()
-                        document.execCommand('copy')
-                        console.log('复制成功');
-                    }
-                    document.body.removeChild(input);
-                }
-
-                let saveToFile = function (data, mode) {
+                let saveToFile = function () {
                     let primaryDynamic = player.dynamic.primary.player
                     // 比对两者, 看是否一样
                     // 查找dynamicSkin, 获取对应的key
-                    let dskins = decadeUI.dynamicSkin[player.name]
+                    let playerName = player.name || player.parentNode.name
+                    if (playerName) player.name = playerName
+                    else return
+                    let dskins = decadeUI.dynamicSkin[playerName]
                     let saveKey
                     for (let k in dskins) {
                         if (dskins[k].name === primaryDynamic.name) {
@@ -5438,196 +5455,74 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             break
                         }
                     }
-                    data = {scale: data.scale, x: data.x, y: data.y, angle: data.angle}
-                    let isWrite = false
                     // 如果当前是调整千幻雷修的情况下, 那么保存千幻雷修的相关参数
                     if (saveKey) {
-                        // if (player.isQhlx && mode === 'beijing') {
-                        //     skinSwitchMessage.show({
-                        //         text: '暂不支持保存千幻背景参数'
-                        //     })
-                        //     return
-                        // }
-
                         let modeToKey = {
                             daiji: 'daiji',
                             chukuang: 'gongji',
                             beijing: 'beijing'
                         }
-                        // 比对两者的数据, 如果不一样,才进行保存
-                        if (skinSwitch.saveSkinParams[player.name]) {
-                            if (skinSwitch.saveSkinParams[player.name][saveKey]) {
-                                let saveData = skinSwitch.saveSkinParams[player.name][saveKey]
-                                // 千幻雷修就不检查重复key了, 每次都进行更新
-                                if (player.isQhlx) {
-                                    let k = modeToKey[mode]
-                                    // let k = mode === 'daiji' ? 'daiji' : 'gongji'
-                                    k = currentPlay
-                                    if (saveData['qhlx']) {
-                                        saveData['qhlx'][k] = data
-                                    } else {
-                                        saveData['qhlx'] = {}
-                                        saveData['qhlx'][k] = data
-                                    }
-                                    isWrite = true
-                                } else {
-                                    for (let k in data) {
-                                        if (data[k] !== undefined) {
-                                            if (player.isQhlx) {
-                                                // 更新新的值
-                                                if (mode === 'daiji') {
-                                                    if (saveData[k] === undefined || (saveData[k].toString() !== data[k].toString())) {
-                                                        saveData[k] = data[k]
-                                                        isWrite = true
-                                                    }
-                                                } else if (mode === 'beijing') {
-                                                    if (!saveData.beijing) {
-                                                        saveData.beijing = {}
-                                                        saveData.beijing[k] = data[k]
-                                                        isWrite = true
-                                                    } else {
-                                                        if (saveData.beijing[k] === undefined || (saveData.beijing[k].toString() !== data[k].toString())) {
-                                                            saveData.beijing[k] = data[k]
-                                                            isWrite = true
-                                                        }
-                                                    }
-                                                } else {
-                                                    if (!saveData.gongji) {
-                                                        saveData.gongji = {}
-                                                        saveData.gongji[k] = data[k]
-                                                        isWrite = true
-                                                    } else {
-                                                        if (saveData.gongji[k] === undefined || (saveData.gongji[k].toString() !== data[k].toString())) {
-                                                            saveData.gongji[k] = data[k]
-                                                            isWrite = true
-                                                        }
-                                                    }
-                                                }
-                                            } else {
-                                                // 更新新的值
-                                                if (mode === 'daiji') {
-                                                    if (saveData[k] === undefined || (saveData[k].toString() !== data[k].toString())) {
-                                                        saveData[k] = data[k]
-                                                        isWrite = true
-                                                    }
-                                                } else if (mode === 'beijing'){
-                                                    if (!saveData.beijing) {
-                                                        saveData.beijing = {}
-                                                        saveData.beijing[k] = data[k]
-                                                        isWrite = true
-                                                    } else {
-                                                        saveData.beijing[k] = data[k]
-                                                        isWrite = true
-                                                    }
-                                                } else {
-                                                    if (!saveData.gongji) {
-                                                        saveData.gongji = {}
-                                                        saveData.gongji[k] = data[k]
-                                                        isWrite = true
-                                                    } else {
-                                                        if (saveData.gongji[k] === undefined || (saveData.gongji[k].toString() !== data[k].toString())) {
-                                                            saveData.gongji[k] = data[k]
-                                                            isWrite = true
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            } else {
-                                if (player.isQhlx) {
-                                    let k = modeToKey[mode]
-                                    skinSwitch.saveSkinParams[player.name][saveKey] = {}
-                                    skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'] = {}
-                                    skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'][k] = data
 
-                                } else {
-                                    if (mode === 'daiji') {
-                                        skinSwitch.saveSkinParams[player.name][saveKey] = data
-                                    } else if (mode === 'beijing'){
-                                        skinSwitch.saveSkinParams[player.name][saveKey] = {}
-                                        skinSwitch.saveSkinParams[player.name][saveKey].beijing = data
-                                    } else {
-                                        skinSwitch.saveSkinParams[player.name][saveKey] = {}
-                                        skinSwitch.saveSkinParams[player.name][saveKey].gongji = data
-                                    }
-                                    isWrite = true
-                                }
-
-                            }
-                        } else {
-                            skinSwitch.saveSkinParams[player.name] = {}
-
-                            if (player.isQhlx) {
-                                let k = modeToKey[mode]
-                                skinSwitch.saveSkinParams[player.name][saveKey] = {}
-                                skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'] = {}
-                                skinSwitch.saveSkinParams[player.name][saveKey]['qhlx'][k] = data
-
-                            } else {
-                                if (mode === 'daiji') {
-                                    skinSwitch.saveSkinParams[player.name][saveKey] = data
-                                } else if (mode === 'beijing'){
-                                    skinSwitch.saveSkinParams[player.name][saveKey] = {}
-                                    skinSwitch.saveSkinParams[player.name][saveKey].beijing = data
-                                } else {
-                                    skinSwitch.saveSkinParams[player.name][saveKey] = {}
-                                    skinSwitch.saveSkinParams[player.name][saveKey].gongji = data
-                                }
-                            }
-                            isWrite = true
+                        // 统一初始化参数
+                        if (!skinSwitch.saveSkinParams) {
+                            skinSwitch.saveSkinParams = {}
                         }
-                        if (isWrite) {
-                            // 写到文件
-                            let str = `window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.saveSkinParams =\n`
-                            str += JSON.stringify(skinSwitch.saveSkinParams, null, 4)
-                            str += '\n}'
-                            game.writeFile(str, skinSwitch.path, 'saveSkinParams.js', function () {
-                                console.log('写入saveSkinParams.js成功')
-                                skinSwitchMessage.show({
-                                    type: 'success',
-                                    text: '保存成功',
-                                    duration: 1500,    // 显示时间
-                                    closeable: false, // 可手动关闭
-                                })
-                            })
-                            // 修改千幻雷修版本的值
-                            if (skinSwitch.saveSkinParams[player.name][saveKey].qhlx) {
-                                decadeUI.dynamicSkin[player.name][saveKey].qhlx = skinSwitch.saveSkinParams[player.name][saveKey].qhlx
+                        if (!skinSwitch.saveSkinParams[player.name]) {
+                            skinSwitch.saveSkinParams[player.name] = {}
+                        }
+                        if (!skinSwitch.saveSkinParams[player.name][saveKey]) {
+                            skinSwitch.saveSkinParams[player.name][saveKey] = {}
+                        }
+                        let toSaveData
+                        if (player.isQhlx) {
+                            if (!skinSwitch.saveSkinParams[player.name][saveKey].qhlx) {
+                                skinSwitch.saveSkinParams[player.name][saveKey].qhlx = {}
                             }
+                            if (currentFunc === funcs.qhDecade) {
+                                if (!skinSwitch.saveSkinParams[player.name][saveKey].qhlx.decade) {
+                                    skinSwitch.saveSkinParams[player.name][saveKey].qhlx.decade = {}
+                                }
+                                toSaveData = skinSwitch.saveSkinParams[player.name][saveKey].qhlx.decade
+                            } else {
+                                toSaveData = skinSwitch.saveSkinParams[player.name][saveKey].qhlx
+                            }
+
+                        } else {
+                            toSaveData = skinSwitch.saveSkinParams[player.name][saveKey]
+                        }
+
+                        let modeData = {
+                            x: adjustX,
+                            y: adjustY,
+                            scale: adjustScale,
+                            angle: adjustAngle,
+                        }
+
+                        let k = modeToKey[currentMode]
+                        if (!player.isQhlx && currentMode === modes.daiji) {
+                            skinSwitch.saveSkinParams[player.name][saveKey] = modeData
+                        } else {
+                            toSaveData[k] = modeData
+                        }
+                        // 写到文件
+                        let str = `window.saveFunc = function(lib, game, ui, get, ai, _status){window.skinSwitch.saveSkinParams =\n`
+                        str += JSON.stringify(skinSwitch.saveSkinParams, null, 4)
+                        str += '\n}'
+                        game.writeFile(str, skinSwitch.path, 'saveSkinParams.js', function () {
+                            console.log('写入saveSkinParams.js成功')
+                            skinSwitchMessage.show({
+                                type: 'success',
+                                text: '保存成功',
+                                duration: 1500,    // 显示时间
+                                closeable: false, // 可手动关闭
+                            })
+                        })
+                        // 修改千幻雷修版本的值
+                        if (skinSwitch.saveSkinParams[player.name][saveKey].qhlx) {
+                            decadeUI.dynamicSkin[player.name][saveKey].qhlx = skinSwitch.saveSkinParams[player.name][saveKey].qhlx
                         }
                     }
                 }
-
-                daijiSave.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                    if (!(currentPlay === 'daiji' || currentPlay === 'beijing')) {
-                        return
-                    }
-                    // 获取当前的位置参数
-                    getDynamicPos(currentPlay, function (data) {
-                        // 同时写入到文件中
-                        if (data) {
-                            saveToFile(data, currentPlay)
-                            copyToClipboard(data)
-                        }
-                    })
-                })
-                chuKuangSave.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
-                    if (currentPlay !== 'chukuang') {
-                        return
-                    }
-                    // 获取当前的位置参数
-                    getDynamicPos('chukuang', function (data) {
-                        if (data) {
-                            saveToFile(data, 'chukuang')
-                            copyToClipboard(data)
-                        }
-                    })
-                })
-
-                // 初始化动皮相对位置.
-                // adjustPos = ui.create.div('.adjust-position .hidden-adjust', ui.window)
 
                 editBox.updateGlobalParams()
             }
@@ -5651,9 +5546,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
                 }
                 toggleShow(editBox)
-                // if (adjustPos) {
-                //     hide(adjustPos)
-                // }
                 return editBox
             }
 

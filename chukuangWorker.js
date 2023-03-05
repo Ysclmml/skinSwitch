@@ -134,7 +134,7 @@ class PlayerAnimation {
         }
         this.playerState[data.id] = {'time': new Date().getTime()};
         this.playerState[data.id]['action'] = data.action
-        playNode.angle = undefined
+        // playNode.angle = undefined
         let showTime = animation.showTime * 1000
         let delayTime = 400
         if (!(playNode.player.shizhounian || playNode.player.chuchang || playNode.player.qhlxBigAvatar)) {
@@ -476,6 +476,9 @@ class PlayerAnimation {
             }
         }
         if (player.qhlxBigAvatar) {
+            if (player.isDecade) {
+                player.qhlx = player.qhlx && player.qhlx.decade // 如果当前是十周年样式, 用十周年的配置覆盖.
+            }
             if (player.qhlx) {
                 if (player.qhlx.gongji) {
                     initPlayerGongJi()
@@ -1147,16 +1150,17 @@ function adjust(data) {
         // 修改参数
         actionParams.x = data.x
         actionParams.y = data.y
-    } else if (data.xyPos){
-        if (data.xyPos.x != null) {
-            actionParams.x[0] = data.xyPos.x
-        } else if (data.xyPos.y != null){
-            actionParams.y[0] = data.xyPos.y
-        }
-    } else if (data.scale != null) {
+    }
+    if (data.scale != null) {
         // 同一个动皮出框通过调整静态大小即可.
         if (actionParams.scale) {
             actionParams.scale = data.scale
+        }
+    }
+    if (data.angle != null) {
+        // 同一个动皮出框通过调整静态大小即可.
+        if (actionParams.angle) {
+            actionParams.angle = data.angle
         }
     }
     actionParams.posAuto = false

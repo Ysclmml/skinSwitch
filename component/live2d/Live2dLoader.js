@@ -449,6 +449,15 @@ var CustomLive2dLoader = class Live2dLoader {
             file: expression.file || expression.File || '',
         })) || [];
 
+        // 需要指定一个默认的待机group,  默认是idle或者Idle, 但是有些没有设置这些, 所以需要更改
+
+        if ('idle' in definitions) {
+            this.model.internalModel.motionManager.groups.idle = 'idle';
+        } else if ('Idle' in motionGroups) {
+            this.model.internalModel.motionManager.groups.idle = 'Idle';
+        } else {
+            this.model.internalModel.motionManager.groups.idle = config.idle || Object.keys(definitions)[0]
+        }
 
         this.modelArgs = {
             scale: scale,
