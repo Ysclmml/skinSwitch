@@ -1251,6 +1251,41 @@ function getNodeInfo(data) {
 
 }
 
+// 更换当前动皮的其他骨骼标签
+function changeAction(data) {
+	let am = animationManagers.getById(data.id);
+	if (!am) return;
+	let apnode = am.getNodeBySkinId(data.skinID);
+	if (!apnode) return
+	completeParams(apnode)
+
+	if (data.isDefault) {
+		apnode.skeleton.state.addAnimation(0, apnode.player.action || apnode.skeleton.defaultAction, true, 0)
+		for (let s of ['x', 'y', 'scale', 'angle']) {
+			if (s in apnode.player) {
+				apnode[s] = apnode.player[s]
+			}
+		}
+	} else {
+		let skinInfo = data.skinInfo  // 获取新的action的参数信息
+		let animation = apnode.skeleton.data.findAnimation(skinInfo.action)
+		if (!animation) return  // 后面再加上标签不存在报一些错误信息
+		apnode.skeleton.state.data.setMix(apnode.player.action || apnode.skeleton.defaultAction, animation.name, 0.6)
+		if (skinInfo.loop) {
+			apnode.skeleton.state.setAnimationWith(0, animation, true)
+		} else {
+			apnode.skeleton.state.setAnimationWith(0, animation, false)
+			apnode.skeleton.state.addAnimation(0, apnode.player.action || apnode.skeleton.defaultAction, true, 0)
+		}
+		// 重新覆盖一些参数
+		for (let s of ['x', 'y', 'scale', 'angle']) {
+			if (s in skinInfo) {
+				apnode[s] = skinInfo[s]
+			}
+		}
+	}
+}
+
 function find(data) {
 	let am = animationManagers.getById(data.id);
 	if (!am) return;
@@ -1327,7 +1362,19 @@ function changeSkelSkin(data) {
 	if (!am) return;
 	let apnode = am.getNodeBySkinId(data.skinId)
 	if (!apnode) return
+	let specifySkinName = data.skinName
+
 	let skins = apnode.skeleton.data.skins
+	if (specifySkinName) {
+		for (let i = 0; i < skins.length; i++) {
+			if (skins[i].name === specifySkinName) {
+				apnode.skeleton.setSkinByName(specifySkinName);
+				apnode.skeleton.setSlotsToSetupPose();
+				return
+			}
+		}
+	}
+
 	if (skins.length > 1) {
 		let curSkin = apnode.skeleton.skin.name
 		// 替换当前皮肤为下一个皮肤
@@ -1776,81 +1823,32 @@ function getActionDuration(dynamic, skelName, actionName) {
 
 onmessage = function (e) {
 	let data = e.data
-	switch (data.message) {
-		case 'CREATE':
-			create(data)
-			break;
-		case 'PLAY':
-			play(data)
-			break;
-		case 'StartPlay':  // 真正开始播放背景和待机骨骼
-			startPlaySkin(data)
-			break
-		case 'STOP':
-			stop(data)
-			break;
 
-		case 'STOPALL':
-			stopAll(data)
-			break;
-
-		case 'UPDATE':
-			msgUpdate(data)
-			break;
-
-		case "ACTION":
-			action(data)
-			break;
-
-		case "HIDE":
-			hide1(data)
-			break;
-
-		case "HIDE2":
-			hide2(data)
-			break;
-
-		case "FIND":
-			find(data)
-			break;
-		case "SHOW":
-			show(data)
-			break;
-
-		case "ADJUST":
-			adjust(data)
-			break
-
-		case "DEBUG":
-			debug(data)
-			break
-		case "POSITION":
-			position(data)
-			break
-		case "hideAllNode":
-			hideAllNode(data)
-			break
-		case 'recoverDaiJi':
-			recoverDaiJi(data)
-			break
-		case 'DESTROY':
-			destroy(data)
-			break
-		case 'changeSkelSkin':
-			changeSkelSkin(data)
-			break
-		case 'getBound':
-			getBound(data)
-			break
-		case 'changeQhlxFactor':
-			changeQhlxFactor(data)
-			break
-		case 'RESIZE':
-			resize(data)
-			break
-		case 'GET_NODE_INFO':
-			getNodeInfo(data)
-			break
-
+	const messageMap = {
+		CREATE: create,
+		PLAY: play,
+		StartPlay: startPlaySkin,
+		STOP: stop,
+		STOPALL: stopAll,
+		UPDATE: msgUpdate,
+		ACTION: action,
+		FIND: find,
+		SHOW: show,
+		ADJUST: adjust,
+		DEBUG: debug,
+		POSITION: position,
+		hideAllNode: hideAllNode,
+		recoverDaiJi: recoverDaiJi,
+		DESTROY: destroy,
+		changeSkelSkin: changeSkelSkin,
+		getBound: getBound,
+		changeQhlxFactor: changeQhlxFactor,
+		GET_NODE_INFO: getNodeInfo,
+		RESIZE: resize,
+		CHANGE_ACTION: changeAction,
 	}
+	if (data.message in messageMap) {
+		messageMap[data.message](data)
+	}
+
 }

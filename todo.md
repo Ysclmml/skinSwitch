@@ -66,3 +66,87 @@
 3-5 
 1. 增加出场位置的设置, 只能设置自己的出场, ai不允许设置
 
+2. 增加可以配置达成某种条件可以自动切换骨骼或者切换同骨骼的动作或者切换同骨骼的skin
+可选预定义的条件有
+其中击杀可以选择播放击杀动画
+
+增加特殊配置.
+暂时几种种条件选择  juexing, jisha, lowhp, damage, zhuanhuanji, xiandingji   -->>> 觉醒, 击杀, 低血量, 遭受伤害, 转换技,限定技
+
+```js
+special = {
+    // 下面是预定义骨骼的参数, 可以供特效进行选择播放或者切换下面的这些参数
+    // 更换骨骼/皮肤/标签  transform可以只填写自己想要变换的, 比如只填写变换标签或者只变换骨骼skin
+    transform1: {
+        name: 'xxxx', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+        skin: '',   // 可以切换同一个骨骼的其他皮肤
+        action: '', // 也可以切换播放一段骨骼的其他标签
+        loop: true, // 如果是true, 表示是直切切换为其他标签, 如果为false, 只是单纯的触发播放另一个标签. 该参数只有当name一致且action指定才有效
+        effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+    },
+    transform2: {
+        hp: 2,   // 当被低血量使用, 表示当前血量, 当被受伤使用, 表示一次性受到多少伤害触发. 
+        name: 'xxxx', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版/daiji2'
+        skin: '',   // 可以切换同一个骨骼的其他皮肤
+        action: '', // 也可以切换播放一段骨骼的其他标签
+        loop: true, // 如果是true, 表示是直切切换为其他标签, 如果为false, 只是单纯的触发播放另一个标签. 该参数只有当name一致且action指定才有效
+        effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+    },
+    transform3: {
+        hp: 3,  
+        name: 'xxxx', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版/daiji2'
+        skin: '',   // 可以切换同一个骨骼的其他皮肤
+        action: '', // 也可以切换播放一段骨骼的其他标签
+        loop: true, // 如果是true, 表示是直切切换为其他标签, 如果为false, 只是单纯的触发播放另一个标签. 该参数只有当name一致且action指定才有效
+        effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+    },
+    play: {
+          name: '骨骼位置', 
+          x: [0, 0.5],  // x和y不填写默认在屏幕中央.  后面考虑像特效测试一样可以指定其他位置
+          y: [0, 0.5],
+          scale: 0.5, 
+          speed: 0.5, // 还有一些其他参数和待机一致 
+    },
+    condition: {
+        juexingji: {
+            transform: 'transform1',
+            play: 'play',  // 也可以选择播放一段动画         
+        },
+        // 低血量, 回血后, 会恢复原来的骨骼
+        lowhp: {
+            transform: ['transform2', 'transform3'],  // 低血量暂不设置播放动画选项
+        },  
+        // 击杀, 配合一些击杀骨骼使用, 在屏幕中央进行播放. 一般只有ol有击杀骨骼 
+        kill: {
+            play: 'play1',
+            transform: 'transform2',  // 可以复用上面定义的骨骼. 
+        },
+        zhuanhuanji: {
+            play: 'play2',
+            transform: 'transformXXX'  // 转换技触发后会与预设的两种骨骼互相切换
+        },
+        damage: {
+            play: 'play2',
+            transform: ['transformXXX', 'transformYYY']
+        },
+        // 同觉醒
+        xiandingji: {
+            transform: 'transform1',
+            play: 'play',  // 也可以选择播放一段动画     
+        },           
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+```
+

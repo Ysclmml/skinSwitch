@@ -1170,7 +1170,7 @@ function adjust(data) {
 // 单纯用来播放特效
 function playEffect(data) {
     let sprite = data.sprite
-    let position = data.sprite
+    let position = data.position
     if (typeof sprite === 'string') {
         sprite = {name: sprite}
     }

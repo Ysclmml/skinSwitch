@@ -4490,7 +4490,6 @@ var spine3_7;
 				data.translateMix = input.readFloat();
 				skeletonData.pathConstraints.push(data);
 			}
-			debugger
 			var defaultSkin = this.readSkin(input, skeletonData, 'default', nonessential);
 			if (defaultSkin != null) {
 				skeletonData.defaultSkin = defaultSkin;

@@ -1,0 +1,321 @@
+
+SF_pifu_eff_juexing.png
+size: 1957,1957
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+juexing_tx1_00
+  rotate: false
+  xy: 2, 973
+  size: 271, 268
+  orig: 450, 450
+  offset: 89, 101
+  index: -1
+juexing_tx1_01
+  rotate: false
+  xy: 275, 962
+  size: 272, 268
+  orig: 450, 450
+  offset: 88, 101
+  index: -1
+juexing_tx1_02
+  rotate: false
+  xy: 1316, 1207
+  size: 269, 264
+  orig: 450, 450
+  offset: 89, 103
+  index: -1
+juexing_tx1_03
+  rotate: false
+  xy: 261, 1489
+  size: 262, 242
+  orig: 450, 450
+  offset: 89, 108
+  index: -1
+juexing_tx1_04
+  rotate: false
+  xy: 1662, 1719
+  size: 257, 236
+  orig: 450, 450
+  offset: 90, 117
+  index: -1
+juexing_tx1_05
+  rotate: false
+  xy: 2, 1491
+  size: 257, 241
+  orig: 450, 450
+  offset: 90, 117
+  index: -1
+juexing_tx1_06
+  rotate: false
+  xy: 525, 1485
+  size: 256, 242
+  orig: 450, 450
+  offset: 91, 118
+  index: -1
+juexing_tx1_07
+  rotate: false
+  xy: 783, 1480
+  size: 258, 242
+  orig: 450, 450
+  offset: 91, 118
+  index: -1
+juexing_tx1_08
+  rotate: false
+  xy: 1545, 1473
+  size: 249, 244
+  orig: 450, 450
+  offset: 102, 116
+  index: -1
+juexing_tx1_09
+  rotate: false
+  xy: 1043, 1480
+  size: 250, 242
+  orig: 450, 450
+  offset: 102, 118
+  index: -1
+juexing_tx1_10
+  rotate: false
+  xy: 1295, 1479
+  size: 248, 243
+  orig: 450, 450
+  offset: 106, 118
+  index: -1
+juexing_tx1_11
+  rotate: false
+  xy: 2, 1245
+  size: 249, 244
+  orig: 450, 450
+  offset: 107, 118
+  index: -1
+juexing_tx1_12
+  rotate: false
+  xy: 253, 1243
+  size: 251, 244
+  orig: 450, 450
+  offset: 106, 117
+  index: -1
+juexing_tx1_13
+  rotate: true
+  xy: 932, 1724
+  size: 231, 244
+  orig: 450, 450
+  offset: 105, 117
+  index: -1
+juexing_tx1_14
+  rotate: true
+  xy: 1178, 1724
+  size: 231, 242
+  orig: 450, 450
+  offset: 103, 118
+  index: -1
+juexing_tx1_15
+  rotate: true
+  xy: 1422, 1724
+  size: 231, 238
+  orig: 450, 450
+  offset: 102, 122
+  index: -1
+juexing_tx1_16
+  rotate: false
+  xy: 699, 1729
+  size: 231, 226
+  orig: 450, 450
+  offset: 101, 123
+  index: -1
+juexing_tx1_17
+  rotate: false
+  xy: 2, 1735
+  size: 231, 220
+  orig: 450, 450
+  offset: 99, 124
+  index: -1
+juexing_tx1_18
+  rotate: false
+  xy: 235, 1734
+  size: 230, 221
+  orig: 450, 450
+  offset: 98, 122
+  index: -1
+juexing_tx1_19
+  rotate: false
+  xy: 467, 1733
+  size: 230, 222
+  orig: 450, 450
+  offset: 97, 121
+  index: -1
+juexing_tx2_00
+  rotate: false
+  xy: 960, 9
+  size: 321, 314
+  orig: 450, 450
+  offset: 69, 73
+  index: -1
+juexing_tx2_01
+  rotate: false
+  xy: 1283, 2
+  size: 321, 314
+  orig: 450, 450
+  offset: 69, 73
+  index: -1
+juexing_tx2_02
+  rotate: false
+  xy: 1121, 931
+  size: 302, 274
+  orig: 450, 450
+  offset: 77, 95
+  index: -1
+juexing_tx2_03
+  rotate: false
+  xy: 1587, 1204
+  size: 286, 267
+  orig: 450, 450
+  offset: 86, 108
+  index: -1
+juexing_tx2_04
+  rotate: false
+  xy: 1189, 630
+  size: 311, 291
+  orig: 450, 450
+  offset: 73, 94
+  index: -1
+juexing_tx2_05
+  rotate: false
+  xy: 2, 46
+  size: 319, 310
+  orig: 450, 450
+  offset: 69, 81
+  index: -1
+juexing_tx2_06
+  rotate: false
+  xy: 323, 29
+  size: 318, 310
+  orig: 450, 450
+  offset: 69, 81
+  index: -1
+juexing_tx2_07
+  rotate: false
+  xy: 643, 18
+  size: 315, 310
+  orig: 450, 450
+  offset: 70, 80
+  index: -1
+juexing_tx2_08
+  rotate: false
+  xy: 1550, 318
+  size: 311, 306
+  orig: 450, 450
+  offset: 73, 81
+  index: -1
+juexing_tx2_09
+  rotate: true
+  xy: 1247, 325
+  size: 299, 301
+  orig: 450, 450
+  offset: 81, 81
+  index: -1
+juexing_tx2_10
+  rotate: true
+  xy: 884, 640
+  size: 289, 303
+  orig: 450, 450
+  offset: 83, 79
+  index: -1
+juexing_tx2_11
+  rotate: true
+  xy: 2, 362
+  size: 296, 308
+  orig: 450, 450
+  offset: 81, 76
+  index: -1
+juexing_tx2_12
+  rotate: true
+  xy: 1502, 626
+  size: 295, 308
+  orig: 450, 450
+  offset: 81, 76
+  index: -1
+juexing_tx2_13
+  rotate: true
+  xy: 627, 341
+  size: 297, 312
+  orig: 450, 450
+  offset: 80, 73
+  index: -1
+juexing_tx2_14
+  rotate: true
+  xy: 312, 358
+  size: 296, 313
+  orig: 450, 450
+  offset: 81, 71
+  index: -1
+juexing_tx2_15
+  rotate: true
+  xy: 941, 330
+  size: 298, 304
+  orig: 450, 450
+  offset: 80, 68
+  index: -1
+juexing_tx2_16
+  rotate: true
+  xy: 1425, 923
+  size: 279, 295
+  orig: 450, 450
+  offset: 96, 66
+  index: -1
+juexing_tx2_17
+  rotate: true
+  xy: 296, 660
+  size: 286, 292
+  orig: 450, 450
+  offset: 92, 68
+  index: -1
+juexing_tx2_18
+  rotate: true
+  xy: 2, 677
+  size: 283, 292
+  orig: 450, 450
+  offset: 96, 67
+  index: -1
+juexing_tx2_19
+  rotate: true
+  xy: 590, 656
+  size: 286, 292
+  orig: 450, 450
+  offset: 94, 66
+  index: -1
+juexing_tx2_20
+  rotate: false
+  xy: 549, 948
+  size: 290, 268
+  orig: 450, 450
+  offset: 90, 91
+  index: -1
+juexing_tx2_21
+  rotate: false
+  xy: 841, 944
+  size: 278, 270
+  orig: 450, 450
+  offset: 102, 91
+  index: -1
+juexing_tx2_22
+  rotate: true
+  xy: 1048, 1216
+  size: 261, 266
+  orig: 450, 450
+  offset: 103, 97
+  index: -1
+juexing_tx2_23
+  rotate: true
+  xy: 778, 1218
+  size: 260, 268
+  orig: 450, 450
+  offset: 105, 96
+  index: -1
+juexing_tx2_24
+  rotate: true
+  xy: 506, 1232
+  size: 251, 270
+  orig: 450, 450
+  offset: 113, 96
+  index: -1
