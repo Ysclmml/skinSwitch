@@ -1274,8 +1274,15 @@ function changeAction(data) {
 		if (skinInfo.loop) {
 			apnode.skeleton.state.setAnimationWith(0, animation, true)
 		} else {
+			// 获取当前正在播放的action
+			let currentEntry = apnode.skeleton.state.tracks[0]
+			let currentAniName = currentEntry.animation.name
 			apnode.skeleton.state.setAnimationWith(0, animation, false)
-			apnode.skeleton.state.addAnimation(0, apnode.player.action || apnode.skeleton.defaultAction, true, 0)
+			if (currentEntry.loop) {
+				apnode.skeleton.state.addAnimation(0, currentAniName, true, 0)
+			} else {
+				apnode.skeleton.state.addAnimation(0, apnode.player.action || apnode.skeleton.defaultAction, true, 0)
+			}
 		}
 		// 重新覆盖一些参数
 		for (let s of ['x', 'y', 'scale', 'angle']) {

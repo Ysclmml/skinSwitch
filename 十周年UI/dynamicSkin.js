@@ -152,6 +152,32 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				background: 'skin_daqiao_JueShiZhiZi_bg.png',
 				skinName: "绝世之姿"
 			},
+			变换action: {
+				x: [0,0.5],
+				y: [0,0.5],
+				action: 'celebrate_idle',
+				name: "大乔/变换action/bamuwei_YZ",
+				scale: 0.35,
+				version: "3.8",
+				json: true,
+				special: {
+					变换action: {
+						action: 'greeting',
+						hp: 2,
+						loop: true,
+					},
+					变换action2: {
+						hp: 1,  // 如果血量低于2, 则会触发变身效果, 当血量恢复到2以上, 那么
+						action: 'click', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+					condition: {
+						lowhp: {
+							transform: ['变换action', '变换action2'],  // 设置血量需要变换的骨骼
+						},
+					}
+				}
+			},
 		},
 		daxiaoqiao:{
 			战场绝版:{
@@ -171,12 +197,26 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				background: 'skin_diaochan_ZhanChang_bg.png',
 			},
 			玉婵仙子:{
-				name: 'skin_diaochan_YuChanXianZi',
+				// name: '貂蝉/玉蝉仙子/skin_diaochan_YuChanXianZi',
+				name: '貂蝉/玉蝉仙子/daiji',
 				x: [5, 0.5],
 				y: [0, 0],
 				scale: 0.6,
-				background: 'skin_diaochan_YuChanXianZi_bg.png',
-
+				// background: 'skin_diaochan_YuChanXianZi_bg.png',
+				chuchang: {
+					name: '貂蝉/玉蝉仙子/chuchang',
+					scale: 0.8,
+				},
+				beijing: {
+					name: '貂蝉/玉蝉仙子/beijing',
+					x: [0,0.16],
+					y: [0,0.4],
+					scale: 0.3,
+				},
+				gongji: {
+					name: '貂蝉/玉蝉仙子/jisha'
+				},
+				shizhounian: true,
 			},
 			驭魂千机: {
 				name: 'skin_diaochan_YuHunQianJi',
@@ -217,9 +257,9 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 		guozhao:{
 			雍容尊雅:{
 				name: 'skin_guozhao_YongRongZunYa',
-				x: [-80, 0.5],
-				y: [8, 0.3],
-				scale: 0.6,
+				x: [0,-0.14],
+				y: [0,0.43],
+				scale: 0.55,
 				background: 'skin_guozhao_YongRongZunYa_bg.png',
 			},
 		},
@@ -279,7 +319,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 			},
 			蛇蝎为心:{
 				name: 'skin_hetaihou_SheXieWeiXin',
-				// action: 'DaiJi',
+				action: 'DaiJi',
 				x: [0,-0.33],
 				y: [0,0.27],
 				scale: 0.46,
@@ -289,7 +329,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 			},
 			蛇蝎为心2:{
 				name: 'skin_hetaihou_SheXieWeiXin',
-				// action: 'DaiJi',
+				action: 'DaiJi',
 				x: [0,-0.33],
 				y: [0,0.27],
 				scale: 0.46,
@@ -317,7 +357,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				// teshu: 'play2',  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
 				teshu: {
 					name:"何太后战场骨骼/chuchang2",
-					action: ['gongji', 'jineng'] ,  // action不写是默认播放第一个动作
+					action: ['jineng'] ,  // action不写是默认播放第一个动作
 					scale: 0.7,
 				},  // 如果是和待机同一个皮肤, 可以直接填写对应的特殊动作标签名字
 				play2: 'play2',
@@ -328,13 +368,13 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				},
 				gongji: {
 					name:"何太后战场骨骼/chuchang2",
-					action: ['gongji', 'jineng'] ,  // action不写是默认播放第一个动作
+					action: ['gongji',] ,  // action不写是默认播放第一个动作
 					scale: 0.7,
 					// x: [0, 0.5],
 					// y: [0, 0.5],
 				},  // 通常是出框需要播放的参数
 				shizhounian: true,
-			}
+			},
 		},
 		huaman:{
 			花俏蛮娇:{
@@ -454,6 +494,15 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				scale: 0.6,
 				background: 'skin_wangyuanji_ShuNianDongZhi_bg.png',
 			},
+			// 温情良缘: {
+			// 	name: '王元姬/温情良缘/xingxiang',
+			// 	x: [-24, 0.5],
+			// 	y: [8, 0.5],
+			// 	scale: 0.6,
+			// 	version: '4.0',
+			// 	// clipSlots: ['lian'],
+			// 	// hideSlots: ['lian']
+			// }
 		},
 		wangyi:{
 			绝色异彩:{
@@ -518,6 +567,20 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				action: 'DaiJi',
 				background: '小乔/sin_xiaoqiao_zhanchangjueban_bg.png',
 			},
+			// 矫情之花: {
+			// 	name: '小乔/矫情之花/yyht_xiaoqiao',
+			// 	x: [0, 0.4],
+			// 	y: [0, 0.2],
+			// 	scale: 0.35,
+			// 	angle: 24,
+			// 	speed: 1,
+			// 	json: true,
+			// 	version: '3.8',
+			// 	gongji: {
+			// 		scale: 0.5,
+			// 	},
+			// 	background: '小乔/矫情之花/yyht_xiaoqiao_bg.png',
+			// },
 		},
 		xinxianying:{
 			英装素果:{
@@ -658,7 +721,15 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					x: [0,-0.77],
 					y: [0,0.4],
 					scale: 0.3,
+
 				},
+				zhishixian: {
+					name: '神甘宁/ceshi/shouji2',
+					scale: 0.35,
+					speed: 0.6,
+					delay: 0.1,
+					factor: 100,  // 调节参数, 自己根据游戏效果进行调节的参数
+				}
 			},
 		},
 		lvlingqi: {
@@ -691,13 +762,56 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					scale: 0.8,
 					speed: 0.5,
 					delay: 0.5,  // 指示线在攻击多久后出现, 区间[0, 1], 默认0
+					// start: 'attack',  // 填写了这个表示从武将牌处开始播放指示线动画
 					effect: {  // 爆炸特效 一般是shouji
 						name: '吕玲绮/战场绝版/shouji',  // 指示线
 						scale: 0.6,
 						speed: 0.7,
-						delay: 0.2,
+						delay: 0.2,					}
+				}
+			},
+			test_skin_gongji: {
+				name: '3.8/06/spine_minister_costume_62_88',  // 可以直接文件夹带名字
+				x: [0, 0.5],
+				y: [0, 0.5],
+				scale: 1,
+				version: '3.8',
+				// skin: 'effect',  // 待机初始皮肤
+				// gongji: {
+				// 	action: 'kaishi',
+				// 	skin: 'effect',
+				// 	ck: false,  // 出框与否, 表示攻击不出框,只改变骨骼原本位置. 拼音chukuang缩写
+				// },
+				json: true,  // 标明当前是json骨骼, 同理如果包含其他骨骼, 都需要指定json字段
+				special: {
+					变换skin: {
+						skin: 'effect',
+						hp: 2,
+					},
+					condition: {
+						lowhp: {
+							transform: ['变换skin'],  // 设置血量需要变换的骨骼
+						},
 					}
 				}
+				// zhishixian: {
+				// 	name: 'zhaoyan/CaiHuiFangFei/shouji2',
+				// 	scale: 1,
+				// 	speed: 1,
+				// 	delay: 0.15,
+				// 	factor: 1,
+				// 	start: 'attack',  // 填写了这个表示从武将牌处开始播放指示线动画
+				// 	version: '3.6',
+				// 	effect: {
+				// 		name: 'zhaoyan/CaiHuiFangFei/shouji',
+				// 		scale: 0.6,
+				// 		speed: 0.7,
+				// 		delay: 0.8,
+				// 		background: 'zhaoyan/CaiHuiFangFei/jing_beijing_bg.png',
+				// 		skinName: "彩绘芳菲",
+				// 		version: '3.6',
+				// 	},
+				// },
 			},
 			'测试json': {
 				name: 'test_json/spine_update_renwu',  // 可以直接文件夹带名字
@@ -705,6 +819,29 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				y: [0, 0.5],
 				scale: 1,
 				json: true  // 标明当前是json骨骼, 同理如果包含其他骨骼, 都需要指定json字段
+			},
+			'测试4.0': {
+				name: '滕芳兰-脂车香姝/xingxiang',
+				version: '4.0',
+				json: true,
+				x: [-50, 0.5],
+				y: [0, 0.5],
+				scale: 1,
+				beijing: {
+					name: '滕芳兰-脂车香姝/beijing',
+					scale: 0.5,
+					x: [0, 0.5],
+					y: [0, 0.5],
+					json: true,
+				},
+				gongji: {
+					name: '滕芳兰-脂车香姝/jineng01',
+					x: [0, 0.8],
+					y: [0, 0.4],
+					json: true,
+					scale: 1,
+				},
+				shizhounian: true,
 			},
 			'测试alpha': {
 				name: 'test_alpha/i_agnes_skeleton',  // 可以直接文件夹带名字
@@ -720,8 +857,87 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					showTime: 2
 				},
 				alpha: true,
+			},
+			test3_5: {
+				x: [0,0.5],
+				y: [0,0.5],
+				name: "吕玲绮/test3_5/lihui_caiwei",
+				scale: 0.35,
+				version: "3.5.35",
+			},
+			test3_7: {
+				x: [0,0.5],
+				y: [0,0.5],
+				name: "吕玲绮/test3_7/h01",
+				scale: 0.35,
+				version: "3.7",
+				json: true,
+			},
+
+		},
+		tenggongzhu: {
+			菡萏慕卿: {
+				name: "滕公主/菡萏慕卿/daiji2",
+				flipX: true,
+				x: [0, 0.5],
+				y: [0, 0.4],
+				scale: 1.0,
+				angle: 0,
+				speed: 1,
+				teshu: 'play2',// 触发非攻击
+				gongji: {
+					name: "滕公主/菡萏慕卿/chuchang2",
+					action: ["gongji", "jineng"],
+					scale: 0.45,// 出杀或攻击时随机播放一个动画
+					flipX: true,
+				},
+				shizhounian: true,  // 标明这是十周年的骨骼, 出场位置和出框默认会在原地, 并且返回也不是位移
+				chuchang: {  // 第一回合出场
+					name: "滕公主/菡萏慕卿/chuchang",
+					action: "play",
+					scale: 0.7,
+				},
+				shan: "play3", // 只有是shizhounian为true时才会播放出闪的动画. 默认play3
+				background:  '滕公主/菡萏慕卿/beijing.png',
+				// 指示线
+				zhishixian: {
+					name: '滕公主/菡萏慕卿/shouji2',
+					scale: 0.7,
+					speed: 0.7,
+					delay: 0.1,  // 指示线在攻击多久后出现, 区间[0, 1], 默认0
+					factor: 0.5,  // 调节参数, 自己根据游戏效果进行调节的参数
+					effect: {  // 爆炸特效 一般是shouji
+						name: '滕公主/菡萏慕卿/shouji',  // 指示线
+						scale: 0.6,
+						speed: 0.7,
+						delay: 0.5
+					}
+				},
+				skinName: "菡萏慕卿"
+			},
+			test3_8: {
+				name: "滕公主/test3_8/spine_minister_57",
+				x: [0, 0.63],
+				y: [0, -0.43],
+				scale: 0.5,
+				angle: 0,
+				speed: 1,
+				version: '3.8',
+				json: true,
+				// gongji: true
+			},
+			测试: {
+				name: '滕公主/c200_00/c200_00',
+				"scale": 0.12,
+				"x": [0,0.52],
+				"y": [0, -0.46],
+				skin: '00',
+				action: 'smile',
+				version: '4.0',
+				alpha: true,
 			}
 		},
+
 		xushao: {
 			'评世雕龙': {
 				name: '许邵/评世雕龙/daiji',
@@ -778,7 +994,8 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				},
 				angle: -25,
 				background: 'skin_xurong_JinMieShenHai_bg.png',
-				skinName: "烬灭神骇"
+				skinName: "烬灭神骇",
+				// atkFlipX: true,
 			},
 		},
 		shen_luxun: {
@@ -803,27 +1020,37 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				y: [0, 0.1],
 				speed: 1,
 				pos: {
-					x: [0, 0.7],
-					y: [0, 0.45]
+					x: [0, 0.8],
+					y: [0, 0.4]
 				},
 				scale: 0.55,
 				background: 'skin_liuyan_XiongJuYiZhou_bg.png',
-				skinName: "雄踞益州"
+				skinName: "雄踞益州",
+				special: {
+					变身: {
+						times: 1,  // 表示受到多少次伤害后触发该变身骨骼
+						name: 'liuyan/秋霜金枫', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+					变身2: {
+						times: 3,  // 表示触发多少次伤害后变身该骨骼
+						name: 'caochun/变身后', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+					condition: {
+						damage: {
+							transform: ['变身', '变身2'],  // 设置血量需要变换的骨骼
+						},
+					}
+				}
 			},
 			秋霜金枫: {
 				name: "刘焉/秋霜金枫/liuyan_qiushuangjinfeng",
 				x: [0, 0.3],
-				y: [10, 0],
+				y: [0, 0],
 				scale: 0.6,
 				angle: 0,
 				speed: 1,
-				// teshu: {
-				// 	x: [0, 0.75],
-				// 	y: [0, 0.3],
-				// 	scale: 0.45,
-				// 	name: "刘焉/秋霜金枫/tushe",
-				// 	action:["jineng"]
-				// },// 触发非攻击
 				teshu: "play2",
 				gongji: {
 					// x: [0, 0.72],
@@ -845,8 +1072,13 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				zhishixian: {
 					name: '刘焉/秋霜金枫/shouji2',
 					scale: 0.8,
-					speed: 0.7,
+					speed: 0.3,
 					delay: 0.1,
+					// name: '神甘宁/ceshi/shouji2',
+					// scale: 0.4,
+					// speed: 0.6,
+					// delay: 0.2,
+					// factor: 100,  // 调节参数, 自己根据游戏效果进行调节的参数
 					effect: {  // 爆炸特效 一般是shouji
 						name: '刘焉/秋霜金枫/shouji',  // 指示线
 						scale: 0.6,
@@ -869,7 +1101,19 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				},
 				background: 'skin_liru_ZhenShaShaoDi_bg.png',
 				action: 'DaiJi',
-				skinName: "鸩杀少帝"
+				skinName: "鸩杀少帝",
+				special: {
+					变身: {
+						name: 'caochun/变身前', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+
+					condition: {
+						xiandingji: {
+							transform: "变身",  // 设置血量需要变换的骨骼
+						},
+					}
+				}
 			},
 		},
 		re_zuoci: {
@@ -1040,6 +1284,100 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				background: 'skin_caochun_HuNianCaoChun_bg.png',
 				skinName: "虎年曹纯"
 			},
+			变身前: {
+				name: "曹纯/变身前/daiji2",
+				scale: 0.35,
+				x: [0,0.5],
+				y: [0,0.5],
+				shizhounian: true,
+				background: "曹纯/变身前/static_bg.png",
+				beijing: {
+					name: "曹纯/变身前/beijing",
+					scale: 0.35,
+					x: [0,0.98],
+					y: [0,0.47],
+				},
+				chuchang: {
+					name: "曹纯/变身前/chuchang",
+					scale: 0.7,
+				},
+				gongji: {
+					name: "曹纯/变身前/chuchang2",
+					scale: 0.35,
+				},
+				teshu: {
+					name: "曹纯/变身前/chuchang2",
+					scale: 0.35,
+				},
+				zhishixian: {
+					name: "曹纯/变身前/shouji2",
+					scale: 0.7,
+					delay: 0.3,
+					speed: 0.8,
+					effect: {
+						name: "曹纯/变身前/shouji",
+						scale: 0.7,
+						delay: 0.3,
+						speed: 0.8,
+					},
+				},
+				special: {
+					变身1: {
+						hp: 3,  // 如果血量低于3, 则会触发变身效果, 当血量恢复到2以上, 那么
+						name: 'caochun/虎年曹纯', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+					变身2: {
+						hp: 2,  // 如果血量低于2, 则会触发变身效果, 当血量恢复到2以上, 那么
+						name: 'caochun/变身后', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+					condition: {
+						lowhp: {
+							transform: ['变身1', '变身2'],  // 设置血量需要变换的骨骼
+							recover: false,  // 恢复血量是否变回原来的,
+						},
+					}
+				}
+			},
+			变身后: {
+				name: "曹纯/变身后/daiji2",
+				scale: 0.35,
+				x: [0,0.5],
+				y: [0,0.5],
+				shizhounian: true,
+				background: "曹纯/变身后/static_bg.png",
+				beijing: {
+					name: "曹纯/变身后/beijing",
+					scale: 0.35,
+					x: [0,0.98],
+					y: [0,0.47],
+				},
+				chuchang: {
+					name: "曹纯/变身后/chuchang",
+					scale: 0.7,
+				},
+				gongji: {
+					name: "曹纯/变身后/chuchang2",
+					scale: 0.35,
+				},
+				teshu: {
+					name: "曹纯/变身后/chuchang2",
+					scale: 0.35,
+				},
+				zhishixian: {
+					name: "曹纯/变身后/shouji2",
+					scale: 0.7,
+					delay: 0.3,
+					speed: 0.8,
+					effect: {
+						name: "曹纯/变身后/shouji",
+						scale: 0.7,
+						delay: 0.3,
+						speed: 0.8,
+					},
+				},
+			},
 		},
 		zhongyao: {
 			稳定关右: {
@@ -1063,7 +1401,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				x: [0, 0.35],
 				y: [0, 0.15],
 				scale: 0.5,
-				background: '界徐盛/skin_xusheng_xin_bg.png',
+				// background: '界徐盛/skin_xusheng_xin_bg.png',
 				gongji: {
 					x: [0,0.71],
 					y: [0,0.48],
@@ -1218,6 +1556,7 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 					name: '胡金定-金粉福颜/shouji2',  // 指示线
 					scale: 0.6,
 					speed: 1.5,
+					delay: 0.3,
 					effect: {  // 爆炸特效 一般是shouji
 						name: '胡金定-金粉福颜/shouji',  // 指示线
 						scale: 0.6,
@@ -1241,6 +1580,508 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 				background: 'skin_zhugeliang_WuHouCi_bg.png',
 			},
 		},
+		ol_yuanshao: {
+			一往无前: {
+				name: 'skin_yuanshao_YiWangWuQian',
+				x: [0, 0.3],
+				y: [0, -0.05],
+				scale: 0.65,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				angle: -25,
+				background: 'skin_yuanshao_YiWangWuQian_bg.png',
+				skinName: "一往无前"
+			},
+		},
+		xuyou: {
+			盛气凌人: {
+				name: 'skin_xuyou_ShengQiLingRen',
+				x: [0, 0.51],
+				y: [0, 0.01],
+				scale: 0.6,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				background: 'skin_xuyou_ShengQiLingRen_bg.png',
+				skinName: "盛气凌人",
+				special: {
+					变身: {
+						name: 'caochun/变身前', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+
+					condition: {
+						zhuanhuanji: {
+							transform: "变身",  // 设置血量需要变换的骨骼
+						},
+					}
+				}
+			},
+
+		},
+		caojinyu: {
+			测试骨骼: {
+				name: '曹金玉/daiji',
+				scale: 0.35,
+				x: [-50, 0.5],
+				y: [0, 0.5],
+				// speed: 1,
+				beijing: {
+					name: '曹金玉/beijing',
+					scale: 0.35,
+					x: [-50, 0.5],
+					y: [0, 0.5]
+					// speed: 1,
+				},
+			}
+		},
+		tengfanglan: {
+			'脂车香姝': {
+				name: '滕芳兰-脂车香姝/xingxiang',
+				version: '4.0',
+				json: true,
+				x: [0, 0.44],
+				y: [0, 0.46],
+				scale: 0.8,
+				clipSlots: ['tengfanglan170', 'tengfanglan171', 'tengfanglan172', 'tengfanglan173', 'tengfanglan174', 'tengfanglan175', 'tengfanglan176']
+				// hideSlots: ['tengfanglan170', 'tengfanglan171', 'tengfanglan172']
+
+			}
+		},
+		jin_simashi: {
+			牛年中秋: {
+				name: 'skin_simashi_NiuNianZhongQiu',
+				x: [0, -0.05],
+				y: [0, 0.23],
+				scale: 0.5,
+				//	angle: 25,
+				background: 'skin_simashi_NiuNianZhongQiu_bg.png',
+				action: 'DaiJi',
+				skinName: "牛年中秋"
+			},
+		},
+		qinghegongzhu: {
+			瑞雪芳梅: {
+				name: "清河公主/瑞雪芳梅/xingxiang",
+				x: [0, 0.42],
+				y: [0, 0.38],
+				scale: 0.7,
+				angle: 0,
+				speed: 1,
+				json:true,
+				version: '4.0',
+				gongji: {
+					name: "清河公主/瑞雪芳梅/jineng01",
+					scale: 0.9,// 出杀或攻击时随机播放一个动画
+					x: [0, 0.8],
+					y: [0, 0.28],
+					json:true,
+					version: '4.0',
+				},
+				chuchang: {  // 第一回合出场
+					name: "清河公主/瑞雪芳梅/jineng01",
+					action: "play",
+					scale: 0.7,
+					json:true,
+					version: '4.0',
+				},
+				beijing: {
+					name: '清河公主/瑞雪芳梅/beijing',
+					scale: 0.6,
+					x: [0, 0.02],
+					y: [0, 0.53],
+					json:true,
+					version: '4.0',
+				},
+				// 指示线
+				zhishixian: {
+					name: '清河公主/瑞雪芳梅/jineng02',
+					scale: 1,
+					speed: 1,
+					delay: 0.4,
+					version: '4.0',
+					json: true,
+					effect: {
+						name: '清河公主/瑞雪芳梅/jineng02',  // 指示线
+						scale: 1,
+						speed: 0.7,
+						delay: 0.2,
+						json: true,
+						version: '4.0',
+					},
+				},
+			},
+		},
+		zhaoyan: {
+			彩绘芳菲: {
+				name: "zhaoyan/CaiHuiFangFei/daiji2",
+				x: [0,0.44],
+				y: [0,0.5],
+				scale: 0.85,
+				chuchang: {
+					name: "zhaoyan/CaiHuiFangFei/chuchang",
+					scale: 0.8,
+				},
+				beijing: {
+					name: 'zhaoyan/CaiHuiFangFei/beijing',
+					scale: 0.5,
+					x: [0, -0.5],
+					y: [0, 0.32]
+				},
+				// gongji: true,
+				shizhounian: true,
+				zhishixian: {
+					name: 'zhaoyan/CaiHuiFangFei/shouji2',
+					scale: 1,
+					speed: 1,
+					delay: 0.15,
+					factor: 1,
+					start: 'attack',  // 填写了这个表示从武将牌处开始播放指示线动画
+					effect: {
+						name: 'zhaoyan/CaiHuiFangFei/shouji',
+						scale: 0.6,
+						speed: 0.7,
+						delay: 0.8,
+						background: 'zhaoyan/CaiHuiFangFei/jing_beijing_bg.png',
+						skinName: "彩绘芳菲",
+					},
+				},
+			},
+		},
+		sunru: {
+			月兔琼香: {
+				name: "孙茹/月兔琼香/daiji2",
+				x: [0,0.44],
+				y: [0,0.5],
+				scale: 0.85,
+				chuchang: {
+					name: "孙茹/月兔琼香/chuchang",
+					scale: 0.8,
+				},
+				beijing: {
+					name: '孙茹/月兔琼香/beijing',
+					scale: 0.5,
+					x: [0, -0.5],
+					y: [0, 0.32]
+				},
+				shizhounian: true,
+			}
+		},
+		xiahoudun: {
+			刚烈无惧: {
+				name: "夏侯惇/刚烈无惧/xingxiang",
+				x: [0, 0.72],
+				y: [0, 0.38],
+				scale: 0.9,
+				angle: 0,
+				speed: 1,
+				version: '4.0',
+				beijing: {
+					name: '夏侯惇/刚烈无惧/beijing',
+					scale: 0.6,
+					x: [0, 0.02],
+					y: [0, 0.53],
+					version: '4.0',
+				},
+			},
+		},
+		ol_caiwenji: {
+			测试皮肤: {
+				name: "蔡文姬/5710_mobile/xingxiang",
+				x: [0, 0.72],
+				y: [0, 0.38],
+				scale: 0.9,
+				angle: 0,
+				speed: 1,
+				version: '4.0',
+				json: true,
+				// beijing: {
+				// 	name: '蔡文姬/5710_mobile/beijing',
+				// 	scale: 0.6,
+				// 	x: [0, 0.02],
+				// 	y: [0, 0.53],
+				// 	version: '4.0',
+				// 	json: true,
+				// },
+				beijing: {
+					name: '孙茹/月兔琼香/beijing',
+					scale: 0.5,
+					x: [0, -0.5],
+					y: [0, 0.32],
+					version: '3.6'
+				},
+
+				gongji: {
+					name: '蔡文姬/5710_mobile/jineng01',
+					scale: 0.9,
+					version: 3.6,
+				},
+				shizhounian: true,
+				chuchang: {  // 第一回合出场
+					name: "蔡文姬/5710_mobile/xingxiang",
+					action: "play",
+					scale: 0.7,
+					json: true,
+					version: '4.0',
+				},
+
+				special: {
+					变身: {
+						name: 'ol_caiwenji/亚瑟王', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+					jisha: {
+						name: '../../../皮肤切换/effects/蔡文姬击杀/JiSha',
+						json: true,
+						x: [0, 0.5],
+						y: [0, 0.5],
+						scale: 1,
+						speed: 0.8,
+						version: '4.0',
+						delay: 2,  // 单位秒
+					},
+					condition: {
+						jisha: {
+							transform: "变身",  // 设置血量需要变换的骨骼
+							play: 'jisha',
+						},
+					}
+				}
+
+			},
+			亚瑟王: {
+				x: [0,0.5],
+				y: [0,0.5],
+				name: "蔡文姬/亚瑟王/class_304",
+				scale: 0.35,
+				version: "3.8",
+				json: true,
+				action: 'idle',
+				skin: 'skin_01',
+			},
+		},
+		liubei: {
+			武侯祠: {
+				name: 'skin_liubei_MingLiangQianGu',
+				x: [0, 1.15],
+				y: [0, 0.1],
+				scale: 0.45,
+				angle: 5,
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				action: 'DaiJi',
+				background: 'skin_liubei_WuHouCi_bg.png',
+			},
+			龙骧麟振: {
+				name: 'skin_liubei_LongXiangLinZhen',
+				x: [0, 0.4],
+				y: [0, 0.2],
+				scale: 0.55,
+				//angle:-15,
+				action: 'DaiJi',
+				background: 'skin_liubei_LongXiangLinZhen_bg.png',
+				skinName: "龙骧麟振"
+			},
+			猪年圣诞: {
+				name: 'skin_liubei_ZhuNianShengDan',
+				x: [0, 0.22],
+				y: [0, 0.12],
+				scale: 0.55,
+				//angle:-15,
+				action: 'DaiJi',
+				background: 'skin_liubei_ZhuNianShengDan_bg.png',
+				skinName: "猪年圣诞"
+			},
+		},
+		re_sunquan: {
+			吴王六剑: {
+				name: 'skin_sunquan_WuWangLiuJian',
+				x: [0, 0.53],
+				y: [0, 0.3],
+				scale: 0.4,
+				action: 'DaiJi',
+				pos: {
+					x: [0,0.8],
+					y: [0,0.4]
+				},
+				background: 'skin_sunquan_WuWangLiuJian_bg.png',
+				skinName: "吴王六剑"
+			},
+			牛年七夕: {
+				name: 'skin_sunquan_NiuNianQiXi',
+				x: [0, 0.67],
+				y: [0, 0.4],
+				scale: 0.58,
+				angle: 15,
+				action: 'DaiJi',
+				background: 'skin_sunquan_NiuNianQiXi_bg.png',
+			},
+			猪年端午: {
+				name: 'skin_sunquan_ZhuNianDuanWu',
+				x: [0, 0.67],
+				y: [0, 0.4],
+				scale: 0.58,
+				angle: 15,
+				action: 'DaiJi',
+				background: 'skin_sunquan_ZhuNianDuanWu_bg.png',
+				skinName: "猪年端午"
+			},
+
+		},
+		re_sunben: {
+			长沙桓王: {
+				name: 'skin_sunce_ChangShaHuanWang',
+				x: [0, 0.2],
+				y: [0, 0.3],
+				scale: 0.45,
+				pos: {
+					x: [0,0.7],
+					y: [0,0.4]
+				},
+				action: 'DaiJi',
+				background: 'skin_sunce_ChangShaHuanWang_bg.png',
+				skinName: "长沙桓王",
+				special: {
+					变身: {
+						name: 'caochun/变身前', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+					juexing: {
+						name: '孙策/孙策觉醒/suncehunzi1',
+						json: true,
+						x: [0, 0.5],
+						y: [0, 0.5],
+						scale: 0.8,
+						speed: 0.8,
+						version: '4.0',
+						delay: 2,  // 单位秒
+					},
+					condition: {
+						juexingji: {
+							transform: "变身",  // 设置血量需要变换的骨骼
+							play: 'juexing',
+						},
+					}
+				}
+			},
+			猪年七夕: {
+				name: 'skin_sunce_ZhuNianQiXi',
+				x: [0, 0.8],
+				y: [0, 0.15],
+				scale: 0.55,
+				action: 'DaiJi',
+				background: 'skin_sunce_ZhuNianQiXi_bg.png',
+				skinName: "猪年七夕"
+			},
+		},
+		beimihu: {
+			鬼渊蝶引: {
+				name: 'skin_beimihu_GuiYuanDieYin',
+				x: [0, 0.45],
+				y: [0, 0.16],
+				scale: 0.5,
+				//angle:-10,
+				action: 'DaiJi',
+				background: 'skin_beimihu_GuiYuanDieYin_bg.png',
+				skinName: "鬼渊蝶引"
+			},
+		},
+		caopi: {
+			猪年端午: {
+				name: 'skin_caopi_ZhuNianDuanWu',
+				x: [0, 0.4],
+				y: [0, 0.2],
+				scale: 0.65,
+				//angle:10,
+				action: 'DaiJi',
+				background: 'skin_caopi_ZhuNianDuanWu_bg.png',
+				skinName: "猪年端午"
+			},
+			牛年清明: {
+				name: 'skin_caopi_NiuNianQingMing',
+				x: [0, 0.6],
+				y: [0, 0.1],
+				scale: 0.65,
+				//angle:10,
+				action: 'DaiJi',
+				background: 'skin_caopi_NiuNianQingMing_bg.png',
+				skinName: "牛年清明"
+			},
+		},
+		shen_guojia: {
+			虎年清明: {
+				name: 'skin_shenguojia_QingMingHuNian',
+				x: [0, 1.6],
+				y: [0, 0.6],
+				scale: 0.5,
+				background: 'skin_shenguojia_QingMingHuNian_bg.png',
+				special: {
+					变身: {
+						name: 'caochun/变身前', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+					},
+					condition: {
+						xiandingji: {
+							transform: "变身",  // 设置血量需要变换的骨骼
+							effect: {
+								scale: 0.5,
+								speed: 1.5,
+								name: 'huanfu'
+							}, // 选择更换骨骼的特效. 特效放到effects目录下同名, 不填写默认曹纯动皮的切换特效
+							// effect: 'huanfu', // 选择更换骨骼的特效. 特效放到effects目录下同名, 不填写默认曹纯动皮的切换特效
+						},
+					}
+				}
+			},
+		},
+		zuofen:{
+			清荷粽香:{
+				name: '左棻/清荷粽香/xingxiang',
+				x: [ 0, 0.7],
+				y: [ 0, 0.55],
+				scale: 0.85,
+				json: true,
+				version:"4.0",
+				beijing: {
+					name: '左棻/清荷粽香/beijing',
+					x: [0,0.55],
+					y: [0,0.45],
+					scale: 0.6,
+					json: true,
+					version:"4.0",
+				},
+				gongji: {
+					name: '左棻/清荷粽香/jineng01',
+					x: [ 0, 0.75],
+					y: [ 0, 0.3],
+					scale: 1,
+					json:"4.0",
+					version:"4.0",
+				},
+				zhishixian: {
+					name: '左棻/清荷粽香/jineng02',
+					scale: 0.8,
+					speed: 0.7,
+					delay: 0.3,
+					json:true,
+					version: '4.0',
+					effect: {
+						name: '左棻/清荷粽香/jineng03',
+						scale: 0.8,
+						speed: 0.7,
+						delay: 0.3,
+						version:"4.0",
+						json: true
+					},
+				},
+			},
+		},
+
+
 	};
 	
 	var extend = {
@@ -1260,8 +2101,25 @@ decadeModule.import(function(lib, game, ui, get, ai, _status){
 		re_zhenji: decadeUI.dynamicSkin.zhenji,
 		xin_liru: decadeUI.dynamicSkin.re_liru,     //李儒
 		db_wenyang: decadeUI.dynamicSkin.wenyang,
+		re_yuanshao: decadeUI.dynamicSkin.ol_yuanshao,
+		xin_yuanshao: decadeUI.dynamicSkin.ol_yuanshao,
+		re_liubei: decadeUI.dynamicSkin.liubei,
+		re_caopi: decadeUI.dynamicSkin.caopi,               //曹丕
 	};decadeUI.get.extend(decadeUI.dynamicSkin, extend);
-	
+
+	// 添加皮肤名称
+	let skins = decadeUI.dynamicSkin;
+	if (skins) {
+		let names = Object.keys(skins);
+		for (let i = 0; i < names.length; i++) {
+			let datas = skins[names[i]];
+			let dataKeys = Object.keys(datas);
+			for (let j = 0; j < dataKeys.length; j++) {
+				let skin = datas[dataKeys[j]];
+				if (!skin.skinName) skin.skinName = dataKeys[j];
+			}
+		}
+	}
+
 });
-//
-//
+
