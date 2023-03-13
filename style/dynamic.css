@@ -621,10 +621,10 @@
     color: white;
     background-image: url("../images/huanfu/jing.png");
     background-size: 100% 100%;
-    width: 100px;
-    height: 44px;
-    left: 7%;
-    bottom: -35%;
+    width: 80px;
+    height: 35px;
+    left: 10%;
+    bottom: -24%;
     cursor: pointer;
 }
 
@@ -634,10 +634,10 @@
     color: white;
     background-image: url("../images/huanfu/dong.png");
     background-size: 100% 100%;
-    width: 100px;
-    height: 44px;
-    left: 7%;
-    bottom: -38%;
+    width: 80px;
+    height: 35px;
+    left: 10%;
+    bottom: -24%;
     cursor: pointer;
 }
 

@@ -547,23 +547,240 @@ else if (item[1] == 'textbutton') {
 							} 
 ```
 
- 
+####  变身与播放功能.  
 
-#### 扩展兼容问题
-
-本人测试时使用了特效测试, 手杀UI, 无名杀补丁,原版千幻聆音都没有出现问题. 理论上UI扩展,武将扩展都不会出现兼容问题.
-
-如果需要是用千幻聆音, 请在相应群下载本人修改过的兼容皮肤切换extension.
-
-
-
-千幻1.66版本动皮背景切割有一点点小问题,需要加上几行代码 在1232行
-
-![](./doc/千幻1.66修改.png) 
+special完整的参数. 一般只需使用一个. 其实transform和play可以都写, 也可以只写其中一个. transform表示变身, play表示播放
 
 ```js
-                if (animation.player && animation.player.beijing && !cutdybg) {
-                    animation.player.beijing.clip = null
-                }
+special = {
+    // 首先需要定义特效的参数, 下面的transform就是定义特效的名字.
+    
+    // 更换骨骼/皮肤/标签  transform可以只填写自己想要变换的, 比如只填写变换标签或者只变换骨骼skin
+    transform: {
+        hp: 2,   // 当被低血量使用, 表示当前血量, 当被受伤使用, 表示一次性受到多少伤害触发. 
+        name: 'xxxx', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名id+皮肤名称
+        skin: '',   // 可以切换同一个骨骼的其他皮肤
+        action: '', // 也可以切换播放一段骨骼的其他标签
+        loop: true, // 如果是true, 表示是切换为同骨骼的其他标签, 如果为false, 只是单纯的触发播放另一个标签. 该参数只有当name一致且action指定才有效
+        times: 1,  // 当条件是受伤时表示受到多少次伤害后触发该变身骨骼
+    },
+    // 播放一段特效, 例如觉醒或击杀可以播放
+    play: {
+          name: '骨骼位置',  // 路径以dynamic为起点
+          x: [0, 0.5],  // x和y不填写默认在屏幕中央.  后面考虑像特效测试一样可以指定其他位置
+          y: [0, 0.5],
+          scale: 0.5, 
+          speed: 0.5, // 还有一些其他参数和待机一致 
+    },
+    // 触发以上定义的特效的条件, 现阶段有6种, 觉醒技, 低血量, 击杀, 转换技, 受伤次数, 限定技
+    condition: {
+        // 觉醒技
+        juexingji: {
+            transform: 'transform',  // 觉醒后转换的骨骼. 名字是上面预定义的转换名字
+            play: 'play',  // 也可以选择播放一段动画, 播放的动画名字, 上面预定义的
+        },
+        // 低血量, 回血后, 会恢复原来的骨骼
+        lowhp: {
+            transform: ['transform2', 'transform3'],  // 可以填入多个转换骨骼, 当血量到达设置的阈值时, 切换为对应的骨骼			
+            recover: false,  // 恢复血量是否变回原来的, 如果为true, 恢复体力时会恢复到原来的骨骼. 
+        	effect: {
+                scale: 0.5,  // 播放变换骨骼的参数
+                speed: 1.5,
+                name: 'huanfu'  // 换肤文件
+            }, // 变身播放更换骨骼的特效, 变身特效文件放入 皮肤切换/effects/transform下面, 不填写默认播放曹纯的换肤特效骨骼
+        },  
+        // 击杀, 配合一些击杀骨骼使用, 在屏幕中央进行播放. 一般只有ol有击杀骨骼 
+        jisha: {
+            play: 'play1',  // 击杀可以播放一段动画
+            transform: 'transform2',  //  
+        },
+        // 转换技
+        zhuanhuanji: {
+            play: 'play2',
+            transform: 'transformXXX'  // 转换技触发后会与预设的两种骨骼互相切换
+        },
+        // 受伤
+        damage: {
+            play: 'play2',  // 播放的动画
+            transform: ['transformXXX', 'transformYYY']  // 可以设置多个触发条件
+        },
+        // 限定技
+        xiandingji: {
+            transform: 'transform1',  // 触发限定技可以播放骨骼. 
+            play: 'play',  // 也可以选择播放一段动画     
+        },           
+    }
+}
 ```
+
+**示例**, **曹纯的低血量变身.** 
+
+```js
+{
+    caochun: {
+        变身前: {
+				name: "曹纯/变身前/daiji2",
+				scale: 0.35,
+				x: [0,0.5],
+				y: [0,0.5],
+				shizhounian: true,
+				background: "曹纯/变身前/static_bg.png",
+				beijing: {
+					name: "曹纯/变身前/beijing",
+					scale: 0.35,
+					x: [0,0.98],
+					y: [0,0.47],
+				},
+				chuchang: {
+					name: "曹纯/变身前/chuchang",
+					scale: 0.7,
+				},
+				gongji: {
+					name: "曹纯/变身前/chuchang2",
+					scale: 0.35,
+				},
+				teshu: {
+					name: "曹纯/变身前/chuchang2",
+					scale: 0.35,
+				},
+				zhishixian: {
+					name: "曹纯/变身前/shouji2",
+					scale: 0.7,
+					delay: 0.3,
+					speed: 0.8,
+					effect: {
+						name: "曹纯/变身前/shouji",
+						scale: 0.7,
+						delay: 0.3,
+						speed: 0.8,
+					},
+				},
+				special: {
+					变身1: {
+						hp: 3,  // 如果血量低于3, 则会触发变身效果, 当血量恢复到2以上, 那么
+						name: 'caochun/虎年曹纯', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+					},
+					变身2: {
+						hp: 2,  // 如果血量低于或等于2, 则会触发变身效果,
+						name: 'caochun/变身后', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+					},
+					condition: {
+                        // 触发条件选择低血量
+						lowhp: {
+							transform: ['变身1', '变身2'],  // 设置血量需要变换的骨骼, 允许设置多个
+							recover: false,  // 恢复血量是否变回原来的, 如果为true, 回复会回复原来的骨骼
+						},
+					}
+				}
+			},
+            变身后: {
+				name: "曹纯/变身后/daiji2",
+				scale: 0.35,
+				x: [0,0.5],
+				y: [0,0.5],
+				shizhounian: true,
+				background: "曹纯/变身后/static_bg.png",
+				beijing: {
+					name: "曹纯/变身后/beijing",
+					scale: 0.35,
+					x: [0,0.98],
+					y: [0,0.47],
+				},
+				chuchang: {
+					name: "曹纯/变身后/chuchang",
+					scale: 0.7,
+				},
+				gongji: {
+					name: "曹纯/变身后/chuchang2",
+					scale: 0.35,
+				},
+				teshu: {
+					name: "曹纯/变身后/chuchang2",
+					scale: 0.35,
+				},
+				zhishixian: {
+					name: "曹纯/变身后/shouji2",
+					scale: 0.7,
+					delay: 0.3,
+					speed: 0.8,
+					effect: {
+						name: "曹纯/变身后/shouji",
+						scale: 0.7,
+						delay: 0.3,
+						speed: 0.8,
+					},
+				},
+			},  
+                
+    }
+}
+
+```
+
+**觉醒技示例**
+
+```js
+
+special: {
+					变身: {
+						name: 'caochun/变身前', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+                    // 这时定义觉醒时候播放的动画
+					juexing: {
+						name: '孙策/孙策觉醒/suncehunzi1',
+						json: true,
+						x: [0, 0.5],
+						y: [0, 0.5],
+						
+						name: '../../../皮肤切换/effects/蔡文姬击杀/JiSha',scale: 0.8,
+						speed: 0.8,
+						version: '4.0',
+						delay: 2,  // 单位秒
+					},
+					condition: {
+						juexingji: {
+							transform: "变身",  // 设置觉醒时候需要变换的骨骼
+							play: 'juexing',  // 觉醒后可以设置播放的动画
+						},
+					}
+				}
+```
+
+**击杀示例**
+
+例如蔡文姬击杀填写参数
+
+```js
+special: {
+    
+					变身: {
+						name: 'ol_caiwenji/亚瑟王', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+						// effect: true, // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+					jisha: {
+						name: '../../../皮肤切换/effects/蔡文姬击杀/JiSha',  // 如果放在其他扩展文件夹里参照这个格式,
+						json: true,
+						x: [0, 0.5],
+						y: [0, 0.5],
+						scale: 0.6,
+						speed: 0.8,
+						version: '4.0',
+						delay: 2,  // 单位秒, 表示延时多久后进行播放
+					},
+					condition: {
+                        // 触发条件选择击杀
+						jisha: {
+							transform: "变身",  // 设置需要变换的骨骼
+							play: 'jisha',
+						},
+					}
+				}
+```
+
+其他转换技,受伤次数等累死, 就不赘述了. 
+
+
+
+
 

@@ -19,7 +19,6 @@ var live2d = PIXI.live2d;
 var CustomLive2dLoader = class Live2dLoader {
     constructor(models) {
         let config = models[0];
-        if (!config.mobile && this.isMobile()) return;
         this.load(config);
     }
 
@@ -79,7 +78,6 @@ var CustomLive2dLoader = class Live2dLoader {
 
         // console.log(app.renderer.type); // 回傳目前 PixiJS app 的renderer 模式：
         // PIXI.RENDERER_TYPE，值為 0、1、2
-
         this.app = new PIXI.Application({
             view: document.getElementById("l2dCanvas"),
             width: config.width || 800,
@@ -439,13 +437,13 @@ var CustomLive2dLoader = class Live2dLoader {
         for (const [group, motions] of Object.entries(definitions)) {
             motionGroups.push({
                 name: group,
-                motions: motions?.map((motion, index) => ({
+                motions: motions && motions.map((motion, index) => ({
                     file: motion.file || motion.File || '',
                  })) || [],
             });
         }
 
-        expressions = expressionManager?.definitions.map((expression, index) => ({
+        expressions = expressionManager && expressionManager.definitions.map((expression, index) => ({
             file: expression.file || expression.File || '',
         })) || [];
 
@@ -499,8 +497,10 @@ var CustomLive2dLoader = class Live2dLoader {
         }
         await this.initModel(config)
         // 事先销毁原来的选择框
-        document.getElementById('l2d-tool-div')?.remove()
-        document.getElementById('l2dHoverBox')?.remove()
+        let _toolDiv = document.getElementById('l2d-tool-div')
+        let _l2dHoverBox = document.getElementById('l2dHoverBox')
+        _toolDiv && _toolDiv.remove()
+        _l2dHoverBox && _l2dHoverBox.remove()
         this.initMotionSelectDiv(config)
     }
 
@@ -563,8 +563,12 @@ var CustomLive2dLoader = class Live2dLoader {
         let cn = skinSwitch.lib.config.touchscreen ? 'touchend' : 'click'
         let offsetX, offsetY
         let _this = this
+        this._clickTime = Date.now()
         let eve = (event) => {
             if (_this.canvas.longClick) return
+            if (Date.now() - _this._clickTime <= 3000) {
+                return
+            }
             if (skinSwitch.lib.config.touchscreen) {
                 offsetX = event.changedTouches[0].pageX - this.app.view.offsetLeft
                 offsetY = event.changedTouches[0].pageY - this.app.view.offsetTop
@@ -581,8 +585,8 @@ var CustomLive2dLoader = class Live2dLoader {
             this.model.internalModel.motionManager.startRandomMotion(
                 keys[Math.floor(Math.random() * keys.length)]
             );
-
             console.log("Start motion: random");
+            _this._clickTime = Date.now()
         }
         this.canvas.addEventListener(cn, eve);
     }

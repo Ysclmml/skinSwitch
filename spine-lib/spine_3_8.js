@@ -4851,6 +4851,11 @@ var spine3_8;
 		BinaryInput.prototype.readByte = function () {
 			return this.buffer.getInt8(this.index++);
 		};
+
+		BinaryInput.prototype.readUnsignedByte = function () {
+			return this.buffer.getUint8(this.index++);
+		};
+
 		BinaryInput.prototype.readShort = function () {
 			var value = this.buffer.getInt16(this.index);
 			this.index += 2;
@@ -4897,16 +4902,17 @@ var spine3_8;
 			byteCount--;
 			var chars = "";
 			var charCount = 0;
+			// 参照github的issue检查到这里不能读取中文和韩文等unicode字符的atlas区域, 参照4.0的库修复这里. https://github.com/EsotericSoftware/spine-runtimes/pull/2051#issue-1185863303
 			for (var i = 0; i < byteCount;) {
-				var b = this.readByte();
+				let b = this.readUnsignedByte();
 				switch (b >> 4) {
 					case 12:
 					case 13:
-						chars += String.fromCharCode(((b & 0x1F) << 6 | this.readByte() & 0x3F));
+						chars += String.fromCharCode((b & 31) << 6 | this.readByte() & 63);
 						i += 2;
 						break;
 					case 14:
-						chars += String.fromCharCode(((b & 0x0F) << 12 | (this.readByte() & 0x3F) << 6 | this.readByte() & 0x3F));
+						chars += String.fromCharCode((b & 15) << 12 | (this.readByte() & 63) << 6 | this.readByte() & 63);
 						i += 3;
 						break;
 					default:

@@ -865,7 +865,6 @@ function debug(data) {
 	let dynamic = am.getAnimationBySkinId(data.skinID)
 	let apnode = am.getNodeBySkinId(data.skinID);
 	if (!apnode) return
-	console.log('dynamic', am, 'post data --> ', data)
 	completeParams(apnode)
 
 	// 循环播放动皮动作. 然后接受准备
@@ -913,6 +912,9 @@ function debug(data) {
 		}
 		// 获取对应的骨骼标签, 如果没有获取第一个
 		let actionParams = apnode.player.gongjiAction
+		if (actionParams.version) {
+			dynamic = am.getAnimation(actionParams.version)
+		}
 		if (actionParams) {
 			let playSpine = function (apnode, animation, playNode) {
 				apnode.opacity = 0

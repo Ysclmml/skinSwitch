@@ -1,3 +1,5 @@
+// 将本文件改名为l2dSettings.js, 即可配置l2d
+
 window.pfqhLive2dSettings = {
 
     // 默认的配置,每个模型可以覆盖配置
@@ -30,6 +32,10 @@ window.pfqhLive2dSettings = {
             left: "120px",
             bottom: "180px",
         },
+        pinghai_6: {
+            role: 'pinghai_6/pinghai_6.model3.json',
+            name: 'pinghai_6',  // 显示在选项上的, 默认为key
+        },
         kubo_2: {
             role: 'kubo_2/kubo_2.model3.json',
             name: 'kubo_2',  // 显示在选项上的, 默认为key
@@ -41,11 +47,10 @@ window.pfqhLive2dSettings = {
         dafeng_3: {
             role: 'dafeng_3/dafeng_3.model3.json',
             name: 'dafeng_3',  //
-            width: 1,  // 可以覆盖默认的宽度'
-            height: 1,
-            left: "0px",
-            bottom: "00px",
-
+        },
+        daofeng_5: {
+            role: 'daofeng_5/daofeng_5.model3.json',
+            name: 'daofeng_5',  //
         },
     }
 }

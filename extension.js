@@ -252,6 +252,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                             if (effectPlay) {
                                                                 let eff = special[effectPlay]
                                                                 if (eff) {
+                                                                    if (!eff.x) eff.x = [0, 0.5]
+                                                                    if (!eff.y) eff.y = [0, 0.5]
                                                                     setTimeout(() => {
                                                                         skinSwitch.chukuangWorkerApi.playEffect(eff)
                                                                     }, (eff.delay || 0) * 1000)
@@ -317,6 +319,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                         if (effectPlay) {
                                                             let eff = special[effectPlay]
                                                             if (eff) {
+                                                                if (!eff.x) eff.x = [0, 0.5]
+                                                                if (!eff.y) eff.y = [0, 0.5]
                                                                 setTimeout(() => {
                                                                     skinSwitch.chukuangWorkerApi.playEffect(eff)
                                                                 }, (eff.delay || 0) * 1000)
@@ -616,7 +620,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             let timer
                                             p.node.avatar.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', (e) => {
                                                 // 过滤掉选择角色事件
-                                                if(_status.event.name !== "chooseToUse" && _status.clicked !== false){
+                                                if((_status.event.name !== "chooseToUse" && _status.clicked !== false) || p.classList.contains('selectable') || p.classList.contains('target')){
                                                     return
                                                 }
                                                 if(timer){
@@ -631,20 +635,21 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                         if ( _status.playOpenTool !== p)_status.playOpenTool.getElementsByClassName('playerToolBox')[0].classList.add('hidden')
                                                         else return
                                                     }
+                                                    _status.clicked = false
                                                     box.classList.remove('hidden')
                                                     _status.playOpenTool = p
                                                     skinHoverBtn.name = p.name
                                                     skinHoverBtn.isPrimary = true
                                                     e.stopPropagation()
 
-                                                }, 350)
+                                                }, 250)
 
                                             })
                                             if (p.node.avatar2) {
                                                 p.node.avatar2.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', (e) => {
                                                     e.stopPropagation()
                                                     // 防止选择事件触发
-                                                    if(_status.event.name=='chooseTarget'||_status.event.name=='chooseCardTarget'||_status.event.name.startsWith('useCard')||_status.event.name.startsWith('_')){
+                                                    if((_status.event.name !== "chooseToUse" && _status.clicked !== false) || p.classList.contains('selectable') || p.classList.contains('target')){
                                                         return
                                                     }
                                                     if(timer){
@@ -659,21 +664,21 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                             else return
                                                         }
                                                         box.classList.remove('hidden')
+                                                        _status.clicked = false
                                                         _status.playOpenTool = p
                                                         timer = null
                                                         skinHoverBtn.name = p.name2
                                                         skinHoverBtn.isPrimary = false
-                                                    }, 350)
+                                                    }, 250)
                                                 })
                                             }
                                             skinHoverBtn.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', (e) => {
-                                                e.stopPropagation()
+                                                // e.stopPropagation()
                                                 if (_status.playOpenTool) {
                                                     if ( _status.playOpenTool !== p)_status.playOpenTool.getElementsByClassName('playerToolBox')[0].classList.add('hidden')
                                                 }
                                                 delete _status.playOpenTool
                                                 box.classList.add('hidden')
-                                                console.log('打开皮肤窗口')
                                                 skinSwitch.qhly_open_small(skinHoverBtn.name, p, skinHoverBtn.isPrimary)
 
                                             })
@@ -1049,6 +1054,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             if (effectPlay) {
                                                 let eff = special[effectPlay]
                                                 if (eff) {
+                                                    if (!eff.x) eff.x = [0, 0.5]
+                                                    if (!eff.y) eff.y = [0, 0.5]
                                                     setTimeout(() => {
                                                         skinSwitch.chukuangWorkerApi.playEffect(eff)
                                                     }, (eff.delay || 0) * 1000)
@@ -1098,6 +1105,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         if (effectPlay) {
                                             let eff = special[effectPlay]
                                             if (eff) {
+                                                if (!eff.x) eff.x = [0, 0.5]
+                                                if (!eff.y) eff.y = [0, 0.5]
                                                 setTimeout(() => {
                                                     skinSwitch.chukuangWorkerApi.playEffect(eff)
                                                 }, (eff.delay || 0) * 1000)
@@ -2005,10 +2014,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         lib.config.swipe_down = swipe_down;
                         lib.config.swipe_left = swipe_left;
                         lib.config.swipe_right = swipe_right;
+
+                        // 关闭所有动画
+                        am.stopSpineAll()
+                        for (let k in am.animations) {
+                            if (am.animations[k]) {
+                                am.animations[k].nodes = []
+                                let webglExt = am.animations[k].gl.getExtension('WEBGL_lose_context')
+                                if (webglExt) {
+                                    webglExt.loseContext()
+                                }
+                            }
+                        }
+
                         if (!_status.qhly_open) return;
                         background.delete();
                         delete _status.qhly_open;
-                    };
+                    }
 
                     // 创建canvas
                     let d = ui.create.div('.pfqh-small-dynamic-skin-wrap', cover)
@@ -3346,18 +3368,24 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             return {avatar, special, effs, isPrimary}
                         }
                         let res = []
-                        let r = getSpecialEffs(player.dynamic.primary, true)
-                        if (r) res.push(r)
-                        if (player.doubleAvatar) {
-                            r = getSpecialEffs(player.dynamic.deputy, false)
+                        if (player.dynamic) {
+                            let r = getSpecialEffs(player.dynamic.primary, true)
                             if (r) res.push(r)
+                            if (player.doubleAvatar) {
+                                r = getSpecialEffs(player.dynamic.deputy, false)
+                                if (r) res.push(r)
+                            }
                         }
                         return res
                     },
-                    // 更改为指定参数的状态, avatar当前的动皮皮肤, originSkin原来的默认动皮皮肤
+                    // 更改为指定参数的状态,
                     transformDst: (player, isPrimary, dstInfo, extraParams = {isOrigin: false, huanfuEffect: null}) => {
                         const avatar = isPrimary ? player.dynamic.primary : player.dynamic.deputy
                         let {isOrigin, huanfuEffect} = extraParams
+                        // 标明这时转换播放骨骼
+                        dstInfo = Object.assign({}, dstInfo)
+                        dstInfo._transform = true
+
                         if (dstInfo.name == null || dstInfo.name === avatar.name) {
                             if (dstInfo.action) {
                                 skinSwitch.postMsgApi.changeAvatarAction(player, isPrimary, dstInfo, isOrigin)
@@ -3368,21 +3396,65 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         } else {
                             // 执行变身效果
                             player.stopDynamic(isPrimary, !isPrimary)
-
                             dstInfo.player = dstInfo
                             let huanfuEff = {
                                 name: '../../../皮肤切换/effects/transform/SF_pifu_eff_juexing',
                                 scale: 0.7,
-                                speed: 0.5,
+                                speed: 0.6,
+                                delay: 0.3, // 默认设置的延迟是0.2秒
                             }
+
+                            // 预定义一些特效
+                            const changeEffects = {
+                                posui: {
+                                    scale: 0.6,
+                                    speed: 1,
+                                    name: 'posui',
+                                    json: true,
+                                    delay: 0.5, // 控制多少秒后开始播放骨骼动画
+                                },
+                                jinka: {
+                                    scale: 0.6,
+                                    speed: 1,
+                                    name: 'jinka',
+                                    json: true,
+                                    delay: 0.5, // 控制多少秒后开始播放骨骼动画
+                                },
+                                qiancheng: {
+                                    scale: 0.6,
+                                    speed: 1,
+                                    name: 'qiancheng',
+                                    json: true,
+                                    delay: 0.5, // 控制多少秒后开始播放骨骼动画
+                                },
+                                shaohui: {
+                                    scale: 0.6,
+                                    speed: 1,
+                                    x: [0, 0.6],
+                                    y: [0, 0.5],
+                                    name: 'shaohui',
+                                    json: true,
+                                    delay: 0.5, // 控制多少秒后开始播放骨骼动画
+                                },
+                            }
+
                             if (huanfuEffect) {
-                                if (typeof huanfuEffect === 'string') huanfuEffect = {name: huanfuEffect}
+                                if (typeof huanfuEffect === 'string') {
+                                    if (huanfuEffect in changeEffects) {
+                                        huanfuEffect = changeEffects[huanfuEffect]
+                                    } else {
+                                        huanfuEffect = {name: huanfuEffect};
+                                    }
+                                }
                                 huanfuEff = Object.assign(huanfuEff, huanfuEffect)
                                 huanfuEff.name = '../../../皮肤切换/effects/transform/' + huanfuEffect.name
                             }
                             skinSwitch.chukuangWorkerApi.playEffect(huanfuEff, { parent: player })
                             dstInfo.deputy = !isPrimary
-                            player.playDynamic(dstInfo, !isPrimary);
+
+                            setTimeout(() => {
+                                player.playDynamic(dstInfo, !isPrimary);
+                            }, (huanfuEff.delay || 0) * 1000)
 
                             if (dstInfo.background) {
                                 player.$dynamicWrap.style.backgroundImage = 'url("' + lib.assetURL + 'extension/十周年UI/assets/dynamic/' + dstInfo.background + '")';
@@ -4128,6 +4200,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         playParams.divPos = skinSwitch.getCoordinate(player, true)
 
                     }
+                    // 更换皮肤后, 删除原来保存的原始动皮参数
+                    if (player.originSkin && !playParams._transform) {
+                        delete player.originSkin
+                    }
+                    if (player.originSkin2 && !playParams._transform) {
+                        delete player.originSkin2
+                    }
                     skinSwitch.chukuangWorkerInit()
                     if (!isPrimary && player.dynamic.deputy) {
                         skinSwitch.chukuangWorkerApi.preLoad(player.dynamic.id, player.dynamic.deputy.id, playParams)
@@ -4747,6 +4826,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                             let play = () => {
                                 animationManager.stopSpineAll()
+
                                 let node = dy.playSpine({
                                     x: [0, 0.65],
                                     y: [0, 0.5],
@@ -4754,6 +4834,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     scale: 0.5,
                                     loop: true
                                 })
+                                window.tempDynamic = dy
                                 document.getElementById('curVersionText').innerText = `当前版本: ${version}`
                                 // 切换当前的骨骼
                                 activeSkeleton = node.skeleton
@@ -6123,30 +6204,32 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
             })
 
-            // 加载l2d
-            lib.arenaReady.push(function() {
-                let curVal = lib.config[skinSwitch.configKey.l2dSetting]
-                if (curVal in pfqhLive2dSettings.models) {
-                    let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
-                    for (let k in pfqhLive2dSettings.models[curVal]) {
-                        base[k] = pfqhLive2dSettings.models[curVal][k]
-                    }
-                    base.role = lib.assetURL + base.basePath + base.role
-                    base.key = curVal
-                    // base.height = base.height * skinSwitch.bodySize().height
-                    // base.width = base.width * skinSwitch.bodySize().width
-                    skinSwitch.l2dLoader = new CustomLive2dLoader([
-                        base
-                    ]);
-                }
-            })
+
 
             if (lib.config[skinSwitch.configKey.l2dEnable]) {
                 lib.init.js(skinSwitch.url + 'component/live2d', 'live2dcubismcore.min', () => {
                     lib.init.js(skinSwitch.url + 'component/live2d', 'pixi.min', () => {
                         lib.init.js(skinSwitch.url + 'component/live2d', 'Live2dLoader', () => {
                             // 读取l2d配置
-                            lib.init.js(skinSwitch.url, 'l2dSettings', function () {});
+                            lib.init.js(skinSwitch.url, 'l2dSettings', function () {
+                                // 加载l2d
+                                lib.arenaReady.push(function() {
+                                    let curVal = lib.config[skinSwitch.configKey.l2dSetting]
+                                    if (curVal in pfqhLive2dSettings.models) {
+                                        let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
+                                        for (let k in pfqhLive2dSettings.models[curVal]) {
+                                            base[k] = pfqhLive2dSettings.models[curVal][k]
+                                        }
+                                        base.role = lib.assetURL + base.basePath + base.role
+                                        base.key = curVal
+                                        skinSwitch.l2dLoader = new CustomLive2dLoader([
+                                            base
+                                        ]);
+                                    }
+                                })
+                            }, () => {
+                                console.log('加载l2d失败')
+                            });
                         })
                     })
                 })
@@ -6272,8 +6355,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
                     base.role = lib.assetURL + base.basePath + base.role
                     base.key = value
-                    // base.height = base.height * skinSwitch.bodySize().height
-                    // base.width = base.width * skinSwitch.bodySize().width
                     game.saveConfig(skinSwitch.configKey.l2dSetting, value)
                     if (skinSwitch.l2dLoader) {
                         skinSwitch.l2dLoader.changeModel(base)
@@ -6460,4 +6541,19 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  4. 调整骨骼位置可以长按十字键修改, 并且可以拖动编辑显示框
  5. l2d尝试, 卡的话关闭该功能即可.
  6. 内置了两个蔡文姬的特效, 一个是判定特效, 一个是击杀特效.
+ */
+
+/** 1.17版本更新
+ 1. 更改动静切换皮肤功能
+ 2. 修改编辑动皮样式
+ 3. 预览spine可以记录上一次访问的路径
+ 4. 添加多个可以自动更换骨骼的时机. 配合十周年曹纯至臻双动皮皮肤
+ 5. l2d功能稍微添加下, 长按可以切换.
+
+ */
+
+/** 1.18版本更新
+ 1. 修复觉醒弹窗bug
+ 2. 变身与播放特效可视化操作
+ 3. 支持3.5-4.0版本骨骼播放
  */
