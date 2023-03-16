@@ -1,5 +1,7 @@
 'use strict';
 
+const fps = 60
+
 if (self.spine_4 && self.spine) {
     // 给4.0的mvp添加新的方法.
     spine_4.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
@@ -481,6 +483,9 @@ class BaseAnimation {
         this.BUILT_ID = 0;  // 管理当前的动画id.  每个动画id对应一个APNode对象, 存入nodes数组.
         this._dprAdaptive = false;
 
+        this._fps = fps
+        this._lastTime = 0
+
         Object.defineProperties(this, {
             dprAdaptive: {
                 get:function(){
@@ -503,6 +508,18 @@ class BaseAnimation {
                 },
             }
         });
+    }
+
+    newFpsRender(time) {
+        this.requestId = requestAnimationFrame(this.newFpsRender.bind(this))
+        if (time - this._lastTime < 1000 / this._fps) {
+            // console.log('返回')
+            return
+        }
+        // let realFPS = 1000 / (time - this._lastTime)
+        // console.log('real fps', realFPS, this._fps)
+        this.render(time)
+        this._lastTime = time
     }
 
     hasSpine(filename) {
@@ -883,7 +900,7 @@ class Animation3_6 extends BaseAnimation {
         if (this.requestId == null) {
             this.running = true;
             if (!this.offscreen) this.canvas.style.visibility = 'visible';
-            this.requestId = requestAnimationFrame(this.render.bind(this));
+            this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
         }
 
         sprite.referBounds = undefined;
@@ -1065,7 +1082,7 @@ class Animation3_6 extends BaseAnimation {
 
         gl.disable(gl.SCISSOR_TEST);
 
-        this.requestId = requestAnimationFrame(this.render.bind(this));
+        // this.requestId = requestAnimationFrame(this.render.bind(this));
     };
 }
 
@@ -1320,7 +1337,7 @@ class Animation4_0 extends BaseAnimation{
         if (this.requestId == undefined) {
             this.running = true;
             if (!this.offscreen) this.canvas.style.visibility = 'visible';
-            this.requestId = requestAnimationFrame(this.render.bind(this));
+            this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
         }
 
         sprite.referBounds = undefined;
@@ -1508,7 +1525,7 @@ class Animation4_0 extends BaseAnimation{
         }
 
         gl.disable(gl.SCISSOR_TEST);
-        this.requestId = requestAnimationFrame(this.render.bind(this));
+        // this.requestId = requestAnimationFrame(this.render.bind(this));
     };
 
 }
@@ -1796,7 +1813,7 @@ class Animation3_8 extends BaseAnimation {
         if (this.requestId == null) {
             this.running = true;
             if (!this.offscreen) this.canvas.style.visibility = 'visible';
-            this.requestId = requestAnimationFrame(this.render.bind(this));
+            this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
         }
 
         sprite.referBounds = undefined;
@@ -1983,7 +2000,7 @@ class Animation3_8 extends BaseAnimation {
 
         gl.disable(gl.SCISSOR_TEST);
 
-        this.requestId = requestAnimationFrame(this.render.bind(this));
+        // this.requestId = requestAnimationFrame(this.render.bind(this));
     };
 }
 
@@ -2272,7 +2289,7 @@ class Animation3_5_35 extends BaseAnimation {
         if (this.requestId == null) {
             this.running = true;
             if (!this.offscreen) this.canvas.style.visibility = 'visible';
-            this.requestId = requestAnimationFrame(this.render.bind(this));
+            this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
         }
 
         sprite.referBounds = undefined;
@@ -2453,7 +2470,7 @@ class Animation3_5_35 extends BaseAnimation {
 
         gl.disable(gl.SCISSOR_TEST);
 
-        this.requestId = requestAnimationFrame(this.render.bind(this));
+        // this.requestId = requestAnimationFrame(this.render.bind(this));
     };
 }
 
@@ -2742,7 +2759,7 @@ class Animation3_7 extends BaseAnimation {
         if (this.requestId == null) {
             this.running = true;
             if (!this.offscreen) this.canvas.style.visibility = 'visible';
-            this.requestId = requestAnimationFrame(this.render.bind(this));
+            this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
         }
 
         sprite.referBounds = undefined;
@@ -2925,7 +2942,7 @@ class Animation3_7 extends BaseAnimation {
 
         gl.disable(gl.SCISSOR_TEST);
 
-        this.requestId = requestAnimationFrame(this.render.bind(this));
+        // this.requestId = requestAnimationFrame(this.render.bind(this));
     };
 }
 

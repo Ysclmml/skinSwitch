@@ -3394,8 +3394,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 skinSwitch.postMsgApi.changeSkelSkin(player, dstInfo.skin, isPrimary)
                             }
                         } else {
-                            // 执行变身效果
-                            player.stopDynamic(isPrimary, !isPrimary)
+
                             dstInfo.player = dstInfo
                             let huanfuEff = {
                                 name: '../../../皮肤切换/effects/transform/default',
@@ -3421,6 +3420,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             dstInfo.deputy = !isPrimary
 
                             setTimeout(() => {
+                                player.stopDynamic(isPrimary, !isPrimary)
                                 player.playDynamic(dstInfo, !isPrimary);
                             }, (huanfuEff.delay || 0) * 1000)
 
