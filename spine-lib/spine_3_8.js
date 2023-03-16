@@ -2261,9 +2261,9 @@ var spine3_8;
 				_this.toLoad--;
 				_this.loaded++;
 			}, function (state, responseText) {
-				_this.errors[path] = "Couldn't load text " + path + ": status " + status + ", " + responseText;
+				_this.errors[path] = "Couldn't load text " + path + ": status " + state + ", " + responseText;
 				if (error)
-					error(path, "Couldn't load text " + path + ": status " + status + ", " + responseText);
+					error(path, "Couldn't load text " + path + ": status " + state + ", " + responseText);
 				_this.toLoad--;
 				_this.loaded++;
 			});
@@ -2374,9 +2374,9 @@ var spine3_8;
 					_loop_1(atlasPage);
 				}
 			}, function (state, responseText) {
-				_this.errors[path] = "Couldn't load texture atlas " + path + ": status " + status + ", " + responseText;
+				_this.errors[path] = "Couldn't load texture atlas " + path + ": status " + state + ", " + responseText;
 				if (error)
-					error(path, "Couldn't load texture atlas " + path + ": status " + status + ", " + responseText);
+					error(path, "Couldn't load texture atlas " + path + ": status " + state + ", " + responseText);
 				_this.toLoad--;
 				_this.loaded++;
 			});

@@ -54,6 +54,7 @@ if (self.spine3_8 && self.spine) {
 
     spine3_8.webgl.AssetManager.prototype.loadTexture = spine.webgl.AssetManager.prototype.loadTexture
     spine3_8.webgl.AssetManager.prototype.downloadImageBitmap = spine.webgl.AssetManager.prototype.downloadImageBitmap
+    spine3_8.webgl.AssetManager.prototype.downloadText = spine.webgl.AssetManager.prototype.downloadText
 
 }
 
@@ -3381,12 +3382,13 @@ class DecadeAnimationOffscreenProxy {
 }
 
 
+// todo: 这个没有啥用处, 考虑删掉
 class DecadeAnimationProxy {
 
     constructor(animation, lib) {
         if (!animation) return
         animation.render = Animation3_6.prototype.render.bind(animation)
-        this.am = new AnimationManager(lib.assetURL + 'extension/十周年UI/assets/animation/', animation.canvas, 88888, {dpr: 1, animation})
+        this.am = new AnimationManager(lib.assetURL + 'extension/十周年UI/assets/animation/', animation.canvas, 88888, )
         this.cap = animation.cap
         this.nameVersionMap = {}
         this.canvas = animation.canvas

@@ -1750,7 +1750,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     return size;
                 },
                 // 检查圆弧
-               skinSwitchCheckYH: function (player, forces) {
+                skinSwitchCheckYH: function (player, forces) {
                     if (lib.config['extension_十周年UI_newDecadeStyle'] == "on") return;
                     if (!player || get.itemtype(player) != 'player') return;
                     let group = forces || player.group || 'weizhi';
@@ -3398,45 +3398,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             player.stopDynamic(isPrimary, !isPrimary)
                             dstInfo.player = dstInfo
                             let huanfuEff = {
-                                name: '../../../皮肤切换/effects/transform/SF_pifu_eff_juexing',
+                                name: '../../../皮肤切换/effects/transform/default',
                                 scale: 0.7,
                                 speed: 0.6,
                                 delay: 0.3, // 默认设置的延迟是0.2秒
                             }
 
-                            // 预定义一些特效
-                            const changeEffects = {
-                                posui: {
-                                    scale: 0.6,
-                                    speed: 1,
-                                    name: 'posui',
-                                    json: true,
-                                    delay: 0.5, // 控制多少秒后开始播放骨骼动画
-                                },
-                                jinka: {
-                                    scale: 0.6,
-                                    speed: 1,
-                                    name: 'jinka',
-                                    json: true,
-                                    delay: 0.5, // 控制多少秒后开始播放骨骼动画
-                                },
-                                qiancheng: {
-                                    scale: 0.6,
-                                    speed: 1,
-                                    name: 'qiancheng',
-                                    json: true,
-                                    delay: 0.5, // 控制多少秒后开始播放骨骼动画
-                                },
-                                shaohui: {
-                                    scale: 0.6,
-                                    speed: 1,
-                                    x: [0, 0.6],
-                                    y: [0, 0.5],
-                                    name: 'shaohui',
-                                    json: true,
-                                    delay: 0.5, // 控制多少秒后开始播放骨骼动画
-                                },
-                            }
+                            const changeEffects = skinSwitch.effects.transformEffects
 
                             if (huanfuEffect) {
                                 if (typeof huanfuEffect === 'string') {
@@ -4215,6 +4183,47 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         skinSwitch.chukuangWorkerApi.preLoad(player.dynamic.id, player.dynamic.primary.id, playParams)
                     }
                 },
+
+                // 特殊特效预定义的
+                effects: {
+                    transformEffects: {
+                        default: {
+                            scale: 0.7,
+                            speed: 0.6,
+                            delay: 0.3, // 默认设置的延迟是0.2秒
+                        },
+                        posui: {
+                            scale: 0.6,
+                            speed: 1,
+                            name: 'posui',
+                            json: true,
+                            delay: 0.5, // 控制多少秒后开始播放骨骼动画
+                        },
+                        jinka: {
+                            scale: 0.6,
+                            speed: 1,
+                            name: 'jinka',
+                            json: true,
+                            delay: 0.5, // 控制多少秒后开始播放骨骼动画
+                        },
+                        qiancheng: {
+                            scale: 0.6,
+                            speed: 1,
+                            name: 'qiancheng',
+                            json: true,
+                            delay: 0.5, // 控制多少秒后开始播放骨骼动画
+                        },
+                        shaohui: {
+                            scale: 0.6,
+                            speed: 1,
+                            x: [0, 0.6],
+                            y: [0, 0.5],
+                            name: 'shaohui',
+                            json: true,
+                            delay: 0.5, // 控制多少秒后开始播放骨骼动画
+                        },
+                    }
+                },
                 // 这个就是官方spine的demo拿来简单修改修改, 做一个简单的preview预览页面
                 previewDynamic: function () {
 
@@ -4697,7 +4706,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         for (let k in skinInfoMap) {
                             let info = skinInfoMap[k]
                             // 如果十周年文件里面已经有了对应武将和对应皮肤的话, 跳过.
-                            if (info.type && info.altas && info.png) {
+                            if (info.type && info.altas /*&& info.png*/) {
                                 retFiles.push({
                                     path: k + '.' + info.type,
                                     name: k
@@ -5209,6 +5218,322 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
                 },
 
+                // 通过点击角色身上的按钮,打开设置动皮的变身事件
+                openEventBindWindow: function (player, isPrimary) {
+
+                    const eventBindWindow = ui.create.div('.eventBindWindow', document.body)
+                    const eventBindToolBox = ui.create.div('.eventBindToolBox', eventBindWindow)
+                    const toolItems = ui.create.div('.toolItems', eventBindToolBox)
+
+                    const triggerSelectOut = ui.create.div('.triggerSelectOut', toolItems)
+                    const transformBtn = ui.create.div('.transformBtn .eventBindButton .success', toolItems)
+                    const playEffectBtn = ui.create.div('.playEffectBtn .eventBindButton .success', toolItems)
+                    const previewBtn = ui.create.div('.previewBtn .eventBindButton .success', toolItems)
+                    const saveEffect = ui.create.div('.eventBindButton .success', toolItems)
+                    const exit = ui.create.div('.eventBindButton .success', toolItems)
+                    triggerSelectOut.innerHTML = `
+                        <select id="triggerSelect" class="triggerSelect"></select> 
+                    `
+                    const triggerSelect = document.getElementById('triggerSelect')
+                    transformBtn.innerText = '变换'
+                    playEffectBtn.innerText = '播放特效'
+                    previewBtn.innerText = '预览'
+                    saveEffect.innerText = '保存'
+                    exit.innerText = '退出'
+
+                    const transformContent = ui.create.div('.transformContent', eventBindWindow)
+                    const contentHeaders = ui.create.div('.contentHeaders', transformContent)  // 内容区域的选项区域
+                    const contentArea = ui.create.div('.contentArea', transformContent)  // 内容区域真正内容
+
+                    const transTemps = document.createElement('select')
+                    contentHeaders.appendChild(transTemps)
+                    const sameSkel = ui.create.div('.eventBindButton', contentHeaders)
+                    const diffSkel = ui.create.div('.eventBindButton', contentHeaders)
+                    const newTemp = ui.create.div('.eventBindButton', contentHeaders)
+
+
+                    sameSkel.innerText = '同骨骼'
+                    diffSkel.innerText = '不同骨骼'
+                    newTemp.innerText = '新建'
+
+                    // 初始化预览播放器, 共用十周年UI定义的播放器的canvas
+                    if (!skinSwitch.animationManager) {
+                        skinSwitch.animationManager = new AnimationManager(lib.assetURL + 'extension/十周年UI/assets/animation/', dcdAnim.canvas, 988888, {offscreen: false})
+                    }
+                    const am = skinSwitch.animationManager
+
+                    // 一些常量
+                    const dyskins = decadeUI.dynamicSkin
+                    const dyskinKeys = Object.keys(dyskins)
+
+                    // 一些初始化函数
+                    const initOptions = (selectDom, keyValueMap, func) => {
+                        selectDom.options.length = 0
+                        for (let k in keyValueMap) {
+                            let text = keyValueMap[k]
+                            let option = document.createElement('option')
+                            option.setAttribute('value', k)
+                            option.text = text
+                            selectDom.options.add(option)
+                        }
+                        if (func) {
+                            selectDom.onchange = function (e) {
+                                func(this.options[this.selectedIndex].value, e)
+                            }
+                        }
+
+                    }
+
+                    // 初始化同骨骼的内容
+                    const initSameSkelInfo = () => {
+                        contentArea.innerHTML= `
+                            <div class="sameBox">
+                                <div class="sameBoxItem">
+                                    <div class="label">标签</div>
+                                    <select id="sameActionSelect" class="sameActionSelect"></select> 
+                                </div>
+                                <div class="sameBoxItem">
+                                    <div class="label">皮肤</div>
+                                    <select id="sameSkinSelect" class="sameSkinSelect"></select> 
+                                </div>
+                                <div class="sameBoxItem">
+                                    <div class="label">血量</div>
+                                    <select id="sameHpSelect" class="sameHpSelect"></select> 
+                                    <input type="text">
+                                </div>
+                            </div>
+                        `
+                    }
+
+                    let transformTempKV = {
+                        变身1: '变身1',
+                        变身2: '变身2',
+                    }
+                    initOptions(transTemps, transformTempKV)
+                    // 初始化不同骨骼的内容
+                    const initDiffSkelInfo = () => {
+                        contentArea.innerHTML= `
+                            <div class="diffBox">
+                               <div class="dyskinSelect">
+                                   <div class="choosePlayerGroup">
+                                        <div class="playerInputGroup"> 
+                                            <div class="playerText">武将id: </div> 
+                                            <input type="text">
+                                            <div class="eventBindButton searchPlayer" id="searchPlayerIdBtn">搜索</div>
+                                         </div>    
+                                         <div class="playerAlpha" id="firstAlphaSearch">
+                                            <div style="position: relative"></div>
+                                            <div style="position: relative"></div>
+                                        </div>
+                                         <div class="wujiangIdList" id="wujiangIdList"></div>
+                                    </div>
+                                    <div class="chooseSkin">
+                                      <div class="labelText">皮肤名称</div><select id="wujiangSkinSelect"></select></div>
+                                    </div>
+                                <div class="transformEffectContent">
+                                    <div class="transEffectHead">
+                                        变换特效: <select id="transEffectSelect"></select>
+                                    </div>
+                                    <div class="transItemBox">
+                                        <div class="transSettingItem">
+                                            <div class="labelText transSettingItemText">大小</div>
+                                            <input type="number" value="0.5" placeholder="0.5" id="transItemScale">
+                                        </div>
+                                        <div class="transSettingItem">
+                                            <div class="labelText transSettingItemText">延时</div>
+                                            <input type="number" value="0.3" placeholder="0.3" id="transItemDelay">
+                                        </div>
+                                        <div class="transSettingItem">
+                                            <div class="labelText transSettingItemText">速度</div>
+                                            <input type="number" value="1" placeholder="1" id="transItemSpeed">
+                                        </div>
+                                        <div class="transSettingItem">
+                                            <div class="labelText transSettingItemText">角度</div>
+                                            <input type="number" value="0" placeholder="0" id="transItemAngle">
+                                        </div>
+                                          <div class="transSettingItem">
+                                            <div class="labelText transSettingItemText">x</div>
+                                            <input type="number" id="transItemX">
+                                        </div>
+                                          <div class="transSettingItem">
+                                            <div class="labelText transSettingItemText">y</div>
+                                            <input type="number" id="transItemY">
+                                        </div>
+                                    </div>                               
+                                </div>
+                                
+                            </div>
+                        `
+                        const letterDiv = document.getElementById('firstAlphaSearch')
+                        const wujiangIdList = document.getElementById('wujiangIdList')
+                        const wujiangSkinSelect = document.getElementById('wujiangSkinSelect')
+                        const searchPlayerIdBtn = document.getElementById('searchPlayerIdBtn')
+                        const transEffectSelect = document.getElementById('transEffectSelect')
+                        const transItemScale = document.getElementById('transItemScale')
+                        const transItemDelay = document.getElementById('transItemDelay')
+                        const transItemSpeed = document.getElementById('transItemSpeed')
+                        const transItemAngle = document.getElementById('transItemAngle')
+                        const transItemX = document.getElementById('transItemX')
+                        const transItemY = document.getElementById('transItemY')
+
+                        const lettersList  = ['ABCDEFGHIJKLM', 'NOPQRSTUVWXYZ']
+                        const defaultTransformDir = 'extension/皮肤切换/effects/transform'
+
+                        searchPlayerIdBtn.listen(function (e) {
+                            let inputVal = this.previousElementSibling.value
+                            let wujiangIds = searchWuJiangId(inputVal)
+                            initWuJiangIds(wujiangIds)
+                            refreshSelectLetter(null)
+                        })
+
+                        for (let i = 0; i < 2; i++) {
+                            const letterChild = letterDiv.children[i]
+                            const letters = lettersList[i]
+
+                            for (let t of letters) {
+                                let span = document.createElement('span')
+                                span.innerText = t
+                                span.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
+                                    let letter = this.innerText
+                                    let wujiangIds = searchWuJiangId(letter, true)
+                                    refreshSelectLetter(letter)
+                                    // 改变下面的武将id列表
+                                    initWuJiangIds(wujiangIds)
+
+                                })
+                                letterChild.appendChild(span)
+                            }
+                        }
+
+                        const refreshSelectLetter = (selected) => {
+                            for (let i = 0; i < 2; i++) {
+                                const letterChild = letterDiv.children[i]
+                                for (let span of letterChild.children) {
+                                    if (span.innerText === selected) {
+                                        span.classList.add('firstActive')
+                                    } else {
+                                        span.classList.remove('firstActive')
+                                    }
+                                }
+                            }
+                        }
+
+                        const initWuJiangIds = (wujiangIds) => {
+                            for (let i = wujiangIdList.children.length - 1; i >= 0; i--) {
+                                wujiangIdList.children[i].remove()
+                            }
+                            for (let i = 0; i < wujiangIds.length; i++) {
+                                let idDiv = ui.create.div('.wujiangIdItem', wujiangIdList);
+                                idDiv.style.cursor = 'pointer';
+                                idDiv.innerText = wujiangIds[i];
+                                idDiv.listen(function () {
+                                    // 更新当前武将所对应的皮肤.
+                                    let wujiangId = this.innerText
+                                    const skins = decadeUI.dynamicSkin[wujiangId]
+                                    let keys = Object.keys(skins)
+                                    let keysMap = {}
+                                    for (let k of keys) {
+                                        keysMap[k] = k
+                                    }
+                                    initOptions(wujiangSkinSelect, keysMap)
+                                    console.log('wujiangId....', wujiangId)
+                                });
+                            }
+                        }
+
+                        // 获取所有的切换骨骼特效
+                        const initTransformEffect = () => {
+                            let allEffects = {}
+                            for (let k in skinSwitch.effects.transformEffects) {
+                                allEffects[k] = Object.assign({}, skinSwitch.effects.transformEffects[k])
+                            }
+                            pfqhUtils.getFoldsFiles(defaultTransformDir, function (file, path) {
+                                let suffixes = ['.json', '.skel']
+                                for (let suf of suffixes) {
+                                    if (file.endsWith(suf)) {
+                                        return true
+                                    }
+                                }
+                                return false
+                            }, function (folds, files) {
+                                // 获取所有的特效
+                                console.log('files......', files)
+                                for (let f of files) {
+                                    let name = f.substring(0, f.lastIndexOf("."))
+                                    let ext = f.substring(f.lastIndexOf(".")+1)
+                                    if (name in allEffects) {
+
+                                    } else {
+                                        allEffects[name] = {
+                                            scale: 0.5,  // 默认的参数值
+                                            speed: 1,
+                                            delay: 0.3,
+                                            json: ext === 'json'
+                                        }
+                                    }
+                                }
+                                let optionKeys = {}
+                                for (let k in allEffects) {
+                                    optionKeys[k] = k
+                                }
+                                initOptions(transEffectSelect, optionKeys, function (key, e) {
+                                    let eff = allEffects[key]
+                                    if (eff) {
+                                        transItemScale.value = eff.scale || 0.5
+                                        transItemDelay.value = eff.delay || 0.3
+                                        transItemSpeed.value = eff.speed || 1
+                                        transItemAngle.value = eff.angle || 0
+                                        if (eff.x) {
+                                            transItemX.value = eff.x[1]
+                                        } else {
+                                            transItemX.value = null
+                                        }
+                                        if (eff.y) {
+                                            transItemY.value = eff.y[1]
+                                        } else {
+                                            transItemY.value = null
+                                        }
+                                    }
+                                })
+
+                            })
+                        }
+
+                        setTimeout(() => {
+                            initTransformEffect()
+                        }, 2000)
+
+                    }
+
+                    const searchWuJiangId = (str, isFirstLetter = false) => {
+                        if (isFirstLetter) {
+                            return dyskinKeys.filter(v => {
+                                return v[0].toLowerCase() === str.toLowerCase()
+                            })
+                        }
+                        return dyskinKeys.filter(v => {
+                            return v.toLowerCase().indexOf(str.toLowerCase()) !== -1
+                        })
+                    }
+
+                    // const playEffectContent = ui.create.div('.playEffectContent', eventBindWindow)
+
+                    const triggerConstant = {
+                        lowhp: '血量变化',
+                        jisha: '击杀',
+                        juexing: '觉醒技',
+                        xiandingji: '限定技',
+                        zhuanhuanji: '转换技',
+                        damage: '受伤次数',
+                    }
+
+                    initOptions(triggerSelect, triggerConstant)
+
+                    // initSameSkelInfo()
+                    initDiffSkelInfo()
+
+                },
+
                 // 管理滑动事件 status: true  -> 开启
                 allowTouchEvent: function (status) {
                     let thunderForbidTouch = function () {
@@ -5652,7 +5977,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 })
 
                 chukuangBtn.listen(() => {
-                    console.log('调整出框======')
                     currentMode = modes.chukuang
                     showAdjustBar()
                     showShizi(true)
@@ -6183,6 +6507,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     console.log(err)
                 } )
 
+                // 调试, 打开编辑窗口
+                // skinSwitch.openEventBindWindow()
+
                 // 引入js
                 let js = function (path, onload, onerror) {
                     if (!path) return console.error('path');
@@ -6201,6 +6528,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 js(skinSwitch.url + 'component/message.js', () => {
                     window.skinSwitchMessage = new SkinSwitchMessage()
                 })
+
+
 
             })
 
@@ -6397,7 +6726,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 translate:{
                 },
             },
-            intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,攻击附带指示线以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有动静皮切换功能,其中静皮切换需要配合千幻聆音是用. 如果想是用UI更好看的动静切换功能, 请使用千幻雷修版本的动静切换。<br><br>&nbsp;&nbsp;4.现在动皮支持json的骨骼以及可以添加alpha预乘参数<br><br>&nbsp;&nbsp;最后, 感谢无名杀超市群的逝去の記憶,鹰击长空帮忙测试与提出意见',
+            intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,攻击附带指示线以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有动静皮切换功能,其中静皮切换需要配合千幻聆音是用. 如果想是用UI更好看的动静切换功能, 请使用千幻雷修版本的动静切换。<br><br>&nbsp;&nbsp;4.现在动皮支持json的骨骼以及可以添加alpha预乘参数<br><br>&nbsp;&nbsp;最后, 感谢无名杀超市群的逝去の記憶,鹰击长空帮忙测试与提出意见, 感谢默.颜提供的骨骼素材, 感谢鸭佬扒的素材',
             // intro: '<br>&nbsp;&nbsp;<font color=\"green\">&nbsp;&nbsp;初次使用请先备份并导入十周年UI的animation.js和dynamicWorker.js文件<br>&nbsp;&nbsp;1. 当前扩展可以对待机动皮和出框动皮的位置参数的调整.<br>&nbsp;&nbsp;2.可以支持手杀和十周年真动皮的出框攻击,以及十周年动皮的出场动作播放.<br>&nbsp;&nbsp;3.界面内置spine骨骼动画预览.可以把骨骼文件或文件夹塞入扩展目录下的assets即可预览<br></font><br>&nbsp;&nbsp;扩展本身拥有搬自于EngEX扩展的动皮换肤功能,但是并不支持静态皮肤切换, 完整体验需要配合千幻聆音雷修版本,支持动态静态皮肤切换. 本扩展完全兼容千幻雷修并会保持同步更新兼容。<br>&nbsp;&nbsp;注意：由于重新定义了部分函数(logSill)，会和部分扩展的部分内容相互覆盖。<br>&nbsp;&nbsp;<font color=\"red\">每次更新扩展后, 请首先重新覆盖一下原先十周年UI的dynamicWorker文件</font>',
             // intro:"基于EngEX扩展的动态换肤部分魔改.原来使用E佬写的EngEX插件自动出框非常好用,但是非常麻烦的是调整参数不方便, 于是就自己观摩E佬和特效测试扩展大佬的代码编写了调整参数这个简单的扩展\n" +
             //     "基于本人是个后端人员,审美有限(汗),所以换肤部分样式素材基本照搬E佬的EngEX扩展. 第一次写插件,应该有挺多bug,希望见谅.",
@@ -6556,4 +6885,5 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  1. 修复觉醒弹窗bug
  2. 变身与播放特效可视化操作
  3. 支持3.5-4.0版本骨骼播放
+ 4. 修复部分机型不能使用spine3.8的骨骼问题
  */

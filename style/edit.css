@@ -480,3 +480,251 @@
     pointer-events: none;
 }
 
+/*变换骨骼等事件绑定窗口ui start*/
+.eventBindWindow {
+    position: fixed;
+    width: 80%;
+    height: 80%;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 6;
+    /*background-image: url("../images/other/bg.jpg");*/
+    /*background-size: 100% 100%;*/
+}
+
+.eventBindWindow > .eventBindToolBox{
+    display: block;
+    position: relative;
+    width: 100%;
+    height: 20%;
+}
+
+.eventBindWindow > .eventBindToolBox > .toolItems{
+
+}
+
+.eventBindWindow > .eventBindToolBox .toolItems > .triggerSelectOut{
+    position: relative;
+}
+
+.eventBindWindow .eventBindButton{
+    height: 28px;
+    font-size: 14px;
+    padding: 0 14px;
+    margin: 0 8px 14px 0;
+    display: inline-block;
+    color: #606266;
+    box-sizing: border-box;
+    border-radius: 4px;
+    background-color: #fff;
+    border: 1px solid #e4e7ed;
+    cursor: pointer;
+    transition: border .4s,color .4s;
+    outline: none;
+    line-height: 28px;
+    position: relative;
+}
+
+.eventBindWindow .eventBindButton.success {
+    color: #fff;
+    border: 1px solid #67c23a;
+    background-color: #67c23a;
+    transition: all .3s ease;
+}
+
+.eventBindWindow > .eventBindToolBox .toolItems > .transformBtn{
+
+}
+
+.eventBindWindow > .transformContent{
+    position: relative;
+    display: block;
+    margin-top: 10px;
+    width: 100%;
+    height: 80%;
+}
+
+.eventBindWindow .playEffectContent {
+
+}
+
+.eventBindWindow .transformContent .contentHeaders {
+    position: relative;
+    display: block;
+    height: 15%;
+}
+
+.eventBindWindow .contentArea {
+    position: relative;
+    display: block;
+    height: 85%;
+}
+
+.eventBindWindow .contentArea .sameBox{
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+.eventBindWindow .contentArea .sameBox .sameBoxItem{
+    display: block;
+    position: relative;
+}
+
+.eventBindWindow .contentArea .sameBox .sameBoxItem .label {
+    text-align: center;
+    position: relative;
+}
+
+.eventBindWindow .contentArea .diffBox {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect {
+    width: 40%;
+    height: 100%;
+    position: relative;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .choosePlayerGroup {
+    position: relative;
+    display: block;
+    height: 80%;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .choosePlayerGroup .playerInputGroup {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .choosePlayerGroup .playerInputGroup .playerText {
+    width: 70px;
+    font-size: 20px;
+    font-weight: 500;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    position: relative;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .choosePlayerGroup .playerInputGroup input {
+    height: 24px;
+    position: relative;
+    margin-left: 10px;
+    display: inline-block;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .choosePlayerGroup .playerInputGroup .searchPlayer {
+    margin: 0 0 0 10px;
+    width: 60px;
+    height: 10%;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .choosePlayerGroup .playerAlpha {
+    display: block;
+    position: relative;
+    height: 20%;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .choosePlayerGroup .playerAlpha span {
+    font-size: 18px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .choosePlayerGroup .playerAlpha .firstActive {
+    color: rgb(117,186,255);;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .choosePlayerGroup .wujiangIdList {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    align-content: flex-start;
+    overflow-y: auto;
+    height: 60%;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .choosePlayerGroup .wujiangIdList .wujiangIdItem {
+    position: relative;
+    /*background-color: #ecf5ff;*/
+    background-color: rgba(0, 0, 0, 0.3);
+    display: inline-block;
+    height: 28px;
+    padding: 0 10px;
+    line-height: 26px;
+    font-size: 12px;
+    /*color: #409eff;*/
+    color: white;
+    border: 1px solid #d9ecff;
+    border-radius: 4px;
+    box-sizing: border-box;
+    white-space: nowrap;
+    margin-right: 5px;
+    margin-top: 8px;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .chooseSkin {
+    position: relative;
+    display: block;
+    height: 20%;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .chooseSkin div{
+    position: relative;
+}
+
+.eventBindWindow .labelText {
+    font-size: 18px;
+    font-weight: 500;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    position: relative;
+}
+
+.eventBindWindow select {
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    padding: 0;
+    font-size: 18px;
+    height: 28px;
+    margin-right: 5px;
+    background-color: #fff;
+    color: #555;
+    border: 1px solid #aaa;
+    text-shadow: none;
+    border-radius: 4px;
+    transition: box-shadow 0.25s ease;
+}
+
+.eventBindWindow .contentArea .diffBox .dyskinSelect .chooseSkin {
+
+}
+
+.eventBindWindow .transformEffectContent .transEffectHead {
+    position: relative;
+    display: block;
+}
+
+.eventBindWindow .transformEffectContent .transItemBox {
+    position: relative;
+    display: block;
+}
+
+.eventBindWindow .transformEffectContent .transItemBox .transSettingItem{
+    position: relative;
+    display: block;
+}
+
+.eventBindWindow .transformEffectContent .transItemBox .transSettingItem .transSettingItemText{
+    width: 40px;
+}
+/*变换骨骼等事件绑定窗口ui end*/
