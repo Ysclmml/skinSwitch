@@ -4224,7 +4224,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         },
                     }
                 },
-                // 这个就是官方spine的demo拿来简单修改修改, 做一个简单的preview预览页面
                 previewDynamic: function () {
 
                     let background = ui.create.div('.pfqh-preview-background', ui.window);
@@ -4234,6 +4233,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     previewWindow.style = `background: rgb(60,60,60);z-index: 3000;position: fixed; width: 100%; height: 100%;`
                     previewWindow.innerHTML = `
                     <style>
+                        a,a:link,a:visited,a:hover,a:active{
+                            text-decoration: none;
+                            color:inherit;
+                        }
                         #preview-canvas { position: absolute; width: 100% ;height: 100%; }
                         #previewSpineDom span {display: inline-block; margin-left: 20px}
                         input[type='range'] {
@@ -4536,6 +4539,481 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             overflow-y: auto;
                             height: 70vh;
                         }
+                        
+                    /* 模式预览样式开始 */
+                    
+                    .yk-preview {
+                        position: relative;
+                        width: 100%;
+                        height: 100%;
+                    }
+                    
+                    .yk-preview__container div{
+                        position: relative;
+                        display: block;                         
+                    }
+                    
+                    .yk-preview__container {
+                        position: relative;
+                        height: calc(100% - 60px);
+                        transition: width .5s;
+                    }
+                    
+                    .yk-preview__container .yk-preview__closeBtn {
+                        position: absolute;
+                        z-index: 3;
+                        width: 42px;
+                        height: 42px;
+                        text-align: center;
+                        line-height: 42px;
+                        border-radius: 50%;
+                        background-color: #343434;
+                        box-sizing: border-box;
+                        top: 26px;
+                        right: 26px;
+                        color: #d8d8d8;
+                        font-size: 16px;
+                        cursor: pointer;
+                    }
+                    
+                    .yk-preview__closeBtn .icon-close {
+                        font-size: 32px;
+                    }
+                    
+                    .yk-preview__container .yk-preview__list{
+                        width: 100%;
+                        height: 100%;
+                    }
+                    
+                    .yk-preview__container .yk-preview__image {
+                        display: flex;
+                        align-items: center;
+                        width: 100%;
+                        height: 100%;
+                        text-align: center;
+                        position: absolute;
+                    }
+                    
+                    .yk-preview__container .yk-preview__operate {
+                        z-index: 2;
+                        position: relative;
+                    }
+                    
+                    .yk-preview__container .preview-operate {
+                        width: 100%;
+                        height: 60px;
+                        bottom: 0;
+                        background-color: rgba(0,0,0,.6);
+                        color: #c9c9c9;
+                        font-size: 14px;
+                        transition: width .5s;
+                    }
+                    .yk-preview__container .add-photo, .yk-preview__container .preview-operate {
+                        position: fixed;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    }
+                    
+                    .yk-preview__container .preview-operate .image-detail:last-child {
+                        margin-right: 0;
+                    }
+                    .yk-preview__container .preview-operate .image-delete, .yk-preview__container .preview-operate .image-detail {
+                        cursor: pointer;
+                    }
+                    
+                    .yk-preview__container .preview-operate .image-detail {
+                        position: relative;
+                        padding: 0 15px;
+                    }
+                    
+                    .yk-preview__container .preview-operate .image-detail:last-child {
+                        margin-right: 0;
+                    }
+                    .yk-preview__container .preview-operate .image-delete, .preview-operate .image-detail {
+                        cursor: pointer;
+                    }
+                    .yk-preview__container .preview-operate .image-detail {
+                        position: relative;
+                        padding: 0 15px;
+                    }
+                    
+                    .yk-preview__container .preview-operate .iconfont {
+                        font-size: 28px;
+                        width: 40px;
+                        height: 40px;
+                        vertical-align: middle;
+                        display: inline-block;
+                        line-height: 40px;
+                        text-align: center;
+                    }
+                    
+                    .yk-preview__container .preview-operate .image-detail .intro {
+                        border-radius: 6px;
+                        width: 85px;
+                        height: 50px;
+                        top: -65px;
+                        left: 50%;
+                        transform: translate(-50%);
+                        display: flex;
+                        position: absolute;
+                        font-family: PingFangSC-Medium;
+                        font-size: 12px;
+                        color: #fff;
+                        letter-spacing: 0;
+                        text-align: center;
+                        white-space: nowrap;
+                        background: #333;
+                        box-shadow: 0 2px 8px 0 rgb(0 0 0 / 20%);
+                        line-height: 17px;
+                        align-items: center;
+                        justify-content: center;
+                        flex-direction: column;
+                    }
+                    
+                    .yk-preview__container .preview-operate .image-detail .intro img {
+                        position: absolute;
+                        width: 15px;
+                        height: 9px;
+                        bottom: -8px;
+                        left: 50%;
+                        transform: translate(-50%);
+                    }
+                    .yk-preview .yk-preview__info {
+                        position: fixed;
+                        top: 0;
+                        right: 0;
+                        z-index: 3;
+                        /*width: 312px;*/
+                        width: 20%;
+                        height: 100%;
+                        padding: 24px 40px;
+                        margin-bottom: 50px;
+                        box-sizing: border-box;
+                        background: #212221;
+                        color: #fff;
+                        font-weight: 700;
+                        transition: right .5s;
+                    }
+                    
+                    .yk-preview .yk-preview__info div {
+                        display: block;
+                        position: relative;
+                    }
+                    .yk-preview .yk-preview__info .title {
+                        margin-bottom: 50px;
+                        font-size: 16px;
+                    }
+                    
+                    .yk-preview .yk-preview__info .info-item {
+                        display: flex;
+                        flex-direction: row;
+                        margin-bottom: 30px;
+                        font-size: 12px;
+                        align-items: center;
+                    }
+                    
+                    .yk-preview .yk-preview__info .info-item i {
+                        width: 24px;
+                        height: 24px;
+                        font-size: 20px;
+                        font-weight: 400;
+                        color: #999;
+                    }
+                    
+                    .yk-preview .yk-preview__info .info-item .right {
+                        padding-left: 15px;
+                        display: flex;
+                        justify-content: center;
+                        flex-direction: column;
+                    }
+                    .yk-preview .yk-preview__info .info-item .info-name {
+                        white-space: nowrap;
+                    }
+                    .yk-preview .yk-preview__info .info-item .content {
+                        display: flex;
+                        flex-wrap: wrap;
+                        flex: 1;
+                        color: #999;
+                        padding-top: 4px;
+                        font-size: 12px;
+                    }
+                    .yk-preview .yk-preview__info--hidemenu {
+                        position: absolute !important;
+                        top: 50%;
+                        left: 0;
+                        transform: translateY(-50%);
+                        cursor: pointer;
+                        width: 18px;
+                        height: 70px;
+                        line-height: 70px;
+                        text-align: center;
+                        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAABGCAYAAADB0cS2AAAAAXNSR0IArs4c6QAAATZJREFUWAntmMFqhDAQhs240bJsKaW3PXkQj77/c3gSEfQFSildFjTVdP6FLD2UzbrJrZOLYsYvM59zcRJrbZpEWDSOo47ASWie5wNnpUJhxJCs7/vnUBghk2VZDl3XvQ3D8PSoM9W27XFLWeu6Wq3195lXXddnpZTF+5eMtoCISHEFOs/zF1ThKtgM+n0o/DLsFX6DQIAC1jTNPhgE2J5XFJAxZhcFhA8QBYTyBAQLt5c4uu0Hu+JIHPkN+COkj8SR34A/QvpIHPkN+COkj8SR34A/Qvro3zrCn3eUz4/f9yggzACCQTxAmDFICAIBUlXVB6YRm0EQm6apmabpkyHvDFnQZTvXaqBnWXYqisK4Tbd3z/UC4hNOZVl+IcV7XvorhpBJKARgQjkhmVyzc2Ob64MHb34AS8NyNtzdbWEAAAAASUVORK5CYII=);
+                        background-repeat: no-repeat;
+                        background-size: cover;
+                    }
+                    
+                    .yk-preview .actionItemTagOuter {
+                        margin: 10px;
+                        cursor: pointer;
+                    }
+                    
+                    .yk-preview .actionItemTag .actionItemTagIcon {
+                        border-radius: 50%;
+                        text-align: center;
+                        position: relative;
+                        cursor: pointer;
+                        font-size: 20px;
+                        height: 32px;
+                        width: 32px;
+                        line-height: 32px;
+                        vertical-align: middle;
+                        top: -1px;
+                        right: -5px;
+                    }
+                    .yk-preview .actionItemTag {
+                        display: inline-block;
+                        height: 32px;
+                        /* padding: 10px; */
+                        line-height: 30px;
+                        font-size: 16px;
+                        border-radius: 4px;
+                        box-sizing: border-box;
+                        white-space: nowrap;
+                        /* background-color: #ecf5ff; */
+                        /* color: #409eff; */
+                        /* border: 1px solid #d9ecff; */
+                        background-color: #909399;
+                        border-color: #909399;
+                        color: #fff;
+                        padding-right: 10px;
+                    }
+                    
+                    .yk-preview .list-item-box .selectItemTag {
+                        color: #409eff;
+                        border: 1px solid #d9ecff;
+                        background-color: #ecf5ff;
+                    }
+                    
+                    .yk-preview #previewOperateAlpha.alphaSelect {
+                        color: #0bdee9;
+                    }
+                    
+                    .yk-preview .previewModal {
+                        position: fixed;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        width: 100%;
+                        max-height: 60%;
+                        bottom: calc(80px);
+                        z-index: 99999;
+                        transition: all 0s;
+                    }
+                    
+                    .yk-preview .list-container {
+                        width: 40%;
+                        position: relative;
+                        background: #fff;
+                        border: 1px solid #ebeef5;
+                        border-radius: 6px;
+                        box-shadow: 0 2px 12px 0 rgb(0 0 0 / 10%);
+                        z-index: 10000;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: flex-start;
+                        align-items: center;
+                    }
+                    
+                    .yk-preview .closeModal {
+                        width: 20px;
+                        height: 20px;
+                        background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAATJJREFUOBGNkz1uwkAQhbMrI7mkIBJngFMkt0CKLORIdkFBRcEFKNKkoLItWb5FSp+AJlLuEIWeBv/w3rJYtuNdGMkyO7vfm7czRqRpOiuK4s1xnE/f949PD0SSJIu6ridBEOxFHMc7LLZCiB+IvNwTAbypquoDdU54xpKVCUNkDic5HD2bTLTgCswqDMOz4GFChClictKD32E/I6sE+MMmYoI7AiaRsiyX+s603VTmeUbj4LrsOpFS/gKeYm8QHhRgktdB5W/CqFojtebIuNcP2U9wrW0rGI2ly9A0nX8C7YYBXHMqthF3BNqwbtieH5dNpGniAJzBgQrbiJWADb4nIgEvbHO+CfA/4rrua+s6X9yTaNAE75O+c8akKTzP+9MiB3DjPM8ddTaKopEJMuVv8AXIBQzYmzjo8QAAAABJRU5ErkJggg==) no-repeat;
+                        background-size: cover;
+                        position: absolute;
+                        top: 17px;
+                        right: 20px;
+                        cursor: pointer;
+                        z-index: 9;
+                    }
+                    
+                    .yk-preview .list-item-box {
+                       text-shadow: none;
+                    }
+                    
+                    .yk-preview .list-title {
+                        width: 100%;
+                        height: 50px;
+                        line-height: 50px;
+                        font-size: 24px;
+                        text-align: center;
+                        color: #333;
+                          text-shadow: none;
+                    }
+                    
+                    .yk-preview .list-item-box {
+                        display: flex;
+                        flex-wrap: wrap;
+                        justify-content: flex-start;
+                        align-content: flex-start;
+                    }
+                    
+                    .bpx-player-ctrl-volume.bpx-state-show .bpx-player-ctrl-volume-box {
+                        display: block;
+                    }
+                    
+                    .yk-preview .bpx-player-ctrl-volume-box {
+                        /* display: none; */
+                        position: absolute;
+                        bottom: 41px;
+                        left: 50%;
+                        margin-left: -16px;
+                        width: 32px;
+                        height: 100px;
+                        background: rgba(21,21,21,.9);
+                        border-radius: 2px;
+                    }
+                    .yk-preview .bpx-player-ctrl-volume-number {
+                        color: #e5e9ef;
+                        width: 100%;
+                        text-align: center;
+                        font-size: 12px;
+                        height: 28px;
+                        line-height: 28px;
+                        margin-bottom: 2px;
+                    }
+                    .yk-preview .bui-slider {
+                        height: 12px;
+                        cursor: pointer;
+                    }
+                    
+                    .yk-preview .bui {
+                        display: -webkit-box;
+                        display: -ms-flexbox;
+                        display: flex;
+                        vertical-align: middle;
+                        -webkit-box-align: center;
+                        -ms-flex-align: center;
+                        align-items: center;
+                        -webkit-box-pack: start;
+                        -ms-flex-pack: start;
+                        justify-content: flex-start;
+                    }
+                    
+                    .yk-preview .bpx-player-ctrl-volume-progress {
+                        margin: 0 auto;
+                        height: 60px!important;
+                    }
+                    
+                    .yk-preview .bui .bui-area {
+                        width: 100%;
+                        height: 100%;
+                        display: -webkit-box;
+                        display: -ms-flexbox;
+                        display: flex;
+                        vertical-align: middle;
+                        -webkit-box-align: center;
+                        -ms-flex-align: center;
+                        align-items: center;
+                        -webkit-box-pack: start;
+                        -ms-flex-pack: start;
+                        justify-content: flex-start;
+                        line-height: normal;
+                        -webkit-user-select: none;
+                        -moz-user-select: none;
+                        -ms-user-select: none;
+                        user-select: none;
+                    }
+                    
+                    .yk-preview .bpx-player-ctrl-volume-progress .bui-area {
+                        -webkit-box-pack: center!important;
+                        -ms-flex-pack: center!important;
+                        justify-content: center!important;
+                    }
+                    
+                    .yk-preview .bui-slider .bui-track.bui-track-vertical {
+                        height: 100%;
+                        width: 2px;
+                        -webkit-box-align: end;
+                        -ms-flex-align: end;
+                        align-items: flex-end;
+                    }
+                    
+                    
+                    .yk-preview .bui-slider .bui-track {
+                        position: relative;
+                        width: 100%;
+                        height: 2px;
+                        display: -webkit-box;
+                        display: -ms-flexbox;
+                        display: flex;
+                        -webkit-box-align: center;
+                        -ms-flex-align: center;
+                        align-items: center;
+                    }
+                    .yk-preview .bui-slider .bui-track .bui-bar-wrap {
+                        position: absolute;
+                        top: 0;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        border-radius: 1.5px;
+                        overflow: hidden;
+                        background: #e7e7e7;
+                    }
+                    .yk-preview .bui-slider .bui-track.bui-track-vertical .bui-bar-wrap .bui-bar {
+                        position: absolute;
+                        -webkit-transform-origin: 0 100%;
+                        transform-origin: 0 100%;
+                        top: 0;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        background: #00a1d6;
+                    }
+                    
+                    .yk-preview .bui-slider .bui-track .bui-bar-wrap .bui-bar {
+                        position: absolute;
+                        -webkit-transform-origin: 0 0;
+                        transform-origin: 0 0;
+                        top: 0;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        background: #00a1d6;
+                    }
+                    
+                    .yk-preview .bui-slider .bui-track.bui-track-vertical .bui-thumb {
+                        bottom: 0;
+                        top: auto;
+                        position: relative;
+                    }
+                    
+                    .yk-preview .bui-slider .bui-track .bui-thumb {
+                        cursor: pointer;
+                    }
+                    
+                    .bui-slider .bui-track .bui-thumb .bui-thumb-dot, .bui-slider .bui-track .bui-thumb .bui-thumb-dot-special {
+                        -webkit-transition: all .2s;
+                        -o-transition: all .2s;
+                        transition: all .2s;
+                        -webkit-transform: translateZ(0);
+                        transform: translateZ(0);
+                    }
+                    
+                    .yk-preview .bui-slider .bui-track .bui-thumb .bui-thumb-dot {
+                        width: 12px;
+                        height: 12px;
+                        border-radius: 50%;
+                        background-color: #00a1d6;
+                        display: -webkit-box;
+                        display: -ms-flexbox;
+                        display: flex;
+                        vertical-align: middle;
+                        -webkit-box-align: center;
+                        -ms-flex-align: center;
+                        align-items: center;
+                    }
                     
                     </style>
                     <canvas id="preview-canvas"></canvas>
@@ -4552,9 +5030,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                    
                         <span>动画标签:</span><select id="animationList"></select>
                         <span>皮肤:</span><select id="skinList"></select>
-                        <span>大小:<input id="scale" type="number" value="0.5" step="0.05" style="width: 50px"></span>
                      
                         <span>动画时长:<span id="aniTime"></span></span>
+                        <span>大小:<input id="scale" type="number" value="0.5" step="0.05" style="width: 50px"></span>
+
                         <button id="closePreviewWindow" style="margin-left: 20px; margin-top: 10px;" class="closeBtn">关闭预览窗口</button>
                     </div>
                     <!--  模态框       -->
@@ -4574,7 +5053,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                              type="simple">
                                             <div class="nd-detail-filelist__contain">
                                                 <div class="nd-detail-filelist__title">
-                                                    文件夹内容
+                                                    <div>文件夹内容</div>
+                                                    <div style="display: flex; align-items: center">
+                                                        <i class="iconfont icon-paixu1" id="btnSortDirFiles" style="cursor: pointer; margin-right: 15px; font-size: 20px;"></i>
+                                                        <i class="iconfont icon-fanhui" id="btnReturnLastDir" style="cursor: pointer;"></i>
+                                                    </div>
                                                 </div>
                                                 <div class="nd-detail-filelist__name"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABRUExURUxpcf++Hv/ZU//OPv/DL/+9Gv/BI/+4Bf+4Ef/XcP/LOP/TSf/RRP/WTv/JM/+3Ef+9Ff/bhf+5BP/DJf+yDv/imv/kqv/bXP/w0v/fd//calQXUgwAAAAKdFJOUwB///8d3L9enl8sr20gAAACN0lEQVRYw+2Y65abIBRGE1EzVbyNSW18/wctHA6XYw4q9Ee7Vt2AgOHbcVyTOMztdnFxcXFMWf7gKHN190VRKDpFC0iNqB5ZvqpXzJRxHoF7hrAa9/hK9j2oYIA2QA/UqXeyNg5QDBrshhHbUH8xxO+uT7sOJ/tU5a4wh0eK8KmKHTxd28Bfo16pqphep5l6I+R/p8xr668kVghVceH8M5EZYnGhnBKRceGqmaZXPPw2xbO+1xU+8axwe8NfzkIV7xVZdF0AVhi+rWdxIfgmwloE6CkrDCPwJbYUeFgK61icxFcNKyxIxE+WgnllQ0y4+HffzZ8WZtJlCDtz+CzqaaFaVGiWBNEOZZ15zihsT2CFnXk4QStsLohTU3FC+Af8I8JWV1fa1jy8u+hnOUy2vnd5SkeGrJBfHZwDbxe87pfxQvejmMZZYxxdYSoyVyixSvtXFLJ7hWq5xCRNSTozczzHCj8T54kI5d8QCtvZAodDIa7DgRkJaII2hBfaJC7EOE7D076XuIoVBu8oN3kpBLVt4YXBVaUSFSbS5Akb00znSoPn9KCJCN0am7SnGhganC4kKhR2MV0vvEn4M7bFhM3GIZqtgfiPr9BdSAYnrnCX3rQeB/2xsKcHouiBBhpO+phQL9CdjmKqsRkXpkMz57dmfTY1v3k8is26zvN2A6yIbKVqm/tMjFBMp5jpxrWKbsB1dJw/AsC3Lt/YEaK7x1t5r7aLj3ned/fRj1TK3H9wXFxc/F/8BgM0jBZ4nc19AAAAAElFTkSuQmCC"
                                                                                         alt="folder" class="u-file-icon u-file-icon--list"><span id="pfqhCurFold">当前文件夹</span></div>
@@ -4601,7 +5084,143 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             </div>
                         </div>
                     </div>
-                </div>
+                    </div>
+                    <!-- 图集模式预览 -->
+                    <div class="picPreviewBg hidden" id="picPreviewBg" style="width: 100%; height: 100%; left: 0; top: 0">
+                        <div class="yk-preview">
+                            <div class="yk-preview__container" style="width: 100%;" id="previewContainer">
+                                <div class="yk-preview__closeBtn" id="closeImgPreview"><i class="iconfont icon-close"></i>
+                                </div>
+                                <div class="yk-preview__list">
+                                   
+                                </div>
+                                <div class="yk-preview__operate">
+                                    <div class="preview-operate" id="preview-operate" style="width: 100%;">
+                                        <div style="position: absolute; left: 10px"><a href="#unique-id"><i class="iconfont icon-shuliebiao"></i></a></div>
+                                        <div id="previewOperateLeft">
+                                            <div class="image-detail">
+                                                <i class="iconfont icon-left"></i>
+                                            </div>
+                                        </div>
+                                        <div id="previewOperateRight">
+                                            <div class="image-detail">
+                                                <i class="iconfont icon-right"></i>
+                                            </div>
+                                        </div>
+                                           <div id="previewOperateQieHuan">
+                                            <div class="image-detail">
+                                              <i class="iconfont icon-qiehuan"></i>
+                                            </div>
+                                        </div>
+                                        <div id="previewOperateFangda">
+                                            <div class="image-detail">
+                                                <i class="iconfont icon-fangda"></i>
+                                            </div>
+                                        </div>
+                                        <div id="previewOperateSuoxiao">
+                                            <div class="image-detail">
+                                              <i class="iconfont icon-suoxiao"></i>
+                                            </div>
+                                        </div>
+                                        <div id="previewOperateNizhuan">
+                                            <div class="image-detail">
+                                                <i class="iconfont icon-nizhuan"></i>
+                                            </div>
+                                        </div>
+                                        <div id="previewOperateAlpha"> 
+                                            <div class="image-detail">
+                                              <i class="iconfont icon-alpha"></i>
+                                            </div>
+                                        </div>
+                                        <div id="previewOperateDonghuaAction">
+                                            <div class="image-detail">
+                                              <i class="iconfont icon-donghua"></i>
+                                            </div>
+                                        </div>
+                                        <div id="previewOperatePifu">
+                                            <div class="image-detail">
+                                              <i class="iconfont icon-pifu"></i>
+                                            </div>
+                                        </div>
+                                        
+                                         <div id="previewOperateSpeed">
+                                            <div class="image-detail">
+                                              <i class="iconfont icon-sudutiaojie"></i>
+                                            </div>
+                                            <div class="bpx-player-ctrl-volume-box hidden" id="previewOperateSpeedCtrl">
+                                                <div class="bpx-player-ctrl-volume-number">1.0</div>
+                                                <div class="bpx-player-ctrl-volume-progress bui bui-slider" id="dataProgressBar">
+                                                    <div class="bui-area">
+                                                        <div class="bui-track bui-track-vertical" style="">
+                                                            <div class="bui-bar-wrap">
+                                                                <div class="bui-bar bui-bar-normal" role="progressbar" style="transform: scaleY(0.61);"></div>
+                                                            </div>
+                                                            <div class="bui-thumb" style="left: -5px; transform: translateY(-29.28px);">
+                                                                <div class="bui-thumb-dot" style=""></div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div id="previewOperateInfo">
+                                            <div class="image-detail">
+                                              <i class="iconfont icon-info1"></i>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="previewModal hidden" id="previewImgModal">
+                                            <div class="list-container">
+                                                <div class="closeModal" id="closeModal"></div>
+                                                <div style="width: 100%">
+                                                    <div class="list-title" id="previewModalTitle">骨骼标签</div>
+                                                    <div class="list-item-box" id="modalItemsList">具体内容</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                              
+                            </div>
+                            <div class="yk-preview__info hidden" id="previewDetailInfo">
+                                <div class="title">详情</div>
+                                <div class="info-wrap">
+                                    <div class="info-item"><i class="iconfont icon-kanwumingcheng"></i>
+                                        <div class="right">
+                                            <div class="info-name">骨骼名称</div>
+                                            <div class="content">无</div>
+                                        </div>
+                                    </div>
+                                    <div class="info-item"><i class="iconfont icon-banben"></i>
+                                        <div class="right">
+                                            <div class="label">版本</div>
+                                            <div class="content">3.6</div>
+                                        </div>
+                                    </div>
+                                    <div class="info-item"><i class="iconfont icon-shichang"></i>
+                                        <div class="right">
+                                            <div class="label">动画时长</div>
+                                            <div class="content">5</div>
+                                        </div>
+                                    </div>
+                                    <div class="info-item"><i class="iconfont icon-donghua"></i>
+                                        <div class="right">
+                                            <div class="label">动作信息</div>
+                                            <div class="content">标签: idle, 皮肤: default</div>
+                                        </div>
+                                    </div>
+                                    <div class="info-item"><i class="iconfont icon-qitaxinxi"></i>
+                                        <div class="right">
+                                            <div class="label">其他信息</div>
+                                            <div class="content">大小: 0.5, 速度: 1.0</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="yk-preview__info--hidemenu" id="previewInfoHideMenu"><i class="u-icon-next-page"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     `
 
                     let canvas;
@@ -4609,6 +5228,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let currentNode = null
                     let isClosed = false   // 全局信号, 通知关闭, 停止渲染
                     let isUpdate = false
+                    const previewSpineDom = document.getElementById('previewSpineDom')
 
                     canvas = document.getElementById('preview-canvas')
 
@@ -4618,6 +5238,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let px = document.getElementById('posX')
                     let py = document.getElementById('posY')
                     let canvasSize = canvas.getBoundingClientRect()
+
+                    let dpr = Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1)
+                    canvas.width = dpr * skinSwitch.bodySize().width
+                    canvas.height = dpr * skinSwitch.bodySize().height
                     let x = 0.65 * canvasSize.width
                     let y = 0.5 * canvasSize.height
                     let scale = 0.5
@@ -4640,10 +5264,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     let filesEle = document.getElementById('pfqhFilesList')
                     let curFoldEle = document.getElementById('pfqhCurFold')
 
+                    let currentFoldInfo = {
+                        curFiles: [],  // 存储当前目录下的spine文件列表
+                        curFileIndex: 0,  // 当前在文件夹的索引
+                    }
+
                     let clickName = lib.config.touchscreen ? 'touchend' : 'click'
 
                     let lastSelFile = null
-
+                    if (!skinSwitch.nodePreviewedInfo) {
+                        skinSwitch.nodePreviewedInfo = {};  // 保存已经预览的骨骼的相关数据
+                    }
 
                     let contentModal = document.getElementById('unique-id').getElementsByClassName('light-modal-body')[0]
 
@@ -4675,12 +5306,60 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     curFoldEle.innerText = currentPath
 
-                    // 返回上一级事件
-                    document.getElementById('pfqhLastDir').addEventListener(clickName, function (e) {
+                    const returnLastDir = function (e) {
+                        // 获取之前预览的文件夹名字
+                        let lastDirName
+                        if (currentPath) {
+                            lastDirName = currentPath.substring(currentPath.lastIndexOf('/')+1, currentPath.length)
+                        }
                         currentPath = currentPath === '' ? '' : currentPath.substring(0, currentPath.lastIndexOf('/'));
                         game.saveConfig(skinSwitch.configKey.lastPreviewPath, currentPath)
-                        initFoldsInfo()
-                        e.stopPropagation()
+                        initFoldsInfo(lastDirName)
+                    }
+
+                    // 返回上一级事件
+                    document.getElementById('pfqhLastDir').addEventListener(clickName, function (e) {
+                        returnLastDir()
+                    })
+                    // 同返回上一级
+                    document.getElementById('btnReturnLastDir').addEventListener(clickName, function (e) {
+                        returnLastDir()
+                    })
+
+                    let sortDirs = (sorts) => {
+                        let box = document.getElementById('pfqhFoldList')
+                        let arr = []
+                        for (let i = 1; i < box.children.length; i++) {
+                            arr.push(box.children[i])
+                        }
+                        if (sorts == null || sorts === 0) {
+                            arr.sort(function (a, b) {
+                                return a.getAttribute('fold').localeCompare(b.getAttribute('fold'))
+                            })
+
+                        } else if (sorts === 1) {
+                            arr.sort(function (a, b) {
+                                return b.getAttribute('fold').localeCompare(a.getAttribute('fold'))
+                            })
+                        }
+
+                        for (let i = 0; i < arr.length; i++) {
+                            box.appendChild(arr[i])
+                        }
+                    }
+
+                    document.getElementById('btnSortDirFiles').addEventListener(clickName, function (e) {
+                        let sorts = this._sorts
+                        if (sorts == null || sorts === 1) {
+                            this._sorts = 0
+                            this.classList.add('icon-paixu1')
+                            this.classList.remove('icon-daoxu')
+                        } else {
+                            this._sorts = 1
+                            this.classList.remove('icon-paixu1')
+                            this.classList.add('icon-daoxu')
+                        }
+                        sortDirs(this._sorts)
                     })
 
                     // 只过滤出包含完整spine骨骼的文件进行预览
@@ -4717,7 +5396,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         return retFiles
                     }
 
-                    let initFoldsInfo = () => {
+                    let initFoldsInfo = (lastDirName) => {
                         // 获取这个文件夹下的所有合法的skel文件和所有文件夹
                         pfqhUtils.getFoldsFiles(currentPath, function (file, path) {
                             let suffixes = ['.png', '.atlas', '.json', '.skel', '.jpg' ]
@@ -4759,8 +5438,26 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     });
                                     foldsEle.appendChild(div);
                                 }
+                                // 排序一下节点
+                                let _sorts = document.getElementById('btnSortDirFiles')._sorts
+                                if (_sorts != null) {
+                                    sortDirs(_sorts)
+                                }
+                                for (let i = 0; i < foldsEle.children.length; i++) {
+                                    let foldName = foldsEle.children[i].getAttribute('fold')
+                                    if (lastDirName && lastDirName === foldName) {
+                                        foldsEle.children[i].classList.add('previewSelect')
+                                        // 计算滚动条, 滚动到对应的文件夹位置
+                                        if (i > 5) {
+                                            foldsEle.scrollTop = 40 * (i - 5)
+                                        }
+                                    }
+                                }
 
-                                //
+                                // 点击文件夹时 初始化一下当前file
+                                currentFoldInfo.curFiles.length = 0
+                                currentFoldInfo.curFileIndex = -1
+
                                 let retFiles = filterSpineFile(files)
                                 for (let i = 0; i < retFiles.length; i++) {
                                     let div = document.createElement('div')
@@ -4783,9 +5480,18 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         }
                                         lastSelFile = this
                                         this.classList.add('previewSelect')
+
+                                        // 清理图集相关的信息
+                                        currentFoldInfo.curFileIndex = i
+                                        closeModalFunc()
+
                                         // e.stopPropagation()
                                     })
                                     filesEle.appendChild(div)
+
+                                    currentFoldInfo.curFiles.push(div)
+                                    currentFoldInfo.curFileIndex = -1
+                                    closeModalFunc()
                                 }
                             }
                         )
@@ -4834,22 +5540,159 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
 
                             let play = () => {
+                                // 播放下一个之前, 保存上一个的node的数据
+                                if (currentNode) {
+                                    skinSwitch.nodePreviewedInfo[currentNode.name] = {
+                                        x: [0, x / canvas.width],
+                                        y: [0, y / canvas.height],
+                                        scale: currentNode.scale,
+                                        speed: currentNode.speed,
+                                        angle: currentNode.angle,
+                                        action: currentNode.skeleton.state.tracks[0].animation.name,
+                                    }
+                                }
                                 animationManager.stopSpineAll()
-
-                                let node = dy.playSpine({
+                                let playInfo = {
                                     x: [0, 0.65],
                                     y: [0, 0.5],
                                     name: filename,
                                     scale: 0.5,
                                     loop: true
-                                })
-                                window.tempDynamic = dy
+                                }
+                                let isPreviewed = false
+                                if (filename in skinSwitch.nodePreviewedInfo) {
+                                    playInfo = Object.assign(playInfo, skinSwitch.nodePreviewedInfo[filename])
+                                    isPreviewed = true
+                                }
+
+                                let node = dy.playSpine(playInfo)
+
+                                let state = node.skeleton.state;
+                                let activeAnimation = state.tracks[0].animation.name;
+
+                                let checkHasDaiJi = (act) => {
+                                    // 自动寻找待机标签
+                                    const idleAction = ['idle', 'daiji', 'play', 'animation']
+                                    let res = false
+                                    for (let idle of idleAction) {
+                                        if (act.toLowerCase().indexOf(idle) !== -1) {
+                                            res = true
+                                            break
+                                        }
+                                    }
+                                    return res
+                                }
+                                if (!isPreviewed && !checkHasDaiJi(activeAnimation)) {
+                                    for (let i = 1; i < node.skeleton.data.animations.length; i++) {
+                                        let name = node.skeleton.data.animations[i].name
+                                        if (checkHasDaiJi(name)) {
+                                            node.skeleton.state.setAnimation(0, name, true);
+                                            node.skeleton.setToSetupPose();
+                                            // 重新计算bounds
+                                            node.skeleton.updateWorldTransform();
+                                            node.skeleton.bounds = { offset: new dy.spineLib.Vector2(), size: new dy.spineLib.Vector2() };
+                                            node.skeleton.getBounds(node.skeleton.bounds.offset, node.skeleton.bounds.size, []);
+
+                                            break
+                                        }
+                                    }
+                                }
+
+                                // 自动在屏幕中央
+                                let autoFit = (t) => {
+                                    let canvasW = canvas.width
+                                    let canvasH = canvas.height
+                                    let bounds = t.skeleton.bounds
+                                    // 有些没有插槽, 就无法获取size, 返回默认的size
+                                    if (!Number.isFinite(t.skeleton.bounds.offset.x)) {
+                                        initCurrentNodeInfo()
+                                        return
+                                    }
+                                    let centerX = bounds.offset.x + bounds.size.x / 2;
+                                    let centerY = bounds.offset.y + bounds.size.y / 2;
+                                    let scaleX = bounds.size.x / canvasW;
+                                    let scaleY = bounds.size.y / canvasH;
+                                    let tempScale = Math.max(scaleX, scaleY);
+                                    if (tempScale > 1) tempScale = 1 / tempScale;
+                                    tempScale *= canvasH / canvasW
+                                    let width = canvasW / tempScale;
+                                    let height = canvasH / tempScale;
+
+                                    // 手动设置x和y值.
+                                    let xx = -(centerX - width / 2) / width
+                                    let yy = 1-(centerY + height / 2) / height
+                                    t.scale = tempScale * 1.2
+
+                                    if (picPreviewBg.classList.contains('hidden') || window.location.hash === '#unique-id') {
+                                        xx += 0.15
+                                        yy -= 0.07
+                                    }
+
+                                    if (!document.getElementById('previewDetailInfo').classList.contains('hidden')) {
+                                        xx -= 0.1
+                                    }
+
+                                    t.x = [0, xx];
+                                    t.y = [0, yy]
+
+                                    // 修改一些全局变量
+                                    document.getElementById('scale').value = t.scale
+                                    document.getElementById('posX').value = xx
+                                    document.getElementById('posY').value = yy
+                                    scaleSlider.value = t.scale
+                                    // 手动触发change事件
+                                    scaleSlider.dispatchEvent(new CustomEvent('input'))
+                                    x = xx * canvasW
+                                    y = yy * canvasH
+                                    scale = tempScale * 1.2
+                                    initCurrentNodeInfo()
+                                    console.log('scale', 'x', 'y', scale, xx, yy)
+                                }
+
                                 document.getElementById('curVersionText').innerText = `当前版本: ${version}`
                                 // 切换当前的骨骼
                                 activeSkeleton = node.skeleton
                                 currentNode = node
                                 // 更新当前骨骼的标签信息
                                 init()
+                                if (!isPreviewed) {
+                                    autoFit(node)
+                                } else {
+                                    // 修改一些全局变量
+                                    let xx = playInfo.x[1]
+                                    let yy = playInfo.y[1]
+                                    document.getElementById('scale').value = currentNode.scale
+                                    document.getElementById('posX').value = xx
+                                    document.getElementById('posY').value = yy
+                                    scaleSlider.value = currentNode.scale
+                                    // 手动触发change事件
+                                    scaleSlider.dispatchEvent(new CustomEvent('input'))
+                                    x = xx * canvas.width
+                                    y = yy * canvas.height
+                                    scale = playInfo.scale || 1
+                                    initCurrentNodeInfo()
+                                }
+
+                                // 生成缩略图
+                                // setTimeout(() => {
+                                //     canvas.toBlob(function(blob) {
+                                //         let newImg = document.createElement("img")
+                                //         previewWindow.appendChild(newImg);
+                                //         let url = URL.createObjectURL(blob, 'image/webp', 0.01);
+                                //         debugger
+                                //
+                                //         newImg.onload = function() {
+                                //             // no longer need to read the blob so it's revoked
+                                //             URL.revokeObjectURL(url);
+                                //         }
+                                //         newImg.src = url;
+                                //         newImg.style.width = '100px'
+                                //         newImg.style.height = '100px'
+                                //         newImg.style.position = 'absolute'
+                                //         newImg.style.top = '500px'
+                                //
+                                //     });
+                                // }, 2000)
                             }
 
                             if (dy.hasSpine(filename)) {
@@ -4881,7 +5724,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         scaleSlider.type = 'range';
 
                         // scaleSlider = decadeUI.component.slider(0.1, 3, 0.5)
-                        scaleSlider.setAttribute('step', '0.1')
+                        scaleSlider.setAttribute('step', '0.01')
                         let scaleNode = document.getElementById('scale')
                         scaleNode.parentNode.insertBefore(scaleSlider, scaleNode)
                     }
@@ -4973,7 +5816,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         con.appendChild(timeSlider)
 
                         let closePreviewWindow = document.getElementById('closePreviewWindow')
-                        closePreviewWindow.parentNode.insertBefore(con, closePreviewWindow)
+                        closePreviewWindow.parentNode.insertBefore(con, scaleSlider.parentNode)
 
                         timeSlider.addEventListener('input', debounce(function(e){
                             text.innerHTML = `进度: ${Number(timeSlider.value).toFixed(2)}`
@@ -5010,7 +5853,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         con.appendChild(angleSlider)
 
                         let closePreviewWindow = document.getElementById('closePreviewWindow')
-                        closePreviewWindow.parentNode.insertBefore(con, closePreviewWindow)
+                        closePreviewWindow.parentNode.insertBefore(con, scaleSlider.parentNode)
 
                         angleSlider.onchange = function(){
                             text.innerHTML = '角度: ' + angleSlider.value + '°'
@@ -5021,6 +5864,453 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     }
 
+                    /* ********** 图集模式相关的定义 开始 **********/
+                    const picPreviewModeBtn = document.createElement('button')
+                    picPreviewModeBtn.classList.add('closeBtn')
+                    picPreviewModeBtn.style.marginLeft = '10px'
+                    picPreviewModeBtn.innerText = '图集模式'
+                    let closePreviewWindow = document.getElementById('closePreviewWindow')
+                    closePreviewWindow.parentNode.insertBefore(picPreviewModeBtn, closePreviewWindow)
+
+                    const closeImgPreview = document.getElementById('closeImgPreview')
+                    const picPreviewBg = document.getElementById('picPreviewBg')
+
+                    const previewImgModal = document.getElementById('previewImgModal')
+                    const modalItemsList = document.getElementById('modalItemsList')
+                    const modalClose = document.getElementById('closeModal')
+                    // 滑动条
+                    const dataProgressBar = document.getElementById('dataProgressBar')
+                    const previewOperateSpeedCtrl = document.getElementById('previewOperateSpeedCtrl')
+
+                    // 详情
+                    const previewDetailInfo = document.getElementById('previewDetailInfo')
+                    const previewInfoHideMenu = document.getElementById('previewInfoHideMenu')  // 隐藏按钮
+
+                    const operateBtn = {
+                        left: document.getElementById('previewOperateLeft'),
+                        right: document.getElementById('previewOperateRight'),
+                        switchAction: document.getElementById('previewOperateQieHuan'),  // 快速切换标签
+                        scaleAdd: document.getElementById('previewOperateFangda'),
+                        scaleSub: document.getElementById('previewOperateSuoxiao'),
+                        AngleAdd: document.getElementById('previewOperateNizhuan'),
+                        alpha: document.getElementById('previewOperateAlpha'),
+                        action: document.getElementById('previewOperateDonghuaAction'),
+                        skin: document.getElementById('previewOperatePifu'),
+                        speed: document.getElementById('previewOperateSpeed'),
+                        info: document.getElementById('previewOperateInfo'),
+                    }
+
+                    picPreviewModeBtn.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function (){
+                        // 隐藏原来的按钮, 进入图集模式
+                        picPreviewBg.classList.remove('hidden')
+                        previewSpineDom.classList.add('hidden')
+
+                    })
+
+                    closeImgPreview.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function (){
+                        picPreviewBg.classList.add('hidden')
+                        previewSpineDom.classList.remove('hidden')
+                        previewOperateSpeedCtrl.classList.add('hidden')
+                    })
+
+                    operateBtn.left.listen((e) => {
+                        let len = currentFoldInfo.curFiles.length
+                        if (len === 0) return
+                        if (currentFoldInfo.curFileIndex === -1) currentFoldInfo.curFileIndex = 0
+                        else {
+                            if (len === 1) return
+                            if (currentFoldInfo.curFileIndex === 0) currentFoldInfo.curFileIndex = len - 1
+                            else currentFoldInfo.curFileIndex--
+                        }
+                        currentFoldInfo.curFiles[currentFoldInfo.curFileIndex].dispatchEvent(new CustomEvent(lib.config.touchscreen ? 'touchend' : 'click'))
+
+                        // 关闭标签预览页
+                        closeModalFunc()
+                    })
+
+                    operateBtn.right.listen((e) => {
+                        let len = currentFoldInfo.curFiles.length
+                        if (len === 0) return
+                        if (currentFoldInfo.curFileIndex === -1) currentFoldInfo.curFileIndex = 0
+                        else {
+                            if (len === 1) return
+                            if (currentFoldInfo.curFileIndex === len - 1) currentFoldInfo.curFileIndex = 0
+                            else currentFoldInfo.curFileIndex++
+                        }
+                        currentFoldInfo.curFiles[currentFoldInfo.curFileIndex].dispatchEvent(new CustomEvent(lib.config.touchscreen ? 'touchend' : 'click'))
+
+                        closeModalFunc()
+                    })
+
+                    operateBtn.switchAction.listen(() => {
+                        if (currentNode == null) return
+                        closeModalFunc()
+                        // 获取当前角色
+                        let skeleton = activeSkeleton
+                        let state = skeleton.state;
+                        if (skeleton.data.animations.length <= 1) return
+                        let activeAnimation = state.tracks[0].animation.name;
+                        let findIndex = 0
+                        for (let i = 0; i < skeleton.data.animations.length; i++) {
+                            if (activeAnimation === skeleton.data.animations[i].name) {
+                                findIndex = i
+                                break
+                            }
+                        }
+
+                        if (findIndex === skeleton.data.animations.length - 1) {
+                            findIndex = 0
+                        } else {
+                            findIndex++
+                        }
+                        state.setAnimationWith(0, skeleton.data.animations[findIndex], true)
+                        skeleton.setToSetupPose();
+
+                        initCurrentNodeInfo()
+
+                    })
+
+                    skinSwitch.continuousClick(operateBtn.scaleAdd, () => {
+                        if (!currentNode) return
+                        currentNode.scale = (Number(currentNode.scale) || 1) + 0.02
+                        initCurrentNodeInfo(4)
+                    })
+
+                    skinSwitch.continuousClick(operateBtn.scaleSub, () => {
+                        if (!currentNode) return
+                        let s = (Number(currentNode.scale) || 1)  - 0.02
+                        if (s <= 0.01) s = 0.01
+                        currentNode.scale = s
+
+                        initCurrentNodeInfo(4)
+                    })
+
+                    skinSwitch.continuousClick(operateBtn.AngleAdd, () => {
+                        if (!currentNode) return
+                        currentNode.angle = (Number(currentNode.angle) || 0)  + 30
+                    })
+
+                    operateBtn.alpha.listen(function (e){
+                        let premultipliedAlpha = document.getElementById('premultipliedAlpha')
+                        let isSelect = premultipliedAlpha.checked
+                        if (isSelect) {
+                            this.classList.remove('alphaSelect')
+                        } else {
+                            this.classList.add('alphaSelect')
+                        }
+                        currentNode.premultipliedAlpha = !isSelect
+                        premultipliedAlpha.checked = !premultipliedAlpha.checked
+                    })
+
+                    operateBtn.speed.listen(function (e){
+                        previewOperateSpeedCtrl.classList.remove('hidden')
+                        const maxSpeed = 4
+                        if (currentNode) {
+                            let curSpeed = currentNode.speed == null ? 1 : currentNode.speed
+                            if (curSpeed >= maxSpeed) curSpeed = maxSpeed
+                            else if (curSpeed <= 0) curSpeed = 0
+                            let percent = curSpeed / maxSpeed
+                            progressData.progressBarText.innerText = curSpeed.toFixed(1)
+                            progressData.progressBarWrap.style.transform = `scaleY(${percent})`
+                            progressData.progressBarThumb.style.transform = `translateY(-${percent*58}px)`
+                        }
+                        closeModalFunc()
+
+                    })
+
+                    operateBtn.skin.listen(function (e){
+                        if (currentNode == null) return
+                        // 获取当前角色
+                        let skeleton = activeSkeleton
+                        let activeSkin = skeleton.skin.name
+                        let skinsList = []
+                        for (let i = 0; i < skeleton.data.skins.length; i++) {
+                            skinsList.push(skeleton.data.skins[i].name)
+                        }
+                        document.getElementById('previewModalTitle').innerText = '骨骼皮肤'
+                        initItemsModal(skinsList, activeSkin, (skinName) => {
+                            if (!activeSkeleton) return
+                            let skeleton = activeSkeleton
+
+                            skeleton.setSkinByName(skinName);
+                            skeleton.setSlotsToSetupPose();
+
+                            initCurrentNodeInfo()
+                        })
+                    })
+
+                    operateBtn.action.listen((e) => {
+                        if (currentNode == null) return
+                        // 获取当前角色
+                        let skeleton = activeSkeleton
+                        let state = skeleton.state;
+                        let activeAnimation = state.tracks[0].animation.name;
+                        let aniList = []
+                        for (let i = 0; i < skeleton.data.animations.length; i++) {
+                            aniList.push(skeleton.data.animations[i].name)
+                        }
+                        document.getElementById('previewModalTitle').innerText = '骨骼标签'
+
+                        initItemsModal(aniList, activeAnimation, (animationName) => {
+                            if (!activeSkeleton) return
+                            let skeleton = activeSkeleton
+                            let state = skeleton.state;
+                            state.setAnimation(0, animationName, true);
+                            skeleton.setToSetupPose();
+
+                            initCurrentNodeInfo()
+                        })
+                    })
+
+                    operateBtn.info.listen(function (e){
+                        let isHidden = previewDetailInfo.classList.contains('hidden')
+                        if (isHidden) {
+                            previewDetailInfo.classList.remove('hidden')
+                            // 修改样式
+                            document.getElementById('previewContainer').style.width = '80%'
+                            document.getElementById('preview-operate').style.width = '80%'
+                            initCurrentNodeInfo()
+                        } else {
+                            // 关闭.
+                            closeNodeInfo()
+                        }
+
+                    })
+
+                    previewInfoHideMenu.listen(function (e) {
+                        closeNodeInfo()
+                    })
+
+                    // 初始化当前节点的基本信息
+                    const initCurrentNodeInfo = (index) => {
+                        // 获取各个节点
+                        let contentNodes = previewDetailInfo.getElementsByClassName('content')
+                        let currentAni = currentNode.skeleton.state.tracks[0].animation
+                        if (currentNode) {
+                            if (index == null) {
+                                contentNodes[0].innerText = lastSelFile.getAttribute('path')
+                                contentNodes[1].innerText = document.getElementById('curVersionText').innerText
+                                contentNodes[2].innerText = currentAni.duration.toFixed(1)
+                                contentNodes[3].innerText = `标签: ${currentAni.name}, 皮肤: ${currentNode.skeleton.skin.name}`
+                                let speed
+                                if (currentNode.speed == null) {
+                                    speed = 1.0
+                                } else {
+                                    speed = Number(currentNode.speed).toFixed(1)
+                                }
+                                contentNodes[4].innerText = `大小: ${Number(currentNode.scale).toFixed(2)}, 速度: ${speed}`
+                            } else {
+                                switch (index) {
+                                    case 0:
+                                        contentNodes[0].innerText = lastSelFile.getAttribute('path')
+                                        break
+                                    case 1:
+                                        contentNodes[1].innerText = document.getElementById('curVersionText').innerText
+                                        break
+                                    case 2:
+                                        contentNodes[2].innerText = currentAni.duration.toFixed(1)
+                                        break
+                                    case 3:
+                                        contentNodes[3].innerText = `标签: ${currentAni.name}, 皮肤: ${currentNode.skeleton.skin.name}`
+                                        break
+                                    case 4:
+                                        let speed
+                                        if (currentNode.speed == null) {
+                                            speed = 1.0
+                                        } else {
+                                            speed = Number(currentNode.speed).toFixed(1)
+                                        }
+                                        contentNodes[4].innerText = `大小: ${Number(currentNode.scale).toFixed(2)}, 速度: ${speed}`
+                                        break
+                                }
+                            }
+
+                        }
+                    }
+
+                    const closeNodeInfo = () => {
+                        document.getElementById('previewContainer').style.width = '100%'
+                        document.getElementById('preview-operate').style.width = '100%'
+                        previewDetailInfo.classList.add('hidden')
+                    }
+
+                    // 调节速度的滚动条事件
+                    let progressData = {
+                        isDown: false,
+                        posY: 0,
+                        progressBarText: dataProgressBar.previousElementSibling,
+                        progressBarWrap: dataProgressBar.getElementsByClassName('bui-bar-normal')[0],
+                        progressBarThumb: dataProgressBar.getElementsByClassName('bui-thumb')[0],
+
+                    }
+                    dataProgressBar.addEventListener(lib.config.touchscreen ? 'touchstart' : 'mousedown', function (e) {
+                        e.stopPropagation()
+                        progressData.isDown = true
+                        picPreviewBg.isTouching = false
+                        if (e.touches && e.touches.length) {
+                            progressData.posY = e.touches[0].clientY
+                        } else {
+                            progressData.posY = e.clientY
+                        }
+                    })
+                    picPreviewBg.addEventListener(lib.config.touchscreen ? 'touchstart' : 'mousedown', function (e) {
+                        if (!progressData.isDown) {
+                            previewOperateSpeedCtrl.classList.add('hidden')
+                        }
+                    })
+
+                    picPreviewBg.addEventListener(lib.config.touchscreen ? 'touchmove' : 'mousemove', function (e) {
+                        if(!progressData.isDown) return
+                        let deltaY, curY
+                        if (e.touches && e.touches.length) {
+                            curY = e.touches[0].clientY
+                        } else {
+                            curY = e.clientY
+                        }
+                        deltaY = curY - progressData.posY
+                        const maxSpeed = 4
+                        if (currentNode) {
+                            let curSpeed = currentNode.speed == null ? 1 : currentNode.speed
+                            curSpeed = -deltaY / 60 * 4 + curSpeed
+                            if (curSpeed >= maxSpeed) curSpeed = maxSpeed
+                            else if (curSpeed <= 0) curSpeed = 0
+                            let percent = curSpeed / maxSpeed
+                            progressData.progressBarText.innerText = curSpeed.toFixed(1)
+                            progressData.progressBarWrap.style.transform = `scaleY(${percent})`
+                            progressData.progressBarThumb.style.transform = `translateY(-${percent*58}px)`
+
+                            currentNode.speed = curSpeed
+                        }
+                        progressData.posY = curY
+                    })
+
+                    picPreviewBg.addEventListener(lib.config.touchscreen ? 'touchend' : 'mouseup', function (e) {
+                        if (progressData.isDown) {
+                            initCurrentNodeInfo(4)
+                        }
+                        progressData.isDown = false
+
+                    })
+
+                    picPreviewBg.addEventListener(lib.config.touchscreen ? 'touchcancel' : 'mouseleave', function (e) {
+                        progressData.isDown = false
+                    })
+
+                    modalClose.listen(() => {
+                        closeModalFunc()
+                    })
+
+                    // 新的双指放大缩小与滑动功能
+                    function mouseupEvent(event) {
+                        picPreviewBg._mouseup(event);
+                    }
+                    function mousemoveEvent(event) {
+                        if (event) {
+                            if (event.touches && event.touches.length) {
+                                picPreviewBg._mousemove(event.touches[0].clientX, event.touches[0].clientY);
+                            }
+                            else picPreviewBg._mousemove(event.clientX, event.clientY);
+                        }
+                    }
+                    function mousedownEvent(event) {
+                        if (event) {
+                            // 清空之前的数据
+                            if (this.posX) delete this.posX
+                            if (this.posY) delete this.posY
+                            if (event.touches && event.touches.length) picPreviewBg._mousedown(event.touches[0].clientX, event.touches[0].clientY);
+                            else picPreviewBg._mousedown(event.clientX, event.clientY);
+                        }
+                    }
+                    picPreviewBg._mousedown = function (x, y) {
+                        this.posX = x
+                        this.posY = y
+                        this.isTouching = true
+                    }
+                    picPreviewBg._mousemove = function (clientX, clientY) {
+                        if (!this.isTouching) return;
+                        let deltaX = clientX - this.posX;
+                        let deltaY = clientY - this.posY;
+                        x += deltaX
+                        y -= deltaY
+                        let vx =  x / canvas.width
+                        let vy =  y / canvas.height
+
+                        if (currentNode) {
+                            currentNode.x = [0, vx]
+                            currentNode.y = [0, vy]
+                        }
+                        this.posX = clientX
+                        this.posY = clientY
+                    }
+                    picPreviewBg._mouseup = function (event) {
+                        this.isTouching = false;
+                        delete this.posX;
+                        delete this.posY;
+                    }
+                    picPreviewBg.addEventListener('touchstart', mousedownEvent, true);
+                    picPreviewBg.addEventListener('touchend', mouseupEvent, true);
+                    picPreviewBg.addEventListener('touchcancel', mouseupEvent, true);
+                    picPreviewBg.addEventListener('touchmove', mousemoveEvent, true);
+                    picPreviewBg.addEventListener('mousedown', mousedownEvent, true);
+                    picPreviewBg.addEventListener('mouseup', mouseupEvent, true);
+                    picPreviewBg.addEventListener('mouseleave', mouseupEvent, true);
+                    picPreviewBg.addEventListener('mousemove', mousemoveEvent, true);
+
+                    // 监听图集事件的滚轮缩放事件
+                    picPreviewBg.addEventListener('wheel', debounce(function (e) {
+                        let ratio = 0.05;
+                        // 缩小
+
+                        let scale = Number(scaleSlider.value)
+
+                        if (e.deltaY > 0) {
+                            ratio = -0.05;
+                        }
+                        scale = scale + ratio;
+                        // 限制缩放倍数
+                        if (scale < 0.05) scale = 0.05
+                        scaleSlider.value = scale.toString()
+                        // 手动触发change事件
+                        if (currentNode) {
+                            currentNode.scale = scaleSlider.value
+                        }
+                        document.getElementById('scale').value = scaleSlider.value;
+                        initCurrentNodeInfo(4)
+                        // e.preventDefault();
+                    }, 0))
+
+
+                    const closeModalFunc = () => {
+                        previewImgModal.classList.add('hidden')
+                        modalItemsList.innerHTML = '' // 清空数据
+                    }
+
+                    const initItemsModal = (itemList, selectItem, func) => {
+                        previewImgModal.classList.remove('hidden')
+                        modalItemsList.innerHTML = ''
+                        itemList.forEach(item => {
+                            let it = document.createElement('div')
+                            it.classList.add('actionItemTagOuter')
+                            it.innerHTML = `<span class="actionItemTag"><i class="iconfont icon-collect actionItemTagIcon" ></i>${item}</span>`
+                            modalItemsList.appendChild(it)
+                            it.setAttribute('value', item)
+
+                            if (selectItem === item) {
+                                it.getElementsByTagName('span')[0].classList.add('selectItemTag')
+                            }
+                            it.listen(function (e) {
+                                skinSwitch.refreshDomList(
+                                    Array.from(modalItemsList.children).map(v => v.getElementsByTagName('span')[0]),
+                                    'selectItemTag',
+                                    this.getElementsByTagName('span')[0]
+                                )
+                                func(this.getAttribute('value'))
+                            })
+                        })
+                    }
+
+                    /* ******************** 图集模式相关的定义 结束 ********************/
+
                     // 当拖拽的时候pan事件触发 拖拽事件
                     at.on('pan', (e) => {
                         if (e.nativeEvent.touches && e.nativeEvent.touches.length > 1) return
@@ -5030,8 +6320,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let deltaY = e.deltaY
                         x += deltaX
                         y -= deltaY
-                        let vx =  x / canvasSize.width
-                        let vy =  y / canvasSize.height
+                        let vx =  x / canvas.width
+                        let vy =  y / canvas.height
                         px.value = vx.toString()
                         py.value = vy.toString()
                         if (currentNode) {
@@ -5046,7 +6336,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         // scale *= e.scale
                         if (e.scale > 1) scale += 0.1
                         else if (e.scale < 1) scale -= 0.1
-                        scaleSlider.value = scale.toString()
+                        scaleSlider.value = scale
                         // 手动触发change事件
                         scaleSlider.dispatchEvent(new CustomEvent('input'));
                         e.preventDefault();
@@ -5056,16 +6346,21 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         let ratio = 0.05;
                         // 缩小
 
+                        let scale = Number(scaleSlider.value)
+
                         if (e.deltaY > 0) {
                             ratio = -0.05;
                         }
                         scale = scale + ratio;
                         // 限制缩放倍数
-                        if (scale < 0.1) scale = 0.1
+                        if (scale < 0.05) scale = 0.05
                         scaleSlider.value = scale.toString()
                         // 手动触发change事件
-                        scaleSlider.dispatchEvent(new CustomEvent('input'));
-                        e.preventDefault();
+                        if (currentNode) {
+                            currentNode.scale = scaleSlider.value
+                        }
+                        document.getElementById('scale').value = scaleSlider.value;
+                        // e.preventDefault();
                     }, 0))
 
                     document.getElementById('closePreviewWindow').addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function () {
@@ -5092,10 +6387,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             let v = e.srcElement.value
                             if (scaleSlider) {
                                 scaleSlider.value = v
+                                scale = Number(v)
                             }
                             if (currentNode) {
                                 currentNode.scale = Number(v) || 0.5
                             }
+
                         }
                         document.getElementById('posX').oninput = function (e) {
                             let v = e.srcElement.value
@@ -5129,14 +6426,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
 
-                        if (scaleSlider) {
-                            scaleSlider.oninput = function(){
-                                // let v= s1.value / 8;
-                                if (currentNode) {
-                                    currentNode.scale = scaleSlider.value
-                                }
-                                document.getElementById('scale').value = scaleSlider.value;
+                        scaleSlider.oninput = function(){
+                            // let v= s1.value / 8;
+                            if (currentNode) {
+                                currentNode.scale = scaleSlider.value
                             }
+                            document.getElementById('scale').value = scaleSlider.value;
                         }
 
                         let setupAnimationUI = () => {
@@ -5208,8 +6503,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         setupSkinUI()
 
                         // 初始化xy坐标
-                        x = 0.65 * canvasSize.width
-                        y = 0.5 * canvasSize.height
+                        x = 0.65 * canvas.width
+                        y = 0.5 * canvas.height
                         scaleSlider.value = 0.5
                         document.getElementById('scale').value = 0.5
                         currentNode.premultipliedAlpha = document.getElementById('premultipliedAlpha').checked
@@ -5592,6 +6887,42 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             skinSwitch.waitUntil(conditionFunc, execFunc)
                         })
                     }
+                },
+
+                // 刷新设置一组dom只有一个active状态.
+                refreshDomList: function (domList, activeClass, activeItem) {
+                    for (let dom of domList) {
+                        if (dom === activeItem) {
+                            dom.classList.add(activeClass)
+                        } else {
+                            dom.classList.remove(activeClass)
+                        }
+                    }
+                },
+                // 封装长按事件
+                continuousClick: function (dom, func) {
+                    const downEvent =  lib.config.touchscreen ? 'touchstart' : 'mousedown'
+                    const upEvent =  lib.config.touchscreen ? 'touchend' : 'mouseup'
+                    const cancelEvent =  lib.config.touchscreen ? 'touchcancel' : 'mouseleave'
+
+                    let downFunc =  function (e) {
+                        // 改变骨骼的位置
+                        //获取鼠标按下时的时间
+                        let t = setInterval((e) => {func(e, ++downFunc._times)}, 120)
+                        clearInterval(downFunc.timer)
+                        downFunc.timer = t
+                        downFunc._times = 0  // 表示触发了多少次
+                        func(e, ++downFunc._times)  // 立马执行一次
+                    }
+                    let holdUp = function () {
+                        clearInterval(downFunc.timer);
+                        downFunc._times = 0
+                    }
+
+                    dom.addEventListener(downEvent, downFunc)
+                    dom.addEventListener(upEvent, holdUp)
+                    dom.addEventListener(cancelEvent, holdUp)
+
                 }
             }
 
@@ -5629,14 +6960,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
                         lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {
                             lib.init.js(skinSwitch.url, 'animations', function () {
-                                if (lib.config[skinSwitch.configKey.replaceDecadeAni]) {
-                                    skinSwitch.waitUntil(() => {
-                                        return window.dcdAnim
-                                    }, () => {
-                                        window.spineAnim = new DecadeAnimationProxy(window.dcdAnim, lib)
-                                    })
-
-                                }
+                                // if (lib.config[skinSwitch.configKey.replaceDecadeAni]) {
+                                //     skinSwitch.waitUntil(() => {
+                                //         return window.dcdAnim
+                                //     }, () => {
+                                //         window.spineAnim = new DecadeAnimationProxy(window.dcdAnim, lib)
+                                //     })
+                                //
+                                // }
                             })
 
                             lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_5_35', function (){})

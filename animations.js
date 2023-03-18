@@ -1,6 +1,6 @@
 'use strict';
 
-const fps = 60
+const fps = null
 
 if (self.spine_4 && self.spine) {
     // 给4.0的mvp添加新的方法.
@@ -511,9 +511,9 @@ class BaseAnimation {
     }
 
     newFpsRender(time) {
-        this.requestId = requestAnimationFrame(this.newFpsRender.bind(this))
-        if (time - this._lastTime < 1000 / this._fps) {
+        if (this._fps && time - this._lastTime < 1000 / this._fps) {
             // console.log('返回')
+            this.requestId = requestAnimationFrame(this.newFpsRender.bind(this))
             return
         }
         // let realFPS = 1000 / (time - this._lastTime)
@@ -622,7 +622,7 @@ class Animation3_6 extends BaseAnimation {
         super()
         if (!self.spine) return console.error('spine 未定义.');
 
-        let config = { alpha: true };
+        let config = { alpha: true, preserveDrawingBuffer: true };  // 可能需要保留缓冲区
         let gl = canvas.getContext('webgl2', config);
         if (gl == null) {
             gl = canvas.getContext('webgl', config) || canvas.getContext('experimental-webgl', config);
@@ -651,6 +651,7 @@ class Animation3_6 extends BaseAnimation {
         this.canvas = canvas;
         this.dpr = dpr
         this.dprAdaptive = true
+        this.spineLib = spine
     };
 
     createTextureRegion(image, name) {
@@ -1082,7 +1083,7 @@ class Animation3_6 extends BaseAnimation {
 
         gl.disable(gl.SCISSOR_TEST);
 
-        // this.requestId = requestAnimationFrame(this.render.bind(this));
+        this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
     };
 }
 
@@ -1121,7 +1122,7 @@ class Animation4_0 extends BaseAnimation{
         this.BUILT_ID = Ani4StartId;  // 4.0的id从40000开始
         this.dpr = dpr
         this.dprAdaptive = true
-
+        this.spineLib = spine_4
     }
 
     // 不知道下面这个函数的作用, 保留, 出错再修改...
@@ -1525,7 +1526,7 @@ class Animation4_0 extends BaseAnimation{
         }
 
         gl.disable(gl.SCISSOR_TEST);
-        // this.requestId = requestAnimationFrame(this.render.bind(this));
+        this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
     };
 
 }
@@ -1564,6 +1565,7 @@ class Animation3_8 extends BaseAnimation {
         this.canvas = canvas;
         this.dpr = dpr
         this.dprAdaptive = true
+        this.spineLib = spine3_8
     };
 
     createTextureRegion(image, name) {
@@ -2000,7 +2002,7 @@ class Animation3_8 extends BaseAnimation {
 
         gl.disable(gl.SCISSOR_TEST);
 
-        // this.requestId = requestAnimationFrame(this.render.bind(this));
+        this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
     };
 }
 
@@ -2470,7 +2472,7 @@ class Animation3_5_35 extends BaseAnimation {
 
         gl.disable(gl.SCISSOR_TEST);
 
-        // this.requestId = requestAnimationFrame(this.render.bind(this));
+        this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
     };
 }
 
@@ -2942,7 +2944,7 @@ class Animation3_7 extends BaseAnimation {
 
         gl.disable(gl.SCISSOR_TEST);
 
-        // this.requestId = requestAnimationFrame(this.render.bind(this));
+        this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
     };
 }
 
