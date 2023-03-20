@@ -1,5 +1,3 @@
-// 将本文件改名为l2dSettings.js, 即可配置l2d
-
 window.pfqhLive2dSettings = {
 
     // 默认的配置,每个模型可以覆盖配置
@@ -17,6 +15,7 @@ window.pfqhLive2dSettings = {
         // x: xxx  // x坐标
         // y: yyy  // y坐标 可以重新定义
         // idle: 'xxx'  // 手动指定待机播放的动作组
+        // idleKeys: []  // ['idle', 'home', 'stand', 'loop'] 默认包含这些关键字的会当作idle分组用作待机, 比如碧蓝航线的待机分组就是非标准的
     },
     models: {
         // 对于每个模型都可以覆盖上面配置, 基础信息皆可覆盖
@@ -32,10 +31,6 @@ window.pfqhLive2dSettings = {
             left: "120px",
             bottom: "180px",
         },
-        pinghai_6: {
-            role: 'pinghai_6/pinghai_6.model3.json',
-            name: 'pinghai_6',  // 显示在选项上的, 默认为key
-        },
         kubo_2: {
             role: 'kubo_2/kubo_2.model3.json',
             name: 'kubo_2',  // 显示在选项上的, 默认为key
@@ -47,10 +42,7 @@ window.pfqhLive2dSettings = {
         dafeng_3: {
             role: 'dafeng_3/dafeng_3.model3.json',
             name: 'dafeng_3',  //
-        },
-        daofeng_5: {
-            role: 'daofeng_5/daofeng_5.model3.json',
-            name: 'daofeng_5',  //
+            idleKeys: ['idle']
         },
     }
 }

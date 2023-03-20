@@ -1,6 +1,7 @@
 'use strict';
 importScripts('spine.js', './spine-lib/spine_4_0_64.js', './spine-lib/spine_3_8.js',
-	'./spine-lib/spine_3_5_35.js', './spine-lib/spine_3_7.js', 'animation.js', 'settings.js', 'animations.js' );
+	'./spine-lib/spine_3_5_35.js', './spine-lib/spine_3_7.js', './spine-lib/spine_4_1.js',
+	'animation.js', 'settings.js', 'animations.js' );
 
 console.log('new worker...')
 
@@ -108,6 +109,10 @@ function playSkin(am, data) {
 	// 兼容雷修千幻
 	// 获取保存的参数, 如果存在保存的参数, 则使用保存的参数进行播放.
 	if (sprite.qhlxBigAvatar) {
+		if (sprite.isDecade) {
+			sprite.player.qhlx = sprite.player.qhlx && sprite.player.qhlx.decade // 如果当前是十周年样式, 用十周年的配置覆盖.
+		}
+
 		if (sprite.player.qhlx) {
 			if (sprite.player.qhlx.gongji) {
 				initPlayerGongJi()
@@ -115,19 +120,19 @@ function playSkin(am, data) {
 			} else {
 				// 使用雷修默认的出框参数
 				initPlayerGongJi()
-				if (player.isMobile) {
-					player.gongji.x = player.divPos.x + player.divPos.width / 2;
-					player.gongji.y = player.divPos.y + player.divPos.height / 2;
-					if (player.gongji.name === player.name) {
-						player.gongji.scale = player.scale * 0.6
-					} else {
-						player.gongji.scale = player.largeFactor * (player.gongji.scale || 1) * 0.55
-					}
-				} else {
-					player.gongji.x = player.divPos.x + player.divPos.width / 2;
-					player.gongji.y = player.divPos.y + player.divPos.height / 2;
-					player.gongji.scale = player.scale * 0.55
-				}
+				// if (player.isMobile) {
+				// 	player.gongji.x = player.divPos.x + player.divPos.width / 2;
+				// 	player.gongji.y = player.divPos.y + player.divPos.height / 2;
+				// 	if (player.gongji.name === player.name) {
+				// 		player.gongji.scale = player.scale * 0.6
+				// 	} else {
+				// 		player.gongji.scale = player.largeFactor * (player.gongji.scale || 1) * 0.55
+				// 	}
+				// } else {
+				// 	player.gongji.x = player.divPos.x + player.divPos.width / 2;
+				// 	player.gongji.y = player.divPos.y + player.divPos.height / 2;
+				// 	player.gongji.scale = player.scale * 0.55
+				// }
 			}
 			if (sprite.player.qhlx.daiji) {
 				sprite = Object.assign(sprite, sprite.player.qhlx.daiji)
@@ -139,22 +144,22 @@ function playSkin(am, data) {
 			sprite.player.scale = sprite.scale
 			initPlayerGongJi()
 			// fix 大屏预览参数使用雷修默认的出框偏移
-			if (player.isMobile) {
-				player.gongji.x = player.divPos.x + player.divPos.width / 2;
-				player.gongji.y = player.divPos.y + player.divPos.height / 2;
-				if (player.gongji.name === player.name) {
-					player.gongji.scale = player.scale * 0.6
-				} else {
-					player.gongji.scale = player.largeFactor * (player.gongji.scale || 1) * 0.55
-				}
-			} else {
-				player.gongji.x = player.divPos.x + player.divPos.width / 2;
-				player.gongji.y = player.divPos.y + player.divPos.height / 2;
-				player.gongji.scale = player.scale * 0.55
-			}
+			// if (player.isMobile) {
+			// 	player.gongji.x = player.divPos.x + player.divPos.width / 2;
+			// 	player.gongji.y = player.divPos.y + player.divPos.height / 2;
+			// 	if (player.gongji.name === player.name) {
+			// 		player.gongji.scale = player.scale * 0.6
+			// 	} else {
+			// 		player.gongji.scale = player.largeFactor * (player.gongji.scale || 1) * 0.55
+			// 	}
+			// } else {
+			// 	player.gongji.x = player.divPos.x + player.divPos.width / 2;
+			// 	player.gongji.y = player.divPos.y + player.divPos.height / 2;
+			// 	player.gongji.scale = player.scale * 0.55
+			// }
 		}
 		if (sprite.player.beijing) {
-			sprite.player.beijing.scale = (sprite.player.beijing.scale || 1) * sprite.player.largeFactor
+			// sprite.player.beijing.scale = (sprite.player.beijing.scale || 1) * sprite.player.largeFactor
 			if (sprite.player.qhlx && sprite.player.qhlx.beijing) {
 				sprite.player.beijing = Object.assign(sprite.player.beijing, sprite.player.qhlx.beijing)
 			}

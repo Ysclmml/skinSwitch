@@ -11,6 +11,7 @@
     flex-direction: column;
     align-items: center;
     z-index: 3001;
+    text-shadow: none;
 }
 
 /*消除全局的影响*/
@@ -26,7 +27,6 @@
     padding: 0 10px;
     height: 40px;
     box-shadow: 0 0 10px 0 #ccc;
-    font-size: 14px;
     border-radius: 3px;
 
     /* 让消息内部的三个元素（图标、文本、关闭按钮）可以垂直水平居中 */
@@ -35,11 +35,15 @@
 
     /* 增加一个过渡属性，当message元素的高度和margin变化时候将会有一个过渡动画 */
     transition: height 0.2s ease-in-out, margin 0.2s ease-in-out;
+    font-weight: 600;
+    font-size: 16px;
 }
 
 #message-container .message .text {
     color: #333;
     padding: 0 20px 0 5px;
+
+
 }
 #message-container .message .close {
     cursor: pointer;

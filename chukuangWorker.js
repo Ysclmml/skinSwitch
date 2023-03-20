@@ -1,6 +1,6 @@
 'use strict';
 importScripts('spine.js', './spine-lib/spine_4_0_64.js', './spine-lib/spine_3_8.js',
-    './spine-lib/spine_3_5_35.js', './spine-lib/spine_3_7.js', 'animation.js', 'settings.js', 'animations.js' );
+    './spine-lib/spine_3_5_35.js', './spine-lib/spine_3_7.js', './spine-lib/spine_4_1.js', 'animation.js', 'settings.js', 'animations.js' );
 let window = self;
 let devicePixelRatio = 1;
 let documentZoom = 1;
@@ -255,27 +255,40 @@ class PlayerAnimation {
                             let getStartXY = () => {
                                 let x1, y1
 
-                                if (playNode && (dy.start !== 'attack')) {
-                                    if (Array.isArray(playNode.x)) {
-                                        x1 = attackArgs.bodySize.bodyWidth * playNode.x[1] + playNode.x[0]
+                                if (playNode) {
+                                    if (dy.startPos === 'player') {
+                                        return {
+                                            x1: attackArgs.attack.x,
+                                            y1: attackArgs.attack.y + attackArgs.attack.height / 2
+                                        }
+                                    } else if (typeof dy.startPos === 'object') {
+                                        return {
+                                            x1: attackArgs.bodySize.bodyWidth * dy.startPos.x[1] + dy.startPos.x[0],
+                                            y1: attackArgs.bodySize.bodyHeight - attackArgs.bodySize.bodyHeight * dy.startPos.y[1] - dy.startPos.y[0],
+                                        }
                                     } else {
-                                        x1 = playNode.x
+                                        if (Array.isArray(playNode.x)) {
+                                            x1 = attackArgs.bodySize.bodyWidth * playNode.x[1] + playNode.x[0];
+                                        } else {
+                                            x1 = playNode.x;
+                                        }
+
+                                        if (Array.isArray(playNode.y)) {
+                                            y1 = attackArgs.bodySize.bodyHeight - attackArgs.bodySize.bodyHeight * playNode.y[1] - playNode.y[0]
+                                        } else {
+                                            y1 = attackArgs.bodySize.bodyHeight - playNode.y
+                                        }
+                                        if (!data.direction.isLeft) {
+                                            x1 -= 50
+                                        } else {
+                                            x1 += 50
+                                        }
+                                        return {
+                                            x1:  x1,
+                                            y1:  y1
+                                        }
                                     }
 
-                                    if (Array.isArray(playNode.y)) {
-                                        y1 = attackArgs.bodySize.bodyHeight - attackArgs.bodySize.bodyHeight * playNode.y[1] - playNode.y[0]
-                                    } else {
-                                        y1 = attackArgs.bodySize.bodyHeight - playNode.y
-                                    }
-                                    if (!data.direction.isLeft) {
-                                        x1 -= 50
-                                    } else {
-                                        x1 += 50
-                                    }
-                                    return {
-                                        x1:  x1,
-                                        y1:  y1
-                                    }
 
                                 } else {
                                     // 起始点从攻击方的卡牌位置开始
@@ -502,7 +515,6 @@ class PlayerAnimation {
                 }
             } else {
                 initPlayerGongJi()
-                console.log('player.divPos --> ', player.divPos)
                 // fix 大屏预览参数使用雷修默认的出框偏移
                 if (playerAnimation.isMobile) {
                     if (!player.gongji) {
@@ -729,6 +741,10 @@ function setPos(apnode, data) {
                 return setShiZhouNianGongJiPos(apnode, data)
             }
         } else if (data.action === 'chuchang') {
+            // 如果设置了出场的位置, 那么不使用默认的位置
+            if (apnode.player.chuchangAction.x && apnode.player.chuchangAction.y) {
+                return
+            }
             apnode.x = data.player.x + data.player.width / 4
             apnode.y = data.player.y + data.player.height * 0.8
             return setShiZhouNianGongJiPos(apnode, data)

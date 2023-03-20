@@ -171,3 +171,7 @@
 .icon-daoxu:before {
   content: "\e65a";
 }
+
+.icon-viscan-marquee:before {
+  content: "\e632";
+}

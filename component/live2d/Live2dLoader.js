@@ -22,31 +22,6 @@ var CustomLive2dLoader = class Live2dLoader {
         this.load(config);
     }
 
-    getLive2dIndex(models) {
-        let index = -1;
-
-        document.cookie.split(";").forEach((cookie) => {
-            // test=test
-            let cookieMap = cookie.split("=");
-            // live2d=1
-            // 筛选出 live2d-cookie, 并作越界判断
-            if (
-                cookieMap[0].trim() == "live2d" &&
-                cookieMap[1] >= 0 &&
-                cookieMap[1] < models.length
-            )
-                index = cookieMap[1];
-        });
-
-        if (index === -1) {
-            index = Math.floor(Math.random() * models.length);
-            document.cookie =
-                `live2d=${index}; expires=` +
-                new Date(Date.now() + 86400e3).toUTCString();
-        }
-        return index;
-    }
-
     isMobile() {
         return (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|OperaMini/i.test(navigator.userAgent));
     }
@@ -447,14 +422,31 @@ var CustomLive2dLoader = class Live2dLoader {
             file: expression.file || expression.File || '',
         })) || [];
 
-        // 需要指定一个默认的待机group,  默认是idle或者Idle, 但是有些没有设置这些, 所以需要更改
-
+        // 需要指定一个默认的待机group,  默认是idle或者Idle, 但是有些没有设置这些, 所以需要手动添加自定义的待机group
         if ('idle' in definitions) {
             this.model.internalModel.motionManager.groups.idle = 'idle';
-        } else if ('Idle' in motionGroups) {
+        } else if ('Idle' in definitions) {
             this.model.internalModel.motionManager.groups.idle = 'Idle';
         } else {
-            this.model.internalModel.motionManager.groups.idle = config.idle || Object.keys(definitions)[0]
+            // 不包含idle分组的非标准live2d文件, 自动寻找带有某些前缀的作为待机分组
+            let newIdleGroup = []
+            let idleKeys = config.idleKeys || ['idle', 'home', 'stand', 'loop']
+            for (let k in definitions) {
+                for (let file of definitions[k]) {
+                    for (let idleKey of idleKeys) {
+                        if (file.File.toLowerCase().includes(idleKey)) {
+                            newIdleGroup.push(file)
+                        }
+                    }
+                }
+            }
+            if (newIdleGroup.length) {
+                definitions['customIdleGroup'] = newIdleGroup
+                this.model.internalModel.motionManager.groups.idle = 'customIdleGroup'
+                this.model.internalModel.motionManager.motionGroups['customIdleGroup'] = []
+            } else {
+                this.model.internalModel.motionManager.groups.idle = config.idle || Object.keys(definitions)[0]
+            }
         }
 
         this.modelArgs = {

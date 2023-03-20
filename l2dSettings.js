@@ -15,6 +15,7 @@ window.pfqhLive2dSettings = {
         // x: xxx  // x坐标
         // y: yyy  // y坐标 可以重新定义
         // idle: 'xxx'  // 手动指定待机播放的动作组
+        // idleKeys: []  // ['idle', 'home', 'stand', 'loop'] 默认包含这些关键字的会当作idle分组用作待机, 比如碧蓝航线的待机分组就是非标准的
     },
     models: {
         // 对于每个模型都可以覆盖上面配置, 基础信息皆可覆盖
@@ -41,11 +42,7 @@ window.pfqhLive2dSettings = {
         dafeng_3: {
             role: 'dafeng_3/dafeng_3.model3.json',
             name: 'dafeng_3',  //
-            width: 1,  // 可以覆盖默认的宽度'
-            height: 1,
-            left: "0px",
-            bottom: "00px",
-
+            idleKeys: ['idle']
         },
     }
 }

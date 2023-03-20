@@ -596,7 +596,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     document.body.appendChild(div);
                                     player.storage._hf++;
                                 }
-                            };
+                            }
+
                             if (lib.config[skinSwitch.configKey.clickPlayerDynamic]) {
                                 lib.skill._initPlayerChangeSkin = {
                                     trigger: {
@@ -782,8 +783,36 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         }
                                     }
 
-                                    skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu')
+                                    // 过滤技能白名单, 只在单将模式下生效
+                                    if (!player.doubleAvatar) {
+                                        let teshu = player.dynamic.primary.player.teshu
+                                        if (typeof teshu === 'object') {
+                                            if (teshu.whitelist) {
+                                                if (teshu.whitelist.includes(triggerSkill)) {
+                                                    skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu');
+                                                }
+                                            } else {
+                                                skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu');
+                                            }
+                                        } else {
+                                            skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu');
+                                        }
+                                    } else {
+                                        skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu');
+                                    }
                                 }
+                            }
+
+                            lib.skill._testxxx = {
+                                unique: true,
+                                forced: true,
+                                trigger: {
+                                    player: 'phaseAfter'
+                                },
+                                content: function() {
+                                    player.$die();
+                                    player.reinit('shen_ganning', 're_liru');
+                                },
                             }
 
                             // lib.skill._changeSkelSkin = {
@@ -804,22 +833,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             //     }
                             // }
 
-                            lib.skill._checkDynamicShenYh = {
-                                trigger: {
-                                    global: 'gameStart'
-                                },
-                                forced: true,
-                                filter: function (event, player) {
-                                    return !player.doubleAvatar && player.dynamic && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")  && !player.classList.contains('unseen') && !player.classList.contains('unseen2');
-                                },
-                                content: function () {
-                                    var isYh = player.getElementsByClassName("skinYh");
-                                    if (Object.keys(isYh).length <= 0) {
-                                        var yh = skinSwitch.createYH(player.group);
-                                        player.appendChild(yh);
-                                    }
-                                }
-                            };
+                            // lib.skill._checkDynamicShenYh = {
+                            //     trigger: {
+                            //         global: 'gameStart'
+                            //     },
+                            //     forced: true,
+                            //     filter: function (event, player) {
+                            //         return !player.doubleAvatar && player.dynamic && !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")  && !player.classList.contains('unseen') && !player.classList.contains('unseen2');
+                            //     },
+                            //     content: function () {
+                            //         var isYh = player.getElementsByClassName("skinYh");
+                            //         if (Object.keys(isYh).length <= 0) {
+                            //             var yh = skinSwitch.createYH(player.group);
+                            //             player.appendChild(yh);
+                            //         }
+                            //     }
+                            // };
 
                             // 检查游戏开始, 检查自己的是否是十周年真动皮, 播放出场动画, 暂时不考虑双将模式
                             lib.skill._checkDcdChuChang = {
@@ -855,21 +884,18 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
 
                             // 游戏开始时检查所有角色的圆弧组别是否正确
-                            // lib.skill._fix_yh = {
-                            //     trigger: {
-                            //         global: 'gameStart'
-                            //     },
-                            //     forced: true,
-                            //     filter: function (event, player) {
-                            //         return !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
-                            //     },
-                            //     content: function () {
-                            //         for (let p of game.players) {
-                            //             skinSwitch.skinSwitchCheckYH(p)
-                            //         }
-                            //
-                            //     }
-                            // }
+                            lib.skill._fix_yh = {
+                                trigger: {
+                                    global: 'gameStart'
+                                },
+                                forced: true,
+                                filter: function (event, player) {
+                                    return !(lib.config[skinSwitch.decadeKey.newDecadeStyle] === "on")
+                                },
+                                content: function () {
+                                    skinSwitch.skinSwitchCheckYH(player)
+                                }
+                            }
 
                             // 不知道怎么合并, 在回合开始和回合结束, 检测Player的group变化
                             lib.skill._fix_phase_yh = {
@@ -1649,10 +1675,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (!lib.config['extension_千幻聆音_enable'] || lib.config['extension_千幻聆音_qhly_decadeCloseDynamic'] || !(lib.config.qhly_currentViewSkin === 'decade' || lib.config.qhly_currentViewSkin === 'shousha')) {
                             retryOverride(20)
                         }
-                        // groupChange(lib.element.player)
-                        // for (let i = 0; i < game.players.length; i++) {
-                        //     groupChange(game.players[i])
-                        // }
                     }
 
                     // ======== 替换结束 ========
@@ -1709,7 +1731,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'useDynamic': 'extension_皮肤切换_useDynamic',  // 使用皮肤切换携带的出框功能
                     'isAttackFlipX': 'extension_皮肤切换_isAttackFlipX',  //
                     'cugDynamicBg': 'extension_皮肤切换_cugDynamicBg',  // 是否裁剪动态背景
-                    'replaceDecadeAni': 'extension_皮肤切换_replaceDecadeAni',  // 是否替换十周年ui的动画播放器对象
+                    // 'replaceDecadeAni': 'extension_皮肤切换_replaceDecadeAni',  // 是否替换十周年ui的动画播放器对象
                     // 'adjustQhlyFact': 'extension_皮肤切换_adjustQhlyFact',  // 调整预览参数
                     // 'modifyQhlxPreview': 'extension_皮肤切换_modifyQhlxPreview',  // 调整预览大小
                     'l2dEnable': 'extension_皮肤切换_l2dEnable',  // 是否允许l2d
@@ -4428,7 +4450,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
             
                     .nd-detail-filelist__list {
                         width: 100%;
-                        min-height: 400px;
+                        /*min-height: 400px;*/
                         /*height: calc(100% - 140px);*/
                         border-radius: 13px;
                         position: relative;
@@ -4481,28 +4503,27 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         vertical-align: middle;
                     }
             
-                    ::-webkit-scrollbar {
-                        width: 6px;
+                    .filesHeight::-webkit-scrollbar {
+                        width: 10px;
                         height: 10px;
+                        display: block;
                     }
             
-                    ::-webkit-scrollbar-track {
+                    .filesHeight::-webkit-scrollbar-track {
                         border-radius: 0;
                         background: none;
                     }
             
-                    ::-webkit-scrollbar-thumb {
-                        background-color: rgba(85,85,85,.4);
+                    .filesHeight::-webkit-scrollbar-thumb {
+                        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.2);
+                        background: rgb(255 255 255 / 53%);
                     }
             
-                    ::-webkit-scrollbar-thumb,::-webkit-scrollbar-thumb:hover {
+                    .filesHeight::-webkit-scrollbar-thumb:hover {
                         border-radius: 5px;
                         -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.2);
+                        background: rgb(255 200 0);;
                     }
-            
-                    ::-webkit-scrollbar-thumb:hover {
-                        background-color: rgba(85,85,85,.3)
-                    }  
                     
                     .aButton{
                         cursor: pointer;
@@ -4538,6 +4559,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     .filesHeight {
                             overflow-y: auto;
                             height: 70vh;
+                            overflow-x: hidden;
                         }
                         
                     /* 模式预览样式开始 */
@@ -4737,6 +4759,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         color: #999;
                         padding-top: 4px;
                         font-size: 12px;
+                        word-break: break-all;
                     }
                     .yk-preview .yk-preview__info--hidemenu {
                         position: absolute !important;
@@ -4869,7 +4892,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         left: 50%;
                         margin-left: -16px;
                         width: 32px;
-                        height: 100px;
+                        height: 120px;
                         background: rgba(21,21,21,.9);
                         border-radius: 2px;
                     }
@@ -4902,7 +4925,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     
                     .yk-preview .bpx-player-ctrl-volume-progress {
                         margin: 0 auto;
-                        height: 60px!important;
+                        height: 80px!important;
                     }
                     
                     .yk-preview .bui .bui-area {
@@ -4933,7 +4956,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     
                     .yk-preview .bui-slider .bui-track.bui-track-vertical {
                         height: 100%;
-                        width: 2px;
+                        width: 5px;
                         -webkit-box-align: end;
                         -ms-flex-align: end;
                         align-items: flex-end;
@@ -4957,7 +4980,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         bottom: 0;
                         left: 0;
                         right: 0;
-                        border-radius: 1.5px;
+                        border-radius: 2.5px;
                         overflow: hidden;
                         background: #e7e7e7;
                     }
@@ -5020,7 +5043,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     <div id="previewSpineDom" style="color: #fff; position: absolute; top: 0; left: 30px;">
                         <span style="font-weight: bold">spine动画预览窗口</span>
                         <span id="curVersionText">当前版本:</span>
-                        <span><a href="#unique-id" class="closeBtn aButton" style="display: block">目录</a></span>
+                        <span><a id="foldTreeAbtn" href="#unique-id" class="closeBtn aButton" style="display: block">目录</a></span>
                          <span>flipX:</span><input type="checkbox" id="flipX">
                         <span>flipY:</span><input type="checkbox" id="flipY">
                         <span>x: <input id="posX" type="number" value="0.5" step="0.05" style="width: 50px"></span>
@@ -5042,7 +5065,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             <!-- light modal header -->
                             <div class="light-modal-header">
                                 <h3 class="light-modal-heading">选择文件夹预览</h3>
-                                <a href="#" class="light-modal-close-icon" aria-label="close">&times;</a>
+                                <a href="#" id="closeTreeModal" class="light-modal-close-icon" aria-label="close">&times;</a>
                             </div>
                             <!-- light modal body -->
                             <div class="light-modal-body">
@@ -5056,24 +5079,30 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                     <div>文件夹内容</div>
                                                     <div style="display: flex; align-items: center">
                                                         <i class="iconfont icon-paixu1" id="btnSortDirFiles" style="cursor: pointer; margin-right: 15px; font-size: 20px;"></i>
-                                                        <i class="iconfont icon-fanhui" id="btnReturnLastDir" style="cursor: pointer;"></i>
+                                                        <i class="iconfont icon-fanhui" id="btnReturnLastDir" style="cursor: pointer; margin-right: 15px; "></i>
+                                                        <i class="iconfont icon-shousuo" id="btnShouSuoDir" style="cursor: pointer; font-size: 20px;"></i>
                                                     </div>
                                                 </div>
                                                 <div class="nd-detail-filelist__name"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABRUExURUxpcf++Hv/ZU//OPv/DL/+9Gv/BI/+4Bf+4Ef/XcP/LOP/TSf/RRP/WTv/JM/+3Ef+9Ff/bhf+5BP/DJf+yDv/imv/kqv/bXP/w0v/fd//calQXUgwAAAAKdFJOUwB///8d3L9enl8sr20gAAACN0lEQVRYw+2Y65abIBRGE1EzVbyNSW18/wctHA6XYw4q9Ee7Vt2AgOHbcVyTOMztdnFxcXFMWf7gKHN190VRKDpFC0iNqB5ZvqpXzJRxHoF7hrAa9/hK9j2oYIA2QA/UqXeyNg5QDBrshhHbUH8xxO+uT7sOJ/tU5a4wh0eK8KmKHTxd28Bfo16pqphep5l6I+R/p8xr668kVghVceH8M5EZYnGhnBKRceGqmaZXPPw2xbO+1xU+8axwe8NfzkIV7xVZdF0AVhi+rWdxIfgmwloE6CkrDCPwJbYUeFgK61icxFcNKyxIxE+WgnllQ0y4+HffzZ8WZtJlCDtz+CzqaaFaVGiWBNEOZZ15zihsT2CFnXk4QStsLohTU3FC+Af8I8JWV1fa1jy8u+hnOUy2vnd5SkeGrJBfHZwDbxe87pfxQvejmMZZYxxdYSoyVyixSvtXFLJ7hWq5xCRNSTozczzHCj8T54kI5d8QCtvZAodDIa7DgRkJaII2hBfaJC7EOE7D076XuIoVBu8oN3kpBLVt4YXBVaUSFSbS5Akb00znSoPn9KCJCN0am7SnGhganC4kKhR2MV0vvEn4M7bFhM3GIZqtgfiPr9BdSAYnrnCX3rQeB/2xsKcHouiBBhpO+phQL9CdjmKqsRkXpkMz57dmfTY1v3k8is26zvN2A6yIbKVqm/tMjFBMp5jpxrWKbsB1dJw/AsC3Lt/YEaK7x1t5r7aLj3ned/fRj1TK3H9wXFxc/F/8BgM0jBZ4nc19AAAAAElFTkSuQmCC"
                                                                                         alt="folder" class="u-file-icon u-file-icon--list"><span id="pfqhCurFold">当前文件夹</span></div>
                                                 <div class="nd-detail-filelist__list bg">
+                                                  
                                                     <div style="display: flex; flex-direction: row">
-                                                        <div id="pfqhFoldList" class="filesHeight" style="white-space: nowrap; width: 43%; display: flex;flex-direction: column;" >
-                                                            <div class="nd-detail-filename" id="pfqhLastDir">
-                                                            <img
-                                                                 src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABRUExURUxpcf++Hv/ZU//OPv/DL/+9Gv/BI/+4Bf+4Ef/XcP/LOP/TSf/RRP/WTv/JM/+3Ef+9Ff/bhf+5BP/DJf+yDv/imv/kqv/bXP/w0v/fd//calQXUgwAAAAKdFJOUwB///8d3L9enl8sr20gAAACN0lEQVRYw+2Y65abIBRGE1EzVbyNSW18/wctHA6XYw4q9Ee7Vt2AgOHbcVyTOMztdnFxcXFMWf7gKHN190VRKDpFC0iNqB5ZvqpXzJRxHoF7hrAa9/hK9j2oYIA2QA/UqXeyNg5QDBrshhHbUH8xxO+uT7sOJ/tU5a4wh0eK8KmKHTxd28Bfo16pqphep5l6I+R/p8xr668kVghVceH8M5EZYnGhnBKRceGqmaZXPPw2xbO+1xU+8axwe8NfzkIV7xVZdF0AVhi+rWdxIfgmwloE6CkrDCPwJbYUeFgK61icxFcNKyxIxE+WgnllQ0y4+HffzZ8WZtJlCDtz+CzqaaFaVGiWBNEOZZ15zihsT2CFnXk4QStsLohTU3FC+Af8I8JWV1fa1jy8u+hnOUy2vnd5SkeGrJBfHZwDbxe87pfxQvejmMZZYxxdYSoyVyixSvtXFLJ7hWq5xCRNSTozczzHCj8T54kI5d8QCtvZAodDIa7DgRkJaII2hBfaJC7EOE7D076XuIoVBu8oN3kpBLVt4YXBVaUSFSbS5Akb00znSoPn9KCJCN0am7SnGhganC4kKhR2MV0vvEn4M7bFhM3GIZqtgfiPr9BdSAYnrnCX3rQeB/2xsKcHouiBBhpO+phQL9CdjmKqsRkXpkMz57dmfTY1v3k8is26zvN2A6yIbKVqm/tMjFBMp5jpxrWKbsB1dJw/AsC3Lt/YEaK7x1t5r7aLj3ned/fRj1TK3H9wXFxc/F/8BgM0jBZ4nc19AAAAAElFTkSuQmCC"
-                                                                 alt="folder" class="category u-file-icon u-file-icon--list">
-                                                            <span class="nd-detail-filename__title-text inline-block-v-middle text-ellip">返回上级</span>
+                                                      <div class="filesHeight" style="width: 45%;">
+                                                         <div id="pfqhFoldList" style="white-space: nowrap;  display: flex;flex-direction: column; width: 90%" >
+                                                                <div class="nd-detail-filename" id="pfqhLastDir">
+                                                                <img
+                                                                     src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABRUExURUxpcf++Hv/ZU//OPv/DL/+9Gv/BI/+4Bf+4Ef/XcP/LOP/TSf/RRP/WTv/JM/+3Ef+9Ff/bhf+5BP/DJf+yDv/imv/kqv/bXP/w0v/fd//calQXUgwAAAAKdFJOUwB///8d3L9enl8sr20gAAACN0lEQVRYw+2Y65abIBRGE1EzVbyNSW18/wctHA6XYw4q9Ee7Vt2AgOHbcVyTOMztdnFxcXFMWf7gKHN190VRKDpFC0iNqB5ZvqpXzJRxHoF7hrAa9/hK9j2oYIA2QA/UqXeyNg5QDBrshhHbUH8xxO+uT7sOJ/tU5a4wh0eK8KmKHTxd28Bfo16pqphep5l6I+R/p8xr668kVghVceH8M5EZYnGhnBKRceGqmaZXPPw2xbO+1xU+8axwe8NfzkIV7xVZdF0AVhi+rWdxIfgmwloE6CkrDCPwJbYUeFgK61icxFcNKyxIxE+WgnllQ0y4+HffzZ8WZtJlCDtz+CzqaaFaVGiWBNEOZZ15zihsT2CFnXk4QStsLohTU3FC+Af8I8JWV1fa1jy8u+hnOUy2vnd5SkeGrJBfHZwDbxe87pfxQvejmMZZYxxdYSoyVyixSvtXFLJ7hWq5xCRNSTozczzHCj8T54kI5d8QCtvZAodDIa7DgRkJaII2hBfaJC7EOE7D076XuIoVBu8oN3kpBLVt4YXBVaUSFSbS5Akb00znSoPn9KCJCN0am7SnGhganC4kKhR2MV0vvEn4M7bFhM3GIZqtgfiPr9BdSAYnrnCX3rQeB/2xsKcHouiBBhpO+phQL9CdjmKqsRkXpkMz57dmfTY1v3k8is26zvN2A6yIbKVqm/tMjFBMp5jpxrWKbsB1dJw/AsC3Lt/YEaK7x1t5r7aLj3ned/fRj1TK3H9wXFxc/F/8BgM0jBZ4nc19AAAAAElFTkSuQmCC"
+                                                                     alt="folder" class="category u-file-icon u-file-icon--list">
+                                                                <span class="nd-detail-filename__title-text inline-block-v-middle text-ellip">返回上级</span>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                        <div id="pfqhFilesList" class="filesHeight" style="margin-left: 5%; white-space: nowrap; width: 43%; display: flex;flex-direction: column;"">
-                                   
+                                                        <div class="filesHeight" style="margin-left: 5%; width: 50%; ">
+                                                            <div id="pfqhFilesList" style="white-space: nowrap; display: flex;flex-direction: column; width: 90%">
+                                                            </div>
                                                         </div>
+                                                        
                                                     </div>
                                                     
                                                 </div>
@@ -5096,7 +5125,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 </div>
                                 <div class="yk-preview__operate">
                                     <div class="preview-operate" id="preview-operate" style="width: 100%;">
-                                        <div style="position: absolute; left: 10px"><a href="#unique-id"><i class="iconfont icon-shuliebiao"></i></a></div>
+                                        <div id="opFoldTree" style="position: absolute; left: 10px; cursor:pointer;"><i class="iconfont icon-shuliebiao"></i></div>
                                         <div id="previewOperateLeft">
                                             <div class="image-detail">
                                                 <i class="iconfont icon-left"></i>
@@ -5155,7 +5184,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                             <div class="bui-bar-wrap">
                                                                 <div class="bui-bar bui-bar-normal" role="progressbar" style="transform: scaleY(0.61);"></div>
                                                             </div>
-                                                            <div class="bui-thumb" style="left: -5px; transform: translateY(-29.28px);">
+                                                            <div class="bui-thumb" style="left: -4px; transform: translateY(-29.28px);">
                                                                 <div class="bui-thumb-dot" style=""></div>
                                                             </div>
                                                         </div>
@@ -5325,6 +5354,21 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     document.getElementById('btnReturnLastDir').addEventListener(clickName, function (e) {
                         returnLastDir()
                     })
+                    // 收缩文件夹
+                    document.getElementById('btnShouSuoDir').addEventListener(clickName, function (e) {
+                        let node = foldsEle.parentNode
+                        let fileNode = filesEle.parentNode
+                        let isHide = node.style.display === 'none'
+                        if (isHide) {
+                            node.style.display = 'inline-block'
+                            fileNode.style.width = '50%'
+                            fileNode.style.marginLeft = '5%'
+                        } else {
+                            node.style.display = 'none'
+                            fileNode.style.width = '100%'
+                            fileNode.style.marginLeft = '0px'
+                        }
+                    })
 
                     let sortDirs = (sorts) => {
                         let box = document.getElementById('pfqhFoldList')
@@ -5449,8 +5493,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         foldsEle.children[i].classList.add('previewSelect')
                                         // 计算滚动条, 滚动到对应的文件夹位置
                                         if (i > 5) {
-                                            foldsEle.scrollTop = 40 * (i - 5)
+                                            foldsEle.parentNode.scrollTop = 40 * (i - 5)
                                         }
+                                    } else {
+                                        foldsEle.children[i].classList.remove('previewSelect')
                                     }
                                 }
 
@@ -5481,8 +5527,23 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         lastSelFile = this
                                         this.classList.add('previewSelect')
 
-                                        // 清理图集相关的信息
-                                        currentFoldInfo.curFileIndex = i
+                                        // 可能需要更新一下滚动条以及索引
+                                        for (let idx = 0; idx < this.parentNode.children.length; idx++) {
+                                            if (this === this.parentNode.children[idx]) {
+                                                // 清理图集相关的信息
+                                                currentFoldInfo.curFileIndex = idx
+                                                if (window.location.hash === '#unique-id') {
+                                                    let scrollTop = filesEle.parentNode.scrollTop;
+                                                    if (scrollTop > (idx * 40)) {
+                                                        filesEle.parentNode.scrollTop = 40 * (idx - 3)
+                                                    } else if ((idx * 40 - scrollTop) > 3 * 40) {
+                                                        filesEle.parentNode.scrollTop = 40 * (idx - 3)
+                                                    }
+                                                }
+                                                break
+                                            }
+                                        }
+
                                         closeModalFunc()
 
                                         // e.stopPropagation()
@@ -5511,7 +5572,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             if (version == null) {
                                 version = '3.6'
                             }
-                            if ((!['3.5.35', '3.6', '3.7', '3.8', '4.0'].includes(version))) {
+                            if ((!['3.5.35', '3.6', '3.7', '3.8', '4.0', '4.1'].includes(version))) {
                                 skinSwitchMessage.show({
                                     'type': 'warning',
                                     'text': `当前不支持${version}版本的骨骼文件播放`,
@@ -5540,6 +5601,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
 
                             let play = () => {
+                                if (skinSwitch.nodePreviewedInfo[filename] === false) return
                                 // 播放下一个之前, 保存上一个的node的数据
                                 if (currentNode) {
                                     skinSwitch.nodePreviewedInfo[currentNode.name] = {
@@ -5700,8 +5762,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             } else {
                                 dy.loadSpine(filename, ext, () => {
                                     play()
-                                }, () => {
-                                    console.log('加载骨骼错误')
+                                }, (err, err2) => {
+                                    console.log('加载骨骼错误', err, err2)
+                                    let errMsg = ''
+                                    if (err2 && err2.indexOf('atlas page image') !== -1) {
+                                        errMsg = '缺少切图'
+                                    }
+                                    skinSwitchMessage.show({
+                                        type: 'warning',
+                                        text: `加载${filename}错误 ${errMsg}`
+                                    })
+                                    skinSwitch.nodePreviewedInfo[filename] = false
                                 })
                             }
 
@@ -5900,6 +5971,26 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         info: document.getElementById('previewOperateInfo'),
                     }
 
+                    document.getElementById('opFoldTree').listen(() => {
+                        if (window.location.hash !== '#unique-id') {
+                            document.getElementById('foldTreeAbtn').click()
+                            setTimeout(() => {
+                                if (lastSelFile) {
+                                    for (let idx = 0; idx < filesEle.children.length; idx++) {
+                                        if (lastSelFile === filesEle.children[idx]) {
+                                            if (idx > 5) {
+                                                filesEle.parentNode.scrollTop = 40 * (idx - 5)
+                                            }
+                                            break
+                                        }
+                                    }
+                                }
+                            }, 100)
+                        } else {
+                            document.getElementById('closeTreeModal').click()
+                        }
+                    })
+
                     picPreviewModeBtn.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', function (){
                         // 隐藏原来的按钮, 进入图集模式
                         picPreviewBg.classList.remove('hidden')
@@ -5923,7 +6014,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             else currentFoldInfo.curFileIndex--
                         }
                         currentFoldInfo.curFiles[currentFoldInfo.curFileIndex].dispatchEvent(new CustomEvent(lib.config.touchscreen ? 'touchend' : 'click'))
-
                         // 关闭标签预览页
                         closeModalFunc()
                     })
@@ -6012,7 +6102,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             let percent = curSpeed / maxSpeed
                             progressData.progressBarText.innerText = curSpeed.toFixed(1)
                             progressData.progressBarWrap.style.transform = `scaleY(${percent})`
-                            progressData.progressBarThumb.style.transform = `translateY(-${percent*58}px)`
+                            progressData.progressBarThumb.style.transform = `translateY(-${percent*78}px)`
                         }
                         closeModalFunc()
 
@@ -6020,8 +6110,16 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     operateBtn.skin.listen(function (e){
                         if (currentNode == null) return
+
+                        if (!previewImgModal.classList.contains('hidden')) {
+                            if (document.getElementById('previewModalTitle').innerText === '骨骼皮肤') {
+                                closeModalFunc()
+                                return
+                            }
+                        }
+
                         // 获取当前角色
-                        let skeleton = activeSkeleton
+                        let skeleton = activeSkeleton;
                         let activeSkin = skeleton.skin.name
                         let skinsList = []
                         for (let i = 0; i < skeleton.data.skins.length; i++) {
@@ -6041,6 +6139,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     operateBtn.action.listen((e) => {
                         if (currentNode == null) return
+
+                        if (!previewImgModal.classList.contains('hidden')) {
+                            if (document.getElementById('previewModalTitle').innerText === '骨骼标签') {
+                                closeModalFunc()
+                                return
+                            }
+                        }
                         // 获取当前角色
                         let skeleton = activeSkeleton
                         let state = skeleton.state;
@@ -6177,7 +6282,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             let percent = curSpeed / maxSpeed
                             progressData.progressBarText.innerText = curSpeed.toFixed(1)
                             progressData.progressBarWrap.style.transform = `scaleY(${percent})`
-                            progressData.progressBarThumb.style.transform = `translateY(-${percent*58}px)`
+                            progressData.progressBarThumb.style.transform = `translateY(-${percent*78}px)`
 
                             currentNode.speed = curSpeed
                         }
@@ -6959,19 +7064,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 lib.init.js(skinSwitch.url, 'spine', function () {
                     lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_0_64', function () {
                         lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_8', function () {
-                            lib.init.js(skinSwitch.url, 'animations', function () {
-                                // if (lib.config[skinSwitch.configKey.replaceDecadeAni]) {
-                                //     skinSwitch.waitUntil(() => {
-                                //         return window.dcdAnim
-                                //     }, () => {
-                                //         window.spineAnim = new DecadeAnimationProxy(window.dcdAnim, lib)
-                                //     })
-                                //
-                                // }
+                            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_4_1', function () {
+                                lib.init.js(skinSwitch.url, 'animations', function () {})
+                                lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_5_35', function (){})
+                                lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_7', function (){})
                             })
-
-                            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_5_35', function (){})
-                            lib.init.js(skinSwitch.url + 'spine-lib', 'spine_3_7', function (){})
                         })
                     })
                 })
@@ -7047,6 +7144,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 const saveBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
                 const retBtn = ui.create.div('.funcBtn .btnItem', adjustBtnGroup)
 
+                const closeBtn = ui.create.div('.iconfont .icon-close .closeEditBtn', editBox)
+
                 daijiBtn.innerText = '调整待机'
                 beijingBtn.innerText = '调整背景'
                 chukuangBtn.innerText = '调整出框'
@@ -7078,9 +7177,39 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                 }
 
+                closeBtn.listen(() => {
+                    hide(editBox)
+                })
+
+                let changeInfoData = () => {
+                    if (!textInfoShow) return
+                    let x = adjustX[1].toFixed(2)
+                    let y = adjustY[1].toFixed(2)
+                    let scale = adjustScale.toFixed(2)
+                    let angle = Number(adjustAngle) || 0
+                    textInfoShow.innerHTML = `x: [${adjustX[0]}, ${x}]<br> y: [${adjustY[0]}, ${y}]<br>大小: ${scale}<br> 角度: ${angle}`
+                }
+
                 let initBlackBg = () => {
                     // 添加调整工具箱
                     blackbg = ui.create.div('.pfqh_qhly_blackbg .hidden', document.body);
+                    let dataShowDiv = ui.create.div('.dataShowDiv', blackbg);  // 显示当前节点的数据信息
+                    textInfoShow = ui.create.div('.textInfoShow', dataShowDiv)
+                    let copyJudgeInfo = ui.create.div('.copyCurrentInfoDiv', dataShowDiv)  // 复制信息
+                    copyJudgeInfo.innerText = '复制参数'
+                    textInfoShow.innerHTML = `x: [0, 0.5]<br> y: [0, 0.5]<br>大小: 0.5<br> 角度: 0`
+
+                    copyJudgeInfo.listen(() => {
+                        adjustX[1] = Number(adjustX[1].toFixed(2))
+                        adjustY[1] = Number(adjustY[1].toFixed(2))
+                        copyToClipboard({
+                            x: adjustX,
+                            y: adjustY,
+                            angle: adjustAngle,
+                            scale: Number(adjustScale.toFixed(2)),
+                        })
+                    })
+
                     let buttonbar = ui.create.div('.pfqh_qhly_bigeditbar', blackbg);
                     let buttons = new Array(8);
                     for (let i = 0; i < 6; i++) {
@@ -7098,6 +7227,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             adjustScale += 0.01
                                         }
                                         skinSwitch.postMsgApi.resizePos(player, currentMode, {scale: adjustScale})
+                                        changeInfoData()
                                     })
                                     break;
                                 }
@@ -7111,6 +7241,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         }
                                         if (adjustScale <= 0) adjustScale = 0.01
                                         skinSwitch.postMsgApi.resizePos(player, currentMode, {scale: adjustScale})
+                                        changeInfoData()
                                     })
                                     break;
                                 }
@@ -7122,6 +7253,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             adjustAngle++
                                         }
                                         skinSwitch.postMsgApi.resizePos(player, currentMode, {angle: adjustAngle})
+                                        changeInfoData()
                                     })
                                     break;
                                 }
@@ -7133,6 +7265,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             adjustAngle--
                                         }
                                         skinSwitch.postMsgApi.resizePos(player, currentMode, {angle: adjustAngle})
+                                        changeInfoData()
                                     })
                                     break;
                                 }
@@ -7202,6 +7335,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             adjustX[1] += slideX * 0.003;
                             adjustY[1] -= slideY * 0.003;
                         }
+                        changeInfoData()
                         skinSwitch.postMsgApi.resizePos(player, currentMode, {
                             message: 'RESIZE',
                             x: adjustX,
@@ -7226,6 +7360,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 }
 
                 let blackbg
+                let textInfoShow
                 let showAdjustBar = hidden => {
                     if (!blackbg) {
                         initBlackBg()
@@ -7243,6 +7378,16 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         adjustY = data.y
                         adjustScale = data.scale
                         adjustAngle = data.angle || 0
+
+                        if (adjustX[0] !== 0 || adjustY[0] !== 0) {
+                            adjustX[0] = 0
+                            adjustY[0] = 0
+                            skinSwitch.postMsgApi.resizePos(player, currentMode, {x: adjustX, y: adjustY})
+                            initPosParams()
+                            return
+                        }
+
+                        changeInfoData()
                     })
                 }
 
@@ -7347,21 +7492,25 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         continuousClick(adjustDirection.querySelector('#upbtn'), () => {
                             adjustY[1] += 0.01
                             skinSwitch.postMsgApi.resizePos(player, currentMode, {x: adjustX, y: adjustY})
+                            changeInfoData()
                         })
 
                         continuousClick(adjustDirection.querySelector('#bottombtn'), () => {
                             adjustY[1] -= 0.01
                             skinSwitch.postMsgApi.resizePos(player, currentMode, {x: adjustX, y: adjustY})
+                            changeInfoData()
                         })
 
                         continuousClick(adjustDirection.querySelector('#leftbtn'), () => {
                             adjustX[1] -= 0.01
                             skinSwitch.postMsgApi.resizePos(player, currentMode, {x: adjustX, y: adjustY})
+                            changeInfoData()
                         })
 
                         continuousClick(adjustDirection.querySelector('#rightbtn'), () => {
                             adjustX[1] += 0.01
                             skinSwitch.postMsgApi.resizePos(player, currentMode, {x: adjustX, y: adjustY})
+                            changeInfoData()
                         })
                     }
                     if (hidden) adjustDirection.classList.add('hidden')
@@ -7623,28 +7772,33 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     initPosParams()
                 }
 
-                // let copyToClipboard = function (dataInfo) {
-                //     // 保存当前动皮参数
-                //     let copyData = `\t\t\t\tx: [${data.x}],\n\t\t\t\ty: [${data.y}],\n`
-                //     if (data.angle !== undefined) {
-                //         copyData += `\t\t\t\tangle: ${data.angle},\n`
-                //     }
-                //     if (data.scale !== undefined) {
-                //         copyData += `\t\t\t\tscale: ${data.scale},\n`
-                //     }
-                //     // 复制到剪切板, 复制代码来源: https://juejin.cn/post/6844903567480848391
-                //     const input = document.createElement('textarea');
-                //     input.setAttribute('readonly', 'readonly');
-                //     // input.setAttribute('value', copyData);
-                //     input.value = copyData
-                //     document.body.appendChild(input);
-                //     if (document.execCommand('copy')) {
-                //         input.select()
-                //         document.execCommand('copy')
-                //         console.log('复制成功');
-                //     }
-                //     document.body.removeChild(input);
-                // }
+                let copyToClipboard = function (data) {
+                    // 保存当前动皮参数
+                    let copyData = `\t\t\t\tx: [${data.x}],\n\t\t\t\ty: [${data.y}],\n`
+                    if (data.angle) {
+                        copyData += `\t\t\t\tangle: ${data.angle},\n`
+                    }
+                    if (data.scale != null) {
+                        copyData += `\t\t\t\tscale: ${data.scale},\n`
+                    }
+                    // 复制到剪切板, 复制代码来源: https://juejin.cn/post/6844903567480848391
+                    const input = document.createElement('textarea');
+                    input.setAttribute('readonly', 'readonly');
+                    // input.setAttribute('value', copyData);
+                    input.value = copyData
+                    document.body.appendChild(input);
+                    if (document.execCommand('copy')) {
+                        input.select()
+                        document.execCommand('copy')
+                        skinSwitchMessage.show({
+                            type: 'success',
+                            text: '复制成功',
+                            duration: 1500,    // 显示时间
+                            closeable: false, // 可手动关闭
+                        })
+                    }
+                    document.body.removeChild(input);
+                }
 
                 let saveToFile = function () {
                     let primaryDynamic = player.dynamic.primary.player
@@ -7707,7 +7861,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         let k = modeToKey[currentMode]
                         if (!player.isQhlx && currentMode === modes.daiji) {
-                            skinSwitch.saveSkinParams[player.name][saveKey] = modeData
+                            skinSwitch.saveSkinParams[player.name][saveKey] = Object.assign(skinSwitch.saveSkinParams[player.name][saveKey], modeData)
                         } else {
                             toSaveData[k] = modeData
                         }
@@ -7859,36 +8013,53 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 js(skinSwitch.url + 'component/message.js', () => {
                     window.skinSwitchMessage = new SkinSwitchMessage()
                 })
-
-
-
             })
-
-
 
             if (lib.config[skinSwitch.configKey.l2dEnable]) {
                 lib.init.js(skinSwitch.url + 'component/live2d', 'live2dcubismcore.min', () => {
                     lib.init.js(skinSwitch.url + 'component/live2d', 'pixi.min', () => {
                         lib.init.js(skinSwitch.url + 'component/live2d', 'Live2dLoader', () => {
                             // 读取l2d配置
+                            let initL2d = () => {
+                                let curVal = lib.config[skinSwitch.configKey.l2dSetting]
+                                if (curVal in pfqhLive2dSettings.models) {
+                                    let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
+                                    for (let k in pfqhLive2dSettings.models[curVal]) {
+                                        base[k] = pfqhLive2dSettings.models[curVal][k]
+                                    }
+                                    base.role = lib.assetURL + base.basePath + base.role
+                                    base.key = curVal
+                                    skinSwitch.l2dLoader = new CustomLive2dLoader([
+                                        base
+                                    ]);
+                                }
+                            }
                             lib.init.js(skinSwitch.url, 'l2dSettings', function () {
                                 // 加载l2d
                                 lib.arenaReady.push(function() {
-                                    let curVal = lib.config[skinSwitch.configKey.l2dSetting]
-                                    if (curVal in pfqhLive2dSettings.models) {
-                                        let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
-                                        for (let k in pfqhLive2dSettings.models[curVal]) {
-                                            base[k] = pfqhLive2dSettings.models[curVal][k]
-                                        }
-                                        base.role = lib.assetURL + base.basePath + base.role
-                                        base.key = curVal
-                                        skinSwitch.l2dLoader = new CustomLive2dLoader([
-                                            base
-                                        ]);
-                                    }
+                                    initL2d()
                                 })
                             }, () => {
-                                console.log('加载l2d失败')
+                                skinSwitch.qhly_checkFileExist(skinSwitch.path + '/l2dSettings.js', exists => {
+                                    if (!exists) {
+                                        game.readFile(skinSwitch.path + '/l2dSettings_示例.js', function (data) {
+                                            game.writeFile(data, skinSwitch.path, 'l2dSettings.js', function () {
+                                                console.log('初始化l2dSettings.js成功')
+                                                setTimeout(() => {
+                                                    // 重新执行一下js内容
+                                                    lib.init.js(skinSwitch.url, 'l2dSettings', function () {
+                                                        // 加载l2d
+                                                        initL2d()
+                                                    }, () => {
+                                                        console.log('重新执行js失败')
+                                                    })
+                                                }, 1000)
+                                            })
+                                        })
+                                    } else {
+                                        console.log('加载l2d失败')
+                                    }
+                                })
                             });
                         })
                     })
@@ -7959,11 +8130,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 "init": true,
                 "intro": "如果设备不支持离屏渲染或者使用EngEx或D扩展出框, 请关闭此出框功能",
             },
-            'replaceDecadeAni': {
-                name: "支持播放ol4.0特效",
-                "init": false,
-                "intro": "替换十周年UI的decadeUi.animation对象后允许播放3.8,4.0的特效",
-            },
+            // 'replaceDecadeAni': {
+            //     name: "支持播放ol4.0特效",
+            //     "init": false,
+            //     "intro": "替换十周年UI的decadeUi.animation对象后允许播放3.8,4.0的特效",
+            // },
             'isAttackFlipX': {
                 name: "AI出框是否翻转X轴",
                 "init": false,
@@ -8213,8 +8384,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
  */
 
 /** 1.18版本更新
- 1. 修复觉醒弹窗bug
- 2. 变身与播放特效可视化操作
- 3. 支持3.5-4.0版本骨骼播放
- 4. 修复部分机型不能使用spine3.8的骨骼问题
+ 1. 修复觉醒与限定技能弹窗bug
+ 2. 支持3.5-4.1版本骨骼播放
+ 3. 修复部分机型不能使用spine3.8的骨骼问题
+ 4. 增加图集预览骨骼的模式
  */

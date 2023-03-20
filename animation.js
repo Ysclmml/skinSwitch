@@ -1224,6 +1224,8 @@ var newDuilib;
 				if (typeof sprite.oncomplete == 'function')
 					sprite.oncomplete = sprite.oncomplete.toString();
 
+				console.log('this ---> player', this)
+
 				// 将播放信息传到worker区播放渲染动画.
 				this.renderer.postMessage({
 					message: 'PLAY',

@@ -33,6 +33,15 @@
     font-size: 20px;
 }
 
+.editDynamic .closeEditBtn {
+    font-size: 28px;
+    right: 10px;
+    top: 5px;
+    font-weight: bolder;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
 .editDynamic .btnGroup {
     width: 96%;
     height: 100%;
@@ -101,6 +110,52 @@
     /*background-color: rgba(0, 0, 0, 0.8);*/
     z-index: 15;
 }
+
+.pfqh_qhly_blackbg .dataShowDiv {
+    width: 100px;
+    height: 125px;
+    font-size: 16px;
+    text-align: center;
+    background: url(../../../theme/woodden/wood2.jpg);
+    background-repeat: repeat;
+    background-size: cover;
+    color: rgba(77, 60, 51,0.8);
+    text-shadow: none;
+    border-radius: 4px;
+    left: 7%;
+    top: 10%;
+}
+
+.pfqh_qhly_blackbg .textInfoShow {
+    position: relative;
+    text-align: left;
+}
+
+.pfqh_qhly_blackbg .copyCurrentInfoDiv {
+    position: relative;
+    background-color: #67c23a;
+    transition: all .3s ease;
+    border-radius: 6px;
+    color: white;
+    margin: 0;
+    line-height: 1;
+    padding: 0px 9px;
+    height: 26px;
+    border: none;
+    display: inline-flex;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+    text-align: center;
+    cursor: pointer;
+    text-decoration: none;
+    margin-top: 3px;
+    white-space: nowrap;
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
 .pfqh_qhly_bigeditbar {
     /*width: 406px;*/
     /*height: 30px;*/
@@ -110,7 +165,7 @@
     /*background: linear-gradient(to top, #696464, #FFF);*/
     /*border-radius: 15px;*/
 
-    height: 300px;
+    height: 320px;
     width: 30px;
     top: 16%;
     position: absolute;
@@ -151,7 +206,7 @@
     width: 26px;
     height: 26px;
     left: 2px;
-    top: 58px;
+    top: 62px;
     background-size: 100% 100%;
     /*background-image: url(../images/edit/suoxiao.webp);*/
     background-image: url(../images/edit/缩小.png);
@@ -164,7 +219,7 @@
     /*left: 120px;*/
 
     left: 2px;
-    top: 104px;
+    top: 112px;
 
     background-size: 100% 100%;
     background-image: url('../images/edit/shunshizhen.webp');
@@ -176,7 +231,7 @@
     /*top: 2px;*/
     /*left: 170px;*/
     left: 2px;
-    top: 150px;
+    top: 162px;
     background-size: 100% 100%;
     background-image: url('../images/edit/nishizhen.webp');
 }
@@ -187,7 +242,7 @@
     /*top: 2px;*/
     /*left: 220px;*/
     left: 2px;
-    top: 196px;
+    top: 212px;
     background-size: 100% 100%;
     background-image: url('../images/edit/shizi.png');
 }
@@ -199,7 +254,7 @@
     /*top: 2px;*/
     /*left: 270px;*/
     left: 2px;
-    top: 242px;
+    top: 262px;
     background-size: 100% 100%;
     background-image: url('../images/edit/fangqi.webp');
 }
@@ -210,7 +265,7 @@
     /*top: 2px;*/
     /*left: 320px;*/
     left: 2px;
-    top: 288px;
+    top: 312px;
     background-size: 100% 100%;
     background-image: url('../images/edit/baocun.webp');
 }

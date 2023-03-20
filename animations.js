@@ -2,6 +2,46 @@
 
 const fps = null
 
+if (self.spine_4_1 && self.spine) {
+    // 给4.0的mvp添加新的方法.
+    spine_4_1.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
+    spine_4_1.Matrix4.prototype.rotate = spine.webgl.Matrix4.prototype.rotate
+    spine_4_1.Matrix4.prototype.concat = spine.webgl.Matrix4.prototype.concat
+    spine_4_1.Matrix4.prototype.setPos2D = spine.webgl.Matrix4.prototype.setPos2D
+    spine_4_1.Matrix4.prototype.originTranslate = spine_4.Matrix4.prototype.translate
+    spine_4_1.Matrix4.prototype.translate = spine.webgl.Matrix4.prototype.translate
+
+    // 4.0 loadTexture在无名杀手机上莫名其妙不能加载需要改造... 花了我好长时间排错找
+    spine_4_1.AssetManager.prototype.loadTexture =  function loadTexture(path, success = null, error = null) {
+        path = this.start(path);
+        let isBrowser = !!(typeof window !== "undefined" && typeof navigator !== "undefined" && window.document);
+        let isWebWorker = !isBrowser;
+        let _this = this
+        if (isWebWorker) {
+            this.downloadImageBitmap(path, function (imageBitmap) {
+                spine.lodedAssets[path] = imageBitmap;
+                let texture = _this.textureLoader(imageBitmap);
+                _this.success(success, path, texture);
+            }, function (status, response) {
+                _this.error(error, path, `Couldn't load image: ${path}`);
+            })
+        } else {
+            let image = new Image();
+            image.crossOrigin = "anonymous";
+            image.onload = () => {
+                this.success(success, path, this.textureLoader(image));
+            };
+            image.onerror = () => {
+                this.error(error, path, `Couldn't load image: ${path}`);
+            };
+            if (this.downloader.rawDataUris[path])
+                path = this.downloader.rawDataUris[path];
+            image.src = path;
+        }
+    }
+    spine_4_1.AssetManager.prototype.downloadImageBitmap = spine.webgl.AssetManager.prototype.downloadImageBitmap
+}
+
 if (self.spine_4 && self.spine) {
     // 给4.0的mvp添加新的方法.
     spine_4.Matrix4.prototype.scale = spine.webgl.Matrix4.prototype.scale
@@ -64,12 +104,14 @@ const Ani4StartId = 40000  // 4.0spine内部维护的起始id
 const Ani3_8StartId = 50000  // 3.8spine内部维护的起始id
 const Ani3_5_35_StartId = 60000  // 3.5.35和3.5版本之前的spine内部维护的起始id
 const Ani3_7_StartId = 70000  // 3.5.35和3.5版本之前的spine内部维护的起始id
+const Ani4_1_StartId = 80000  // 4.1版本之前的spine内部维护的起始id
 const SupportSpineVersion = {
     v3_6: '3.6',
     v4_0: '4.0',
     v3_8: '3.8',
     v3_5_35: '3.5.35',
     v3_7: '3.7',
+    v4_1: '4.1'
 }
 
 class BaseAPNode {
@@ -375,6 +417,13 @@ class APNode4_0 extends BaseAPNode {
         super(initParam)
         // this.mvp = new spine.webgl.Matrix4()
         this.mvp = new spine_4.Matrix4()
+    }
+}
+
+class APNode4_1 extends BaseAPNode {
+    constructor(initParam) {
+        super(initParam)
+        this.mvp = new spine_4_1.Matrix4()
     }
 }
 
@@ -1499,6 +1548,451 @@ class Animation4_0 extends BaseAnimation{
             gl.useProgram(this.spine.shader.program);
 
             shader.setUniform4x4f(spine_4.Shader.MVP_MATRIX, sprite.mvp.values);
+            batcher.begin(shader);
+            renderer.premultipliedAlpha = sprite.premultipliedAlpha;
+            renderer.outcropMask = this.outcropMask;
+            if (renderer.outcropMask) {
+                renderer.outcropX = sprite.renderX;
+                renderer.outcropY = sprite.renderY;
+                renderer.outcropScale = sprite.renderScale;
+                renderer.outcropAngle = sprite.renderAngle;
+                renderer.clipSlots = sprite.clipSlots;
+            }
+
+            renderer.hideSlots = sprite.hideSlots;
+            renderer.disableMask = sprite.disableMask;
+            renderer.draw(batcher, skeleton);
+            batcher.end();
+
+            if (gl.clipping) {
+                gl.clipping = undefined;
+                gl.scissor(0, 0, canvas.width, canvas.height);
+            }
+            if (sprite.viewportNode) {
+                gl.viewport(0, 0, canvas.width, canvas.height);
+                gl.scissor(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        gl.disable(gl.SCISSOR_TEST);
+        this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
+    };
+
+}
+
+class Animation4_1 extends BaseAnimation{
+
+    constructor (pathPrefix, canvas, dpr, isOffscreen) {
+        super()
+        if (!self.spine_4_1) return console.error('spine4_1 未定义.');
+        this.spineLib = spine_4_1
+        let config = { alpha: true };
+        let gl = canvas.getContext('webgl2', config);
+        if (gl == null) {
+            gl = canvas.getContext('webgl', config) || canvas.getContext('experimental-webgl', config);
+        } else {
+            gl.isWebgl2 = true;
+        }
+        if (isOffscreen != null) {
+            this.offscreen = isOffscreen
+        }
+        if (gl) {
+            // 定义了spine动画的相关上下文, 都是后面渲染动画需要的内容, 文档可以参考官方后面的文档, 当前的文档找不到了, 只能找到ts版本的了.
+            // https://github.com/EsotericSoftware/spine-runtimes/blob/726ad4ddbe5c9c8b386b495692c2f55c2039d15d/spine-ts/spine-webgl/example/index.html#L64
+            this.spine = {
+                shader: this.spineLib.Shader.newTwoColoredTextured(gl),
+                batcher: new this.spineLib.PolygonBatcher(gl),
+                skeletonRenderer: new this.spineLib.SkeletonRenderer(gl),
+                assetManager: new this.spineLib.AssetManager(gl, pathPrefix),
+                assets: {},
+                skeletons: [],
+            }
+        } else {
+            this.spine = { assets: {} };
+            console.error('当前设备不支持 WebGL.');
+        }
+        this.gl = gl;
+        this.canvas = canvas;
+        this.BUILT_ID = Ani4StartId;  // 4.0的id从40000开始
+        this.dpr = dpr
+        this.dprAdaptive = true
+
+    }
+
+    // 不知道下面这个函数的作用, 保留, 出错再修改...
+    createTextureRegion(image, name) {
+        let page = new this.spineLib.TextureAtlasPage();
+        page.name = name;
+        page.uWrap = this.spineLib.TextureWrap.ClampToEdge;
+        page.vWrap = this.spineLib.TextureWrap.ClampToEdge;
+        page.texture = this.spine.assetManager.textureLoader(image);
+        page.texture.setWraps(page.uWrap, page.vWrap);
+        page.width = page.texture.getImage().width;
+        page.height = page.texture.getImage().height;
+
+        let region = new this.spineLib.TextureAtlasRegion();
+        region.page = page;
+        region.rotate = false;
+        region.width = page.width;
+        region.height = page.height;
+        region.x = 0;
+        region.y = 0;
+        region.u = region.x / page.width;
+        region.v = region.y / page.height;
+        if (region.rotate) {
+            region.u2 = (region.x + region.height) / page.width;
+            region.v2 = (region.y + region.width) / page.height;
+        }
+        else {
+            region.u2 = (region.x + region.width) / page.width;
+            region.v2 = (region.y + region.height) / page.height;
+        }
+
+        region.originalWidth = page.width;
+        region.originalHeight = page.height;
+        region.index = -1;
+        region.texture = page.texture;
+        region.renderObject = region;
+
+        return region;
+    }
+
+    loadTexture(path, success = null, error = null) {
+
+        path = this.start(path);
+        let isBrowser = !!(typeof window !== "undefined" && typeof navigator !== "undefined" && window.document);
+        let isWebWorker = !isBrowser;
+        let _this = this
+        if (isWebWorker) {
+            this.downloadImageBitmap(path, function (imageBitmap) {
+                spine.lodedAssets[path] = imageBitmap;
+                let texture = _this.textureLoader(imageBitmap);
+                _this.success(success, path, texture);
+            }, function (status, response) {
+                _this.error(error, path, `Couldn't load image: ${path}`);
+            })
+
+            // fetch(path, { mode: "cors" }).then((response) => {
+            //     if (response.ok)
+            //         return response.blob();
+            //     this.error(error, path, `Couldn't load image: ${path}`);
+            //     return null;
+            // }).then((blob) => {
+            //     return blob ? createImageBitmap(blob, { premultiplyAlpha: "none", colorSpaceConversion: "none" }) : null;
+            // }).then((bitmap) => {
+            //     if (bitmap)
+            //         this.success(success, path, this.textureLoader(bitmap));
+            // });
+        } else {
+            let image = new Image();
+            image.crossOrigin = "anonymous";
+            image.onload = () => {
+                this.success(success, path, this.textureLoader(image));
+            };
+            image.onerror = () => {
+                this.error(error, path, `Couldn't load image: ${path}`);
+            };
+            if (this.downloader.rawDataUris[path])
+                path = this.downloader.rawDataUris[path];
+            image.src = path;
+        }
+    }
+
+    loadSpine(filename, skelType, onload, onerror) {
+        skelType = skelType == null ? 'skel' : skelType.toLowerCase();
+        let thisAnim = this;
+        if (skelType === 'json') {
+            thisAnim.spine.assetManager.loadText(filename + '.json', () => {
+                thisAnim.spine.assetManager.loadTextureAtlas(filename + '.atlas', () => {
+                    thisAnim.spine.assets[filename] = { name: filename, skelType: skelType };
+                    if (onload) onload()
+                }, onerror);
+            }, onerror);
+        } else {
+            thisAnim.spine.assetManager.loadBinary(filename + '.skel', () => {
+                thisAnim.spine.assets[filename] = { name: filename, skelType: skelType };
+                thisAnim.spine.assetManager.loadTextureAtlas(filename + '.atlas', onload, onerror);
+            }, onerror);
+        }
+
+    };
+
+    prepSpine(filename, autoLoad) {
+        let _this = this;
+        let spineAssets = _this.spine.assets;
+        if (!spineAssets[filename]) {
+            if (autoLoad) {
+                _this.loadSpine(filename, 'skel', function(){
+                    _this.prepSpine(filename);
+                });
+                return 'loading';
+            }
+            return console.error('prepSpine: [' + filename + '] 骨骼没有加载');;
+        }
+
+        let skeleton;
+        let skeletons = _this.spine.skeletons;
+        for (let i = 0; i < skeletons.length; i++) {
+            skeleton = skeletons[i];
+            if (skeleton.name === filename && skeleton.completed) return skeleton;
+        }
+
+        let asset = spineAssets[filename];
+        let manager = _this.spine.assetManager;
+
+        // 下面的获取原始数据是spine动画的固定写法, api可以参考官网 https://github.com/EsotericSoftware/spine-runtimes/blob/726ad4ddbe5c9c8b386b495692c2f55c2039d15d/spine-ts/spine-webgl/example/index.html#L158
+        let skelRawData = asset.skelRawData;
+        if (!skelRawData) {
+            let atlas = manager.get(filename + ".atlas");
+            let atlasLoader = new this.spineLib.AtlasAttachmentLoader(atlas);
+            if (asset.skelType.toLowerCase() === 'json') {
+                skelRawData = new  this.spineLib.SkeletonJson(atlasLoader)
+            } else {
+                skelRawData = new this.spineLib.SkeletonBinary(atlasLoader);
+            }
+            spineAssets[filename].skelRawData = skelRawData;
+            spineAssets[filename].ready = true;
+        }
+
+        let data = skelRawData.readSkeletonData(manager.get(filename + '.' + asset.skelType));
+        skeleton = new this.spineLib.Skeleton(data)
+
+        // 为骨骼添加名字
+        skeleton.name = filename;
+        // 标记骨骼加载状态为true
+        skeleton.completed = true;
+
+        skeleton.setSkinByName('default');
+        skeleton.setToSetupPose();
+        skeleton.updateWorldTransform();
+        skeleton.state = new this.spineLib.AnimationState(new this.spineLib.AnimationStateData(skeleton.data));
+        skeleton.state.addListener({
+            complete:function(track){
+                var node = skeleton.node;
+                if (node) {
+                    track.loop = (node.loop == null ? false : node.loop);
+                    if (track.loop && node.loopCount > 0) {
+                        node.loopCount--;
+                        if (node.loopCount === 0) track.loop = false;
+                    }
+                    skeleton.completed = node.completed = !track.loop;
+                    if (node.complete) node.complete();
+                } else {
+                    skeleton.completed = !track.loop;
+                    console.error('skeleton complete: 超出预期的错误');
+                }
+            }
+        })
+        skeleton.bounds = { offset: new this.spineLib.Vector2(), size: new this.spineLib.Vector2() }
+        skeleton.getBounds(skeleton.bounds.offset, skeleton.bounds.size, []);
+        skeleton.defaultAction = data.animations[0].name;
+        skeleton.node = undefined;
+        skeletons.push(skeleton);
+        return skeleton;
+    };
+
+    playSpine(sprite, position){
+        if (sprite == undefined) return console.error('playSpine: parameter undefined');
+        if (typeof sprite == 'string') sprite = { name: sprite };
+        if (!this.hasSpine(sprite.name)) return console.error('playSpine: [' + sprite.name + '] 骨骼没有加载');
+
+        var skeletons = this.spine.skeletons;
+        var skeleton;
+        if (!(sprite instanceof APNode4_0 && sprite.skeleton.completed)) {
+            for (var i = 0; i < skeletons.length; i++) {
+                skeleton = skeletons[i];
+                if (skeleton.name == sprite.name && skeleton.completed) break;
+                skeleton = null;
+            }; if (!skeleton) skeleton = this.prepSpine(sprite.name);
+
+            if (!(sprite instanceof APNode4_0)) {
+                var param = sprite;
+                sprite = new APNode4_0(sprite);
+                sprite.id = param.id == undefined ? this.BUILT_ID++ : param.id;
+                this.nodes.push(sprite);
+            }
+
+            sprite.skeleton = skeleton;
+            skeleton.node = sprite;
+        }
+
+        sprite.completed = false;
+        skeleton.completed = false;
+
+        if (position != undefined) {
+            sprite.referNode = position.parent;
+            sprite.referFollow = position.follow;
+            for (let k in position) {
+                sprite[k] = position[k]
+            }
+        }
+
+        var entry = skeleton.state.setAnimation(0, sprite.action ? sprite.action : skeleton.defaultAction, sprite.loop);
+        entry.mixDuration = 0;
+        if (this.requestId == undefined) {
+            this.running = true;
+            if (!this.offscreen) this.canvas.style.visibility = 'visible';
+            this.requestId = requestAnimationFrame(this.newFpsRender.bind(this));
+        }
+
+        sprite.referBounds = undefined;
+        return sprite;
+    };
+
+    stopSpine(sprite) {
+        var nodes = this.nodes;
+        var id = sprite.id == null ? sprite : sprite.id;
+        for (var i = 0; i < nodes.length; i++) {
+            sprite = nodes[i];
+            if (sprite.id === id) {
+                if (!sprite.completed) {
+                    sprite.completed = true;
+                    sprite.skeleton.state.setEmptyAnimation(0);
+                }
+                return sprite;
+            }
+        }
+
+        return null;
+    };
+
+    render(timestamp) {
+        let canvas = this.canvas;
+        let offscreen = this.offscreen;
+        let dpr = 1;
+        if (this.dprAdaptive) {
+            if (offscreen)
+                dpr = this.dpr !== undefined ? this.dpr : 1;
+            else
+                dpr = Math.max(self.devicePixelRatio * (self.documentZoom ? self.documentZoom : 1), 1);
+        }
+        let delta = timestamp - ((this.frameTime == undefined) ? timestamp : this.frameTime);
+        this.frameTime = timestamp;
+
+        let erase = true;
+        let resize = !this.resized || canvas.width == 0 || canvas.height == 0;
+        if (resize) {
+            this.resized = true;
+            if (!offscreen) {
+                canvas.width  = dpr * canvas.clientWidth;
+                canvas.height = dpr * canvas.clientHeight;
+                erase = false;
+            } else {
+                if (this.width)  {
+                    canvas.width  = dpr * this.width;
+                    erase = false;
+                }
+                if (this.height) {
+                    canvas.height = dpr * this.height;
+                    erase = false;
+                }
+            }
+        }
+
+        let ea = {
+            dpr: dpr,
+            delta: delta,
+            canvas: canvas,
+            frameTime: timestamp,
+        };
+
+        let nodes = this.nodes;
+        for (let i = 0; i < nodes.length; i++) {
+            if (!nodes[i].completed) {
+                // 不需要重新viewport那么, 更新node状态
+                if (!nodes[i].viewportNode) {
+                    nodes[i].update(ea);
+                }
+            } else {
+                nodes.remove(nodes[i]);i--;
+            }
+        }
+
+        let gl = this.gl;
+        gl.viewport(0, 0, canvas.width, canvas.height);
+
+        if (gl.renderAni == null) {
+            gl.renderAni = this
+        }
+
+        if (erase && gl.renderAni === this) {
+            gl.clearColor(0, 0, 0, 0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+        }
+
+        if (nodes.length === 0) {
+            this.frameTime = void 0;
+            this.requestId = void 0;
+            this.running = false;
+            gl.renderAni = null
+            return;
+        }
+
+        let sprite, state, skeleton;
+        let shader = this.spine.shader;
+        let batcher = this.spine.batcher;
+        let renderer = this.spine.skeletonRenderer;
+        gl.enable(gl.SCISSOR_TEST);
+        gl.scissor(0, 0, canvas.width, canvas.height);
+
+        if (this.bindShader == null) {
+            this.bindShader = shader;
+            shader.bind();
+            shader.setUniformi(this.spineLib.Shader.SAMPLER, 0);
+        }
+
+        let speed;
+        for (let i = 0; i < nodes.length; i++) {
+            sprite = nodes[i];
+            if (sprite.renderClip != null) {
+                gl.clipping = sprite.renderClip;
+                gl.scissor(gl.clipping.x, gl.clipping.y, gl.clipping.width, gl.clipping.height);
+            }
+
+            if (sprite.viewportNode) {
+                let rect = sprite.viewportNode.getBoundingClientRect()
+                let canvasRect = canvas.getBoundingClientRect()
+                let width  = rect.right - rect.left;
+                let height = rect.bottom - rect.top;
+                if (rect.x + width - canvasRect.x < 0 || rect.x - canvasRect.x > canvasRect.width) {
+                    continue;  // 超出canvas外面了, 不用计算世界位置了, 忽略
+                }
+
+                // 重新更新一下node的值
+                sprite.update({
+                    dpr: dpr,
+                    delta: delta,
+                    canvas: {width: width * dpr, height: height * dpr},
+                    frameTime: timestamp,
+                })
+                // 将当前视口选在小窗的位置上
+                gl.viewport((rect.x - canvasRect.x) * dpr, (canvasRect.bottom - rect.bottom) * dpr, width * dpr, height * dpr);
+                gl.scissor((rect.x - canvasRect.x) * dpr, (canvasRect.bottom - rect.bottom) * dpr, width * dpr, height * dpr);
+            }
+
+            skeleton = sprite.skeleton;
+            state = skeleton.state;
+            speed = sprite.speed == null ? 1 : sprite.speed;
+            // skeleton.flipX = sprite.flipX;
+            // skeleton.flipY = sprite.flipY
+            skeleton.scaleX = sprite.flipX ? -1 : 1
+            skeleton.scaleY = sprite.flipY ? -1 : 1
+
+            // 4.0的修改透明度方法变了, 需要使用下面这种方法.
+            skeleton.color.a = (sprite.renderOpacity == null ? 1 : sprite.renderOpacity);
+
+            state.hideSlots = sprite.hideSlots;
+            state.update(delta / 1000 * speed);
+            state.apply(skeleton);
+            skeleton.updateWorldTransform();
+
+            // Get a uniform location from program1
+            // var location1 = gl.getUniformLocation(p1, "someUniform");
+            // gl.uniform4fv(location1, [1, 2, 3, 4]);  // ERROR!!!
+            // Try to use that location on program2
+            gl.useProgram(this.spine.shader.program);
+
+            shader.setUniform4x4f(this.spineLib.Shader.MVP_MATRIX, sprite.mvp.values);
             batcher.begin(shader);
             renderer.premultipliedAlpha = sprite.premultipliedAlpha;
             renderer.outcropMask = this.outcropMask;
@@ -2982,6 +3476,7 @@ class AnimationManager {
         if (version == null) {
             version = '3.6'
         }
+
         switch (version) {
             case SupportSpineVersion.v3_6:
                 if (!this.animations[version]) {
@@ -3013,6 +3508,12 @@ class AnimationManager {
                     this.animations[version].update({width: this.width, height: this.height})
                 }
                 break
+            case SupportSpineVersion.v4_1:
+                if (!this.animations[version]) {
+                    this.animations[version] = new Animation4_1(this.pathPrefix, this.canvas, this.dpr, this.offscreen)
+                    this.animations[version].update({width: this.width, height: this.height})
+                }
+                break
             default:
                 if (!this.animations[SupportSpineVersion.v3_6]) {
                     this.animations[SupportSpineVersion.v3_6] = new Animation3_6(this.pathPrefix, this.canvas, this.dpr, this.offscreen)
@@ -3030,7 +3531,10 @@ class AnimationManager {
      */
     getAnimationBySkinId(skinId) {
         let ani
-        if (80000 > skinId && skinId >= Ani3_7_StartId) {
+        if (90000 > skinId && skinId >= Ani4_1_StartId) {
+            ani = this.getAnimation(SupportSpineVersion.v4_1)
+        }
+        else if (80000 > skinId && skinId >= Ani3_7_StartId) {
             ani = this.getAnimation(SupportSpineVersion.v3_7)
         }
         else if (70000 > skinId && skinId >= Ani3_5_35_StartId) {
