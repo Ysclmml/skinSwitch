@@ -648,7 +648,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                             })
                                             if (p.node.avatar2) {
                                                 p.node.avatar2.addEventListener(lib.config.touchscreen ? 'touchend' : 'click', (e) => {
-                                                    e.stopPropagation()
                                                     // 防止选择事件触发
                                                     if((_status.event.name !== "chooseToUse" && _status.clicked !== false) || p.classList.contains('selectable') || p.classList.contains('target')){
                                                         return
@@ -801,18 +800,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         skinSwitch.chukuangWorkerApi.chukuangAction(player, 'TeShu');
                                     }
                                 }
-                            }
-
-                            lib.skill._testxxx = {
-                                unique: true,
-                                forced: true,
-                                trigger: {
-                                    player: 'phaseAfter'
-                                },
-                                content: function() {
-                                    player.$die();
-                                    player.reinit('shen_ganning', 're_liru');
-                                },
                             }
 
                             // lib.skill._changeSkelSkin = {
@@ -1726,7 +1713,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'dynamicSkin': 'extension_皮肤切换_dynamicSkin', // 保存选择的皮肤的历史数据
                     'showEditMenu': 'extension_皮肤切换_showEditMenu', // 是否加入顶部菜单
                     'showPreviewDynamicMenu': 'extension_皮肤切换_showPreviewDynamicMenu', // 预览是否加入顶部菜单
-                    'closeXYPosAdjust': 'extension_皮肤切换_closeXYPosAdjust',  // 是否显示坐标微调
+                    // 'closeXYPosAdjust': 'extension_皮肤切换_closeXYPosAdjust',  // 是否显示坐标微调
                     'hideHuanFu': 'extension_皮肤切换_hideHuanFu',  // 关闭隐藏换肤按钮
                     'useDynamic': 'extension_皮肤切换_useDynamic',  // 使用皮肤切换携带的出框功能
                     'isAttackFlipX': 'extension_皮肤切换_isAttackFlipX',  //
@@ -2305,19 +2292,29 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
 
                             let labels = getAllActionLabels(t)
-                            if (labels.includes('ChuChang')) {
+                            let jinchangLabel = 'ChuChang'  // 默认的进场标签
+                            if (t.player.ss_jinchang) {
+                                jinchangLabel = t.player.ss_jinchang
+                            }
+                            if (labels.includes(jinchangLabel)) {
                                 // 清空原来的state状态, 添加出场
                                 t.skeleton.state.setEmptyAnimation(0,0);
-                                t.skeleton.state.setAnimation(0,"ChuChang",false,0);
-                                for (let defaultDaiJi of ['DaiJi', 'play']) {
-                                    let da = getLabelIgnoreCase(t, defaultDaiJi)
-                                    if (da) {
-                                        t.skeleton.state.addAnimation(0, da,true, -0.1);
-                                        t.player.action = da
-                                        t.action = da
+                                t.skeleton.state.setAnimation(0, jinchangLabel, false,0);
+                                if (t.player.action) {
+                                    t.skeleton.state.addAnimation(0, t.player.action,true,-0.01);
+                                    t.action = t.player.action
+                                } else {
+                                    for (let defaultDaiJi of ['DaiJi', 'play']) {
+                                        let da = getLabelIgnoreCase(t, defaultDaiJi)
+                                        if (da) {
+                                            t.skeleton.state.addAnimation(0, da,true,-0.01);
+                                            t.player.action = da
+                                            t.action = da
+                                        }
                                     }
                                 }
                             }
+
                             let daijiActioh = t.action || t.skeleton.defaultAction
                             let setAnimation = () => {
                                 // 如果包含Teshu或者play2. 那么接着播放这两个标签
@@ -5078,9 +5075,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                 <div class="nd-detail-filelist__title">
                                                     <div>文件夹内容</div>
                                                     <div style="display: flex; align-items: center">
-                                                        <i class="iconfont icon-paixu1" id="btnSortDirFiles" style="cursor: pointer; margin-right: 15px; font-size: 20px;"></i>
-                                                        <i class="iconfont icon-fanhui" id="btnReturnLastDir" style="cursor: pointer; margin-right: 15px; "></i>
-                                                        <i class="iconfont icon-shousuo" id="btnShouSuoDir" style="cursor: pointer; font-size: 20px;"></i>
+                                                        <i class="iconfont icon-paixu1" id="btnSortDirFiles" style="cursor: pointer; margin-right: 25px;margin-left: -40px;font-size: 26px;"></i>
+                                                        <i class="iconfont icon-fanhui" id="btnReturnLastDir" style="cursor: pointer; font-size: 20px;margin-right: 25px; "></i>
+                                                        <i class="iconfont icon-shousuo" id="btnShouSuoDir" style="cursor: pointer; font-size: 26px;"></i>
                                                     </div>
                                                 </div>
                                                 <div class="nd-detail-filelist__name"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAMAAAC5zwKfAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAABRUExURUxpcf++Hv/ZU//OPv/DL/+9Gv/BI/+4Bf+4Ef/XcP/LOP/TSf/RRP/WTv/JM/+3Ef+9Ff/bhf+5BP/DJf+yDv/imv/kqv/bXP/w0v/fd//calQXUgwAAAAKdFJOUwB///8d3L9enl8sr20gAAACN0lEQVRYw+2Y65abIBRGE1EzVbyNSW18/wctHA6XYw4q9Ee7Vt2AgOHbcVyTOMztdnFxcXFMWf7gKHN190VRKDpFC0iNqB5ZvqpXzJRxHoF7hrAa9/hK9j2oYIA2QA/UqXeyNg5QDBrshhHbUH8xxO+uT7sOJ/tU5a4wh0eK8KmKHTxd28Bfo16pqphep5l6I+R/p8xr668kVghVceH8M5EZYnGhnBKRceGqmaZXPPw2xbO+1xU+8axwe8NfzkIV7xVZdF0AVhi+rWdxIfgmwloE6CkrDCPwJbYUeFgK61icxFcNKyxIxE+WgnllQ0y4+HffzZ8WZtJlCDtz+CzqaaFaVGiWBNEOZZ15zihsT2CFnXk4QStsLohTU3FC+Af8I8JWV1fa1jy8u+hnOUy2vnd5SkeGrJBfHZwDbxe87pfxQvejmMZZYxxdYSoyVyixSvtXFLJ7hWq5xCRNSTozczzHCj8T54kI5d8QCtvZAodDIa7DgRkJaII2hBfaJC7EOE7D076XuIoVBu8oN3kpBLVt4YXBVaUSFSbS5Akb00znSoPn9KCJCN0am7SnGhganC4kKhR2MV0vvEn4M7bFhM3GIZqtgfiPr9BdSAYnrnCX3rQeB/2xsKcHouiBBhpO+phQL9CdjmKqsRkXpkMz57dmfTY1v3k8is26zvN2A6yIbKVqm/tMjFBMp5jpxrWKbsB1dJw/AsC3Lt/YEaK7x1t5r7aLj3ned/fRj1TK3H9wXFxc/F/8BgM0jBZ4nc19AAAAAElFTkSuQmCC"
@@ -5487,7 +5484,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 if (_sorts != null) {
                                     sortDirs(_sorts)
                                 }
-                                for (let i = 0; i < foldsEle.children.length; i++) {
+                                for (let i = 1; i < foldsEle.children.length; i++) {
                                     let foldName = foldsEle.children[i].getAttribute('fold')
                                     if (lastDirName && lastDirName === foldName) {
                                         foldsEle.children[i].classList.add('previewSelect')
@@ -5536,8 +5533,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                                     let scrollTop = filesEle.parentNode.scrollTop;
                                                     if (scrollTop > (idx * 40)) {
                                                         filesEle.parentNode.scrollTop = 40 * (idx - 3)
-                                                    } else if ((idx * 40 - scrollTop) > 3 * 40) {
-                                                        filesEle.parentNode.scrollTop = 40 * (idx - 3)
+                                                    } else if ((idx * 40 - scrollTop) > 10 * 40) {
+                                                        filesEle.parentNode.scrollTop = 40 * (idx)
                                                     }
                                                 }
                                                 break
@@ -5670,28 +5667,41 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         initCurrentNodeInfo()
                                         return
                                     }
+
                                     let centerX = bounds.offset.x + bounds.size.x / 2;
                                     let centerY = bounds.offset.y + bounds.size.y / 2;
                                     let scaleX = bounds.size.x / canvasW;
                                     let scaleY = bounds.size.y / canvasH;
                                     let tempScale = Math.max(scaleX, scaleY);
-                                    if (tempScale > 1) tempScale = 1 / tempScale;
-                                    tempScale *= canvasH / canvasW
+                                    tempScale = 1 / tempScale;
+
                                     let width = canvasW / tempScale;
                                     let height = canvasH / tempScale;
 
                                     // 手动设置x和y值.
                                     let xx = -(centerX - width / 2) / width
                                     let yy = 1-(centerY + height / 2) / height
-                                    t.scale = tempScale * 1.2
 
-                                    if (picPreviewBg.classList.contains('hidden') || window.location.hash === '#unique-id') {
+                                    if (tempScale < 1) {
+                                        t.scale = tempScale * height / width * 1.2
+                                    } else {
+                                        t.scale = tempScale * height / width / 1.2
+                                    }
+
+                                    if (bounds.size.x < bounds.size.y) {
+                                        t.scale = tempScale * height / width / 1.2
+                                    }
+
+                                    if (window.location.hash === '#unique-id') {
                                         xx += 0.15
+                                    }
+
+                                    if (picPreviewBg.classList.contains('hidden')) {
                                         yy -= 0.07
                                     }
 
                                     if (!document.getElementById('previewDetailInfo').classList.contains('hidden')) {
-                                        xx -= 0.1
+                                        xx -= 0.1;
                                     }
 
                                     t.x = [0, xx];
@@ -5708,7 +5718,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     y = yy * canvasH
                                     scale = tempScale * 1.2
                                     initCurrentNodeInfo()
-                                    console.log('scale', 'x', 'y', scale, xx, yy)
                                 }
 
                                 document.getElementById('curVersionText').innerText = `当前版本: ${version}`
@@ -6836,7 +6845,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                         keysMap[k] = k
                                     }
                                     initOptions(wujiangSkinSelect, keysMap)
-                                    console.log('wujiangId....', wujiangId)
                                 });
                             }
                         }
@@ -6857,7 +6865,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 return false
                             }, function (folds, files) {
                                 // 获取所有的特效
-                                console.log('files......', files)
                                 for (let f of files) {
                                     let name = f.substring(0, f.lastIndexOf("."))
                                     let ext = f.substring(f.lastIndexOf(".")+1)
@@ -7078,7 +7085,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 for (let k in pfqhSkillEffect) {
                     for (let i=0; i<pfqhSkillEffect[k].length; i++) {
                         lib.skill[`__pfqh_${k}_${i}`] = pfqhSkillEffect[k][i]
-                        console.log('skill====', pfqhSkillEffect[k][i])
                     }
                 }
             })
@@ -8105,11 +8111,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 intro: "当你更换的dynamicSkin.js与上一个版本内容差距较大时，需重置",
                 clear: true
             },
-            'closeXYPosAdjust': {
-                name: "关闭位置微调",
-                "init": true,
-                "intro": "预览窗口空间有点不够,这个微调功能用到比较少,所以可以选择关闭",
-            },
+            // 'closeXYPosAdjust': {
+            //     name: "关闭位置微调",
+            //     "init": true,
+            //     "intro": "预览窗口空间有点不够,这个微调功能用到比较少,所以可以选择关闭",
+            // },
             "showEditMenu": {
                 "name": "编辑动态皮肤加入顶部菜单",
                 "init": false,
@@ -8386,6 +8392,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 /** 1.18版本更新
  1. 修复觉醒与限定技能弹窗bug
  2. 支持3.5-4.1版本骨骼播放
- 3. 修复部分机型不能使用spine3.8的骨骼问题
+ 3. 修复部分机型不能使用spine3.8骨骼的问题
  4. 增加图集预览骨骼的模式
+ 5. 预览模式下, 初始化尽量自适应大小与查看位置
+ 6. 兼容千幻雷修1.75版本调整大页面数据无效的问题, 不过需要手动在雷修ext添加几行代码
+ 7. 指示线额外添加两种位置, 分别可以指定起始点或者固定起始点. 技能出框添加白名单, 只有在白名单的技能才可以技能出框, 可以添加玩家的出场位置
+ 8. 适当调大了编辑骨骼参数工具条之间的距离, 添加了一个显示当前编辑参数的信息框.
+ 9. 修复了攻击骨骼和待机骨骼指定了不同版本会报错的问题
  */

@@ -335,16 +335,26 @@ function startPlaySkin(data) {
 		}
 
 		let labels = getAllActionLabels(t)
-		if (labels.includes('ChuChang')) {
+		let jinchangLabel = 'ChuChang'  // 默认的进场标签
+		if (t.player.ss_jinchang) {
+			jinchangLabel = t.player.ss_jinchang
+		}
+		if (labels.includes(jinchangLabel)) {
+
 			// 清空原来的state状态, 添加出场
 			t.skeleton.state.setEmptyAnimation(0,0);
-			t.skeleton.state.setAnimation(0,"ChuChang",false,0);
-			for (let defaultDaiJi of dwDefaultDaiJiAction) {
-				let da = getLabelIgnoreCase(t, defaultDaiJi)
-				if (da) {
-					t.skeleton.state.addAnimation(0, da,true,-0.01);
-					t.player.action = da
-					t.action = da
+			t.skeleton.state.setAnimation(0, jinchangLabel, false,0);
+			if (t.player.action) {
+				t.skeleton.state.addAnimation(0, t.player.action,true,-0.01);
+				t.action = t.player.action
+			} else {
+				for (let defaultDaiJi of dwDefaultDaiJiAction) {
+					let da = getLabelIgnoreCase(t, defaultDaiJi)
+					if (da) {
+						t.skeleton.state.addAnimation(0, da,true,-0.01);
+						t.player.action = da
+						t.action = da
+					}
 				}
 			}
 		}

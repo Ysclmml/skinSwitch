@@ -305,6 +305,36 @@ decadeUI.animation.playSpine('effect_youxikaishi')
 decadeUI.animation.loadAndPlaySpine({name: 'ol冰杀/bingsha01', json: true}, {parent: game.players[2]}, '4.0')
 ```
 
+2023-3-20增加
+
+```js
+1. 添加teshu触发白名单参数, 只有在白名单内的技能才允许触发teshu(出框或者框内)
+2. 指示线增加两种起始位置指定, 可以固定起始位置, 配合某些ol的技能特效.  或者指定从攻击方的角色牌出发
+3. 十周年角色的出场位置可以定义了,但是只允许定义玩家的位置
+
+具体写法, 看下面完整参数
+指示线增加参数:
+// startPos: 'attack',  // 默认, 第一种, 如果是出框则是从骨骼的攻击点出发. 不填写就是原来默认的出框规则
+// startPos: 'player',  // 第二种, 从攻击者的角色框位置出发
+startPos: {
+    x: [0, 0.5],
+    y: [0, 0.2],   // 第三种, 手动固定位置为指示线起点
+}
+
+特殊白名单参数
+whitelist: ['tongli']
+
+出场位置:
+chuchang: { 
+    name: "张璇/双姝绰约/chuchang",
+    action: "play",
+    scale: 0.45,
+    x: [0, 0.3],  // 设置玩家出场位置, 每个ai位置不同, 所以不设置ai位置
+    y: [0, 0.4]
+}
+
+```
+
 
 
 皮肤切换完整动皮参数
@@ -327,6 +357,7 @@ tenggongzhu: {
                 teshu: {  // 如果teshu写法是一个对象字典的话, 可以具体配置
 					name: '许邵/评世雕龙/chuchang2', // 如果名称与待机一样, 那么不会出框, 否则会出框, 并且只有标记为shizhounian的才能够在回合外进行出框
 					action: ['gongji', 'jineng'],  // 播放特殊动画指定的标签, 如果填写了多个, 那么会随机播放一个teshu标签
+                    whitelist: ['tongli'], // 触发特殊时候的白名单技能, 例如,此处只有同礼才允许出框.
 					// scale: 0.45  // 其他参数同待机. 
 				},
 				gongji: {  // 攻击参数和teshu一样
@@ -364,6 +395,12 @@ tenggongzhu: {
 						speed: 0.7,
 						delay: 0.5,
                         // factor: 100,  // 调节参数, 自己根据游戏效果进行调节的参数, 十周年指示线填小一点. 默认0.5   
+					},
+                    // startPos: 'attack',  // 默认, 第一种, 如果是出框则是从骨骼的攻击点出发. 不填写就是原来默认的出框规则
+					// startPos: 'player',  // 第二种, 从攻击者的角色框位置出发
+					startPos: {
+						x: [0, 0.5],
+						y: [0, 0.2],   // 第三种, 手动指定位置出发
 					}
 				},
 				skinName: "菡萏慕卿"
@@ -779,6 +816,23 @@ special: {
 ```
 
 其他转换技,受伤次数等累死, 就不赘述了. 
+
+
+
+#### 千幻雷修1.75调大屏参数
+
+如果需要使用皮肤切换的调整千幻雷修的十周年和手杀大页的数据话,   需要关闭雷音的调整大页的按钮, 并且需要在雷音ext对应位置添加几行代码.  大致在1702行左右
+
+![](./doc/千幻1.75调整.png)
+
+```js
+                // 给当前node打一个大页面的标记 start
+                if (this.classList.contains('qh-isBigAvatar')) {
+                    animation.isDecade = lib.config.qhly_currentViewSkin === 'decade'
+                    animation.qhlxBigAvatar = true
+                }
+                // 给当前node打一个大页面的标记 end
+```
 
 
 
