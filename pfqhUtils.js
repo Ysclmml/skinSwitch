@@ -242,7 +242,7 @@ window.pfqhUtils = {
                     }
                 }
 
-                if (wj in dskins && sk in dskins[wj]) {
+                if (dskins[wj] && sk in dskins[wj]) {
                     continue
                 }
 
