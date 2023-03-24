@@ -610,7 +610,7 @@ class BaseAnimation {
         }
     }
 
-    getSpineActions(filename) {
+    getSpineActions(filename, toLoadActions) {
         if (!this.hasSpine(filename)) return console.error('getSpineActions: [' + filename + '] 骨骼没有加载');;
         let skeleton;
         let skeletons = this.spine.skeletons;
@@ -620,7 +620,7 @@ class BaseAnimation {
             skeleton = undefined;
         }
 
-        if (skeleton == null) skeleton = this.prepSpine(filename);
+        if (skeleton == null) skeleton = this.prepSpine(filename, false, toLoadActions);
         let actions = skeleton.data.animations;
         let result = new Array(actions.length);
         for (let i = 0; i < actions.length; i++) result[i] = { name: actions[i].name, duration: actions[i].duration };
@@ -645,7 +645,7 @@ class BaseAnimation {
     loadSpine(filename, skelType, onload, onerror) {}
 
 
-    prepSpine(filename, autoLoad) {}
+    prepSpine(filename, autoLoad, toLoadActions) {}
 
     playSpine(sprite, position){}
 
@@ -821,7 +821,7 @@ class Animation3_6 extends BaseAnimation {
             reader.ontextLoad, reader.onerror);
     };
 
-    prepSpine(filename, autoLoad) {
+    prepSpine(filename, autoLoad, toLoadActions) {
         var _this = this;
         var spineAssets = _this.spine.assets;
         if (!spineAssets[filename]) {
@@ -871,7 +871,7 @@ class Animation3_6 extends BaseAnimation {
             spineAssets[filename].ready = true;
         }
 
-        var data = skelRawData.readSkeletonData(manager.get(filename + '.' + asset.skelType));
+        var data = skelRawData.readSkeletonData(manager.get(filename + '.' + asset.skelType), toLoadActions);
         skeleton = new spine.Skeleton(data);
 
         // 为骨骼添加名字
@@ -921,7 +921,7 @@ class Animation3_6 extends BaseAnimation {
                 skeleton = skeletons[i];
                 if (skeleton.name == sprite.name && skeleton.completed) break;
                 skeleton = null;
-            }; if (!skeleton) skeleton = this.prepSpine(sprite.name);
+            }; if (!skeleton) skeleton = this.prepSpine(sprite.name, false, sprite.toLoadActions);
 
             if (!(sprite instanceof APNode3_6)) {
                 var param = sprite;

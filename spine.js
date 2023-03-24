@@ -4369,6 +4369,7 @@ var spine;
 	spine.SkeletonData = SkeletonData;
 })(spine || (spine = {}));
 var spine;
+// 减少加载的动作, 按需加载. 减少内存压力
 (function (spine) {
 	var SkeletonBinary = (function () {
 		function SkeletonBinary(attachmentLoader) {
@@ -4376,7 +4377,9 @@ var spine;
 			this.linkedMeshes = new Array();
 			this.attachmentLoader = attachmentLoader;
 		}
-		SkeletonBinary.prototype.readSkeletonData = function (binary) {
+		/** 第二个参数是明确需要加载的骨骼动作标签, 但三个参数是明确需要加载的皮肤数据, 减少不必要的加载内容 */
+		SkeletonBinary.prototype.readSkeletonData = function (binary, toLoadActions, toLoadSkins) {
+			let t = performance.now()
 			var scale = this.scale;
 			var skeletonData = new spine.SkeletonData();
 			skeletonData.name = "";
@@ -4519,14 +4522,202 @@ var spine;
 				data.stringValue = input.readString();
 				skeletonData.events.push(data);
 			}
-			
+			// 加载动作标签
+			// let isSkip = false
 			n = input.readInt(true);
+
 			for (var i = 0; i < n; i++) {
-				skeletonData.animations.push(this.readAnimation(input, input.readString(), skeletonData));
+				let animationName = input.readString()
+				if (!toLoadActions || toLoadActions.includes(animationName)) {
+					skeletonData.animations.push(this.readAnimation(input, animationName, skeletonData));
+				} else {
+					this.skipReadAnimation(input, animationName, skeletonData);
+					// isSkip = true;
+				}
+
 			}
-				
+			// console.log('加载时间=== ', performance.now() - t, 'ms', 'isSkip', isSkip)
+			// if (isSkip) {
+			// 	console.log('ann===', skeletonData.animations)
+			// }
 			return skeletonData;
 		};
+
+		// 优化思路来自于文章 https://zhuanlan.zhihu.com/p/608786238
+		// 跳过读取某个动画动作标签
+		SkeletonBinary.prototype.skipReadAnimation = function(input, name, skeletonData) {
+			var scale = this.scale;
+
+			// readCurve 跳过
+			let readCurve = () => {
+				switch (input.readByte()) {
+					case SkeletonBinary.CURVE_STEPPED:
+						break;
+					case SkeletonBinary.CURVE_BEZIER:
+						input.index += 16;
+						break;
+				}
+			}
+
+			for (var i = 0, n = input.readInt(true); i < n; i++) {
+				input.readInt(true);
+				for (var ii = 0, nn = input.readInt(true); ii < nn; ii++) {
+					var timelineType = input.readByte();
+					var frameCount = input.readInt(true);
+					switch (timelineType) {
+						case SkeletonBinary.SLOT_ATTACHMENT: {
+							for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+								input.index += 4
+								input.readString()
+							}
+							break;
+						}
+						case SkeletonBinary.SLOT_COLOR: {
+							for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+								input.index += 8
+								if (frameIndex < frameCount - 1) {
+									readCurve()
+								}
+							}
+							break;
+						}
+						case SkeletonBinary.SLOT_TWO_COLOR: {
+							for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+								input.index += 12
+								if (frameIndex < frameCount - 1)
+									readCurve()
+							}
+							break;
+						}
+					}
+				}
+			}
+			for (var i = 0, n = input.readInt(true); i < n; i++) {
+				var boneIndex = input.readInt(true);
+				for (var ii = 0, nn = input.readInt(true); ii < nn; ii++) {
+					var timelineType = input.readByte();
+					var frameCount = input.readInt(true);
+					switch (timelineType) {
+						case SkeletonBinary.BONE_ROTATE: {
+							for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+								input.index += 8
+								if (frameIndex < frameCount - 1)
+									readCurve()
+							}
+							break;
+						}
+						case SkeletonBinary.BONE_TRANSLATE:
+						case SkeletonBinary.BONE_SCALE:
+						case SkeletonBinary.BONE_SHEAR: {
+							var timeline = void 0;
+							for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+								input.index += 12
+								if (frameIndex < frameCount - 1)
+									readCurve()
+							}
+							break;
+						}
+					}
+				}
+			}
+			for (var i = 0, n = input.readInt(true); i < n; i++) {
+				input.readInt(true);
+				var frameCount = input.readInt(true);
+				for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+					input.index += 9
+					if (frameIndex < frameCount - 1)
+						readCurve()
+				}
+			}
+			for (var i = 0, n = input.readInt(true); i < n; i++) {
+				input.readInt(true);
+				var frameCount = input.readInt(true);
+				for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+					input.index += 20
+					if (frameIndex < frameCount - 1)
+						readCurve()
+				}
+			}
+			for (var i = 0, n = input.readInt(true); i < n; i++) {
+				input.readInt(true);
+				for (var ii = 0, nn = input.readInt(true); ii < nn; ii++) {
+					var timelineType = input.readByte();
+					var frameCount = input.readInt(true);
+					switch (timelineType) {
+						case SkeletonBinary.PATH_POSITION:
+						case SkeletonBinary.PATH_SPACING: {
+							for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+								input.index += 8
+								if (frameIndex < frameCount - 1)
+									readCurve()
+							}
+							break;
+						}
+						case SkeletonBinary.PATH_MIX: {
+							for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+								input.index += 12
+								if (frameIndex < frameCount - 1)
+									readCurve()
+							}
+							break;
+						}
+					}
+				}
+			}
+			for (var i = 0, n = input.readInt(true); i < n; i++) {
+				input.readInt(true)
+				for (var ii = 0, nn = input.readInt(true); ii < nn; ii++) {
+					input.readInt(true);
+					for (var iii = 0, nnn = input.readInt(true); iii < nnn; iii++) {
+						input.readString()
+
+						var frameCount = input.readInt(true);
+						for (var frameIndex = 0; frameIndex < frameCount; frameIndex++) {
+							input.index += 4
+							var end = input.readInt(true);
+							if (end == 0) {
+
+							} else {
+								var start = input.readInt(true);
+								end += start;
+								if (scale == 1) {
+									input.index += 4 * (end - start)
+								} else {
+									input.index += 4 * (end - start)
+								}
+							}
+							if (frameIndex < frameCount - 1)
+								readCurve()
+						}
+					}
+				}
+			}
+			var drawOrderCount = input.readInt(true);
+			if (drawOrderCount > 0) {
+				for (var i = 0; i < drawOrderCount; i++) {
+					input.index += 4
+					var offsetCount = input.readInt(true);
+					for (var ii = 0; ii < offsetCount; ii++) {
+						input.readInt(true);
+						input.readInt(true)
+					}
+				}
+			}
+			var eventCount = input.readInt(true);
+			if (eventCount > 0) {
+				for (var i = 0; i < eventCount; i++) {
+					input.readFloat();
+					var eventData = skeletonData.events[input.readInt(true)];
+					input.readInt(false);
+					input.index += 4
+					input.readBoolean() ? input.readString() : '';
+					if (eventData.audioPath != null) {
+						input.index += 8
+					}
+				}
+			}
+		}
+
 		SkeletonBinary.prototype.readSkin = function (input, skeletonData, defaultSkin, nonessential) {
 			var skin = new spine.Skin(defaultSkin ? "default" : input.readString());
 			if (!defaultSkin) {

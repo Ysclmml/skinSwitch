@@ -146,14 +146,14 @@
 }
 
 .skin-character {
-    background-image: url("../images/huanfu/white-background.jpg");
-    background-size: 100%;
+    /* background-image: url(../images/huanfu/white-background.jpg); */
+    background-size: 65%;
     background-repeat: no-repeat;
-    /*width: 500px;*/
-    /*height: 120px;*/
-    width: 345px;
-    height: 100px;
-    left: 63%;
+    /* width: 500px; */
+    /* height: 120px; */
+    width: 350px;
+    height: 108px;
+    left: 60%;
     top: 6%;
     transform: translate(-50%, 0);
     display: flex;
@@ -162,7 +162,7 @@
 }
 
 #skinDiv .pfqh-selected {
-    box-shadow: rgba(0, 0, 0, 0.2) 0 0 0 1px,rgba(255, 0, 0, 0.4) 0 0 5px, rgba(255, 0, 0, 0.4) 0 0 12px, rgba(255, 0, 0, 0.8) 0 0 15px !important;
+box-shadow: rgba(0, 0, 0, 0.2) 0 0 0 1px,rgba(255, 0, 0, 0.4) 0 0 5px, rgba(255, 0, 0, 0.4) 0 0 12px, rgba(255, 0, 0, 0.8) 0 0 15px !important;
 }
 
 /*切换按钮 https://code.juejin.cn/pen/7144159185901453342 */
@@ -239,31 +239,47 @@
     opacity: 0;
 }
 
+#skinDiv .selectBackground {
+    position: relative;
+    background-size: 100%;
+    background-repeat: no-repeat;
+    display: block;
+    height: 120px;
+    width: 160px;
+    margin-top: 11%;
+    background-image: url(../images/huanfu/white-background.jpg);
+}
+
 /*    select框*/
 #skinDiv .selectOut {
-    outline:none;
-    /*border:1px solid #BBBBBB;*/
+    outline: none;
     border: none;
-    border-radius:4px;
-    position:relative;
-    margin-left: 5%;
-    margin-right: 5%;
+    border-radius: 4px;
+    position: relative;
+    margin-left: 16%;
+    margin-top: 11%;
+    z-index: 10;
+    width: 100px;
+    display: block;
 }
 
 #skinDiv .selectInner {
-    height:40px;
-    -webkit-appearance:none;
-    appearance:none;
-    border:none;
-    font-size:18px;
-    padding:0 10px;
-    display:block;
-    width:100%;
-    -webkit-box-sizing:border-box;
-    box-sizing:border-box;
+    height: 50px;
+    -webkit-appearance: none;
+    appearance: none;
+    border: none;
+    font-size: 16px;
+    display: block;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
     background-color: #FFFFFF;
-    color:#333333;
-    border-radius:4px;
+    color: #333333;
+    border-radius: 4px;
+    width: 100px;
+    text-overflow: ellipsis;
+    line-height: 50px;
+    text-align: center;
+    z-index: 5;
 }
 
 /*防止 十周年ui 换肤一直被遮盖*/

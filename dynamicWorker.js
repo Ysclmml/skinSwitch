@@ -863,6 +863,12 @@ function position(data) {
 		window.postMessage({id: data.id, type: 'position', x: apnode.player.x, y: apnode.player.y, scale: apnode.player.scale, angle: apnode.player.angle})
 	} else if (data.mode === 'beijing') {
 		if (apnode.beijingNode) {
+			if (apnode.player.beijing.x == null) {
+				apnode.player.beijing.x = [0, 0]
+			}
+			if (apnode.player.beijing.y == null) {
+				apnode.player.beijing.y = [0, 0]
+			}
 			window.postMessage({id: data.id, type: 'position', x: apnode.player.beijing.x, y: apnode.player.beijing.y, scale: apnode.player.beijing.scale, angle: apnode.player.beijing.angle})
 		}
 	}else {
@@ -1309,6 +1315,55 @@ function changeAction(data) {
 		}
 	}
 }
+
+
+function loadResources(data) {
+	const {players} = data
+	let preLoad = (am, player) => {
+		// 获取正确的ani
+		let dynamic = am.getAnimation(player.version)
+		let beijingDynamic
+		if (player.beijing != null) {
+			beijingDynamic = am.getAnimation(player.beijing.version || player.version)
+		}
+		// 将千幻的大小改成自适应
+		let loadAllSkels = () => {
+			let loadDaiJi = () => {
+				let skelType = player.json ? 'json': 'skel'
+				if (!dynamic.hasSpine(player.name)) {
+					dynamic.loadSpine(player.name, skelType, () => {}, (errMsg) => {
+						if (errMsg) {
+							console.error(errMsg)
+						}
+					})
+				}
+			}
+			if (player && player.beijing != null) {
+				if (beijingDynamic.hasSpine(player.beijing.name)) {
+					loadDaiJi()
+				} else {
+					beijingDynamic.loadSpine(player.beijing.name, player.beijing.json ? 'json': 'skel', function () {
+						loadDaiJi()
+					})
+				}
+			} else {
+				loadDaiJi()
+			}
+
+		}
+		loadAllSkels()
+	}
+
+	if (players) {
+		let am = animationManagers.getById(data.id);
+		if (!am) return;
+		for (let res of players) {
+			preLoad(am, res)
+		}
+		console.log('预加载待机骨骼成功')
+	}
+}
+
 
 function find(data) {
 	let am = animationManagers.getById(data.id);
@@ -1870,6 +1925,7 @@ onmessage = function (e) {
 		GET_NODE_INFO: getNodeInfo,
 		RESIZE: resize,
 		CHANGE_ACTION: changeAction,
+		LOAD_RESOURCES: loadResources
 	}
 	if (data.message in messageMap) {
 		messageMap[data.message](data)

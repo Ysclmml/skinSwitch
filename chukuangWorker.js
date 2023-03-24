@@ -82,13 +82,14 @@ class PlayerAnimation {
                 pLoad(act, 0)
             }
         }
-        if (!(data.id in this.playerAni)) {
+        if (data.id != null && !(data.id in this.playerAni)) {
             this.playerAni[data.id] = {}
         }
-        if (!(data.skinId in this.playerAni[data.id])) {
+        if (data.skinId != null && !(data.skinId in this.playerAni[data.id])) {
             this.playerAni[data.id][data.skinId] = {}
+            this.playerAni[data.id][data.skinId] = player
         }
-        this.playerAni[data.id][data.skinId] = player
+
     }
 
     findPlayerParams(id, skinId) {
@@ -788,23 +789,6 @@ function getFullName(localePath, name) {
 }
 
 
-function getActionDuration(dynamic, skelName, actionName) {
-    let spineActions = dynamic.getSpineActions(skelName)
-    let duration = null
-    if (actionName) {
-        for (let a of spineActions) {
-            if (a.name === actionName) {
-                duration = a.duration
-                break
-            }
-        }
-    } else {
-        duration = spineActions[0].duration
-    }
-    return duration
-}
-
-
 // 返回0-a-1中的随机整数
 function randomInt(a) {
     return Math.floor(Math.random() * a)
@@ -853,7 +837,7 @@ function completePlayerParams(avatarPlayer, action) {
             // 只支持假动皮攻击出框, 其他动作和待机相同, 不允许出框
             if (action === 'GongJi') {
                 // 查找待机动作的默认动作标签, 并缓存
-                let results = playerAnimation.getAnni(avatarPlayer, actionParams.version).getSpineActions(daijiName)
+                let results = playerAnimation.getAnni(avatarPlayer, actionParams.version).getSpineActions(daijiName, actionParams.toLoadActions)
                 if (results && results.length > 0) {
                     // 检查是否有GongJi标签, 如果有那是真动皮
                     if (actionParams.fakeDynamic) {
@@ -910,7 +894,7 @@ function completePlayerParams(avatarPlayer, action) {
                 }
                 avatarPlayer.actionState[action] = false
             }  else if (action === 'chuchang') {
-                let results = playerAnimation.getAnni(avatarPlayer, actionParams.version).getSpineActions(daijiName)
+                let results = playerAnimation.getAnni(avatarPlayer, actionParams.version).getSpineActions(daijiName, actionParams.toLoadActions)
                 if (results && results.length > 0) {
                     for (let r of results) {
                         if (r.name === actionParams.action) {
@@ -937,7 +921,7 @@ function completePlayerParams(avatarPlayer, action) {
             avatarPlayer.actionState[action] = false
         } else {
             // 查找骨骼与正确的标签
-            let results = playerAnimation.getAnni(avatarPlayer, actionParams.version).getSpineActions(actionParams.name)
+            let results = playerAnimation.getAnni(avatarPlayer, actionParams.version).getSpineActions(actionParams.name, actionParams.toLoadActions)
             let isArray = Array.isArray(actionParams.action)
             let states = []
 
@@ -1219,7 +1203,6 @@ function createDecadeAni(data) {
 
 // 调用十周年专用的ani播放函数
 function decadeAniFunc(data) {
-    console.log('decadeAniFunc===>', data)
     let f = data.funcName
     let eventId = data.eventId
     let args = data.args
@@ -1390,6 +1373,28 @@ function decadeAniFunc(data) {
     }
 }
 
+function loadResources(data) {
+    const {players, skels} = data
+    if (players) {
+        for (let playerParams of players) {
+            playerAnimation.preLoadPlayerSkel({player: playerParams})
+        }
+        console.log('提前加载变身骨骼', players);
+    }
+    if (skels) {
+        let am = playerAnimation.animationManager
+        for (let skel of skels) {
+            let dy = am.getAnimation(skel.version)
+            if (!dy.hasSpine(skel.name)) {
+                dy.loadSpine(skel.name, skel.json ? 'json': 'skel')
+            }
+        }
+        console.log('提前加载变身特效', skels);
+    }
+
+
+}
+
 
 onmessage = function (e) {
     let data = e.data
@@ -1421,6 +1426,8 @@ onmessage = function (e) {
         case 'DECADE_ANI_FUNC':
             decadeAniFunc(data)
             break
+        case 'LOAD_RESOURCES':
+            loadResources(data)
 
     }
 
