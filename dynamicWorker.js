@@ -344,7 +344,7 @@ function startPlaySkin(data) {
 			// 清空原来的state状态, 添加出场
 			t.skeleton.state.setEmptyAnimation(0,0);
 			t.skeleton.state.setAnimation(0, jinchangLabel, false,0);
-			if (t.player.action) {
+			if (t.player.action && t.player.action !== jinchangLabel) {
 				t.skeleton.state.addAnimation(0, t.player.action,true,-0.01);
 				t.action = t.player.action
 			} else {

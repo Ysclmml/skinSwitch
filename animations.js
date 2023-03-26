@@ -103,7 +103,7 @@ if (self.spine3_8 && self.spine) {
 const Ani4StartId = 40000  // 4.0spine内部维护的起始id
 const Ani3_8StartId = 50000  // 3.8spine内部维护的起始id
 const Ani3_5_35_StartId = 60000  // 3.5.35和3.5版本之前的spine内部维护的起始id
-const Ani3_7_StartId = 70000  // 3.5.35和3.5版本之前的spine内部维护的起始id
+const Ani3_7_StartId = 70000  // 3.7版本之前的spine内部维护的起始id
 const Ani4_1_StartId = 80000  // 4.1版本之前的spine内部维护的起始id
 const SupportSpineVersion = {
     v3_6: '3.6',

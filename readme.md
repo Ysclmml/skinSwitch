@@ -337,7 +337,7 @@ chuchang: {
 
 
 
-皮肤切换完整动皮参数
+#### 皮肤切换完整动皮参数
 
 ```js
 tenggongzhu: {
@@ -376,6 +376,10 @@ tenggongzhu: {
                 play2: 'play2',  // 十周年皮肤会随机时间播放play2动作, 默认读取play2标签.
 				shan: "play3", // 只有是shizhounian为true时才会播放出闪的动画. 默认play3, 可以不进行填写
 				background:  '滕公主/菡萏慕卿/beijing.png',  // 指定角色的静态背景
+                    
+                // 如果是同骨骼, 并且类似手杀的进场效果, 但是标签不是默认的ChuChang, 可以指定下面这个参数 
+                // ss_jinchang: 'Enter',  // 手杀进场效果的标签, 非
+                    
                 beijing: {  // 角色的动态背景
 					name: '滕公主/菡萏慕卿/beijing',  
 					scale: 0.4,
@@ -402,6 +406,11 @@ tenggongzhu: {
 						x: [0, 0.5],
 						y: [0, 0.2],   // 第三种, 手动指定位置出发
 					}
+				},
+                // 如果动皮包含专属卡牌与专属语音, 定义对应的语音文件
+                audio: {  
+					skill: '神郭嘉/audio/skill',  // 填写专属技能语音的路径
+					card: '神郭嘉/audio/card',   // 填写专属卡牌语音的路径
 				},
 				skinName: "菡萏慕卿"
 			},
@@ -609,7 +618,7 @@ special = {
           scale: 0.5, 
           speed: 0.5, // 还有一些其他参数和待机一致 
     },
-    // 触发以上定义的特效的条件, 现阶段有6种, 觉醒技, 低血量, 击杀, 转换技, 受伤次数, 限定技
+    // 触发以上定义的特效的条件, 现阶段有8种, 觉醒技, 低血量, 击杀, 转换技, 受伤次数, 限定技, 使命技, 受伤
     condition: {
         // 觉醒技
         juexingji: {
@@ -636,16 +645,34 @@ special = {
             play: 'play2',
             transform: 'transformXXX'  // 转换技触发后会与预设的两种骨骼互相切换
         },
-        // 受伤
-        damage: {
+        // 受伤次数
+        damageTimes: {
             play: 'play2',  // 播放的动画
             transform: ['transformXXX', 'transformYYY']  // 可以设置多个触发条件
         },
         // 限定技
         xiandingji: {
-            transform: 'transform1',  // 触发限定技可以播放骨骼. 
+            transform: 'transform1',  
             play: 'play',  // 也可以选择播放一段动画     
-        },           
+        },
+        // 使命技能成功
+        shimingjiSuccess: {
+            transform: 'transform1', 
+            play: 'play',  // 也可以选择播放一段动画     
+            audio: 'xxx', //
+        }
+           // 使命技能失败
+        shimingjiFail: {
+            transform: 'transform1',  
+            play: 'play',  // 也可以选择播放一段动画     
+            audio: 'xxx', //
+        },
+    	// 受伤
+    	damage: {
+            transform: 'transform1',  // 受伤变身一次后, 就不会再次触发, 除非手动更换皮肤
+            play: 'play',  // 也可以选择播放一段动画 
+            audio: 'xxx', // 受伤播放语音
+        }
     }
 }
 ```
@@ -815,7 +842,142 @@ special: {
 				}
 ```
 
-其他转换技,受伤次数等累死, 就不赘述了. 
+其他转换技,受伤次数等类似, 就不赘述了. 
+
+**变身特效参数**
+
+默认是十周年曹纯的2血变身特效, 可以指定其他变身特效, 变身特效存放在皮肤切换effects/transform目录下, 在变身参数中指定对应的变身特效.如下图所示. 皮肤切换预定义了几种默认的变身特效, 可以只需要指定特效名称即可. 分别是 
+
+`posui`, `jinka`, `qiancheng`, `shaohui`, 可以自己尝试下更换特效看看效果.
+
+![](./doc/变身特效文件存放位置.png)
+
+
+
+#### 技能语音与专属卡牌语音
+
+专属卡牌与专属语音设置参数
+
+```js
+{
+			倚星折月: {
+				name: "神郭嘉/倚星折月/XingXiang",
+				x: [0,-0.21],
+				y: [0,0.42],
+				scale: 0.43,
+				gongji: {
+					x: [0, 0.7],
+					y: [0, 0.45]
+				},
+				beijing: {
+					"name":"神郭嘉/倚星折月/BeiJing",
+					"scale":0.43
+				},
+                // 动皮专属语音指定, 语音相对路径与动皮参数一致
+				audio: {  
+					skill: '神郭嘉/audio/skill',  // 填写专属技能语音的路径
+					card: '神郭嘉/audio/card',   // 填写专属卡牌语音的路径
+				},
+				special: {
+					变身: {
+						name: 'shen_guojia/倚星折月1', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+					},
+					playxiandingji: {
+						name: '神郭嘉/倚星折月/XingXiang',
+						action: 'GongJi',
+						x: [0, 0.5],
+						y: [0, 0.5],
+						scale: 1,
+						speed: 1,
+					},
+					condition: {
+						juexingji: {
+							transform: "变身",  // 设置血量需要变换的骨骼
+							audio: '神郭嘉/audio/victory', // 触发限定技时候播放的语音
+						},
+						xiandingji: {
+							// transform: "变身",  // 设置血量需要变换的骨骼
+							// play: 'playxiandingji'
+							audio: '神郭嘉/audio/skill/victory', // 触发限定技时候播放的语音
+						},
+						jisha: {
+							audio: '神郭嘉/audio/skill/victory'
+						}
+					}
+				}
+			},
+			倚星折月1: {
+				name: "神郭嘉/倚星折月1/XingXiang_1",
+				x: [0,-0.21],
+				y: [0,0.42],
+				scale: 0.43,
+				gongji: {
+					"x":[0,0.7],
+					"y":[0,0.45]
+				},
+				beijing: {
+					"name":"神郭嘉/倚星折月1/BeiJing_1",
+					"scale":0.43
+				},
+				audio: {  // 语音
+					skill: '神郭嘉/audio/skill',  // 填写技能的路径
+					card: '神郭嘉/audio/card',   // 填写基本牌的路径
+				},
+			},
+		}
+```
+
+
+
+
+
+![](./doc/技能语音存放.png)
+
+![](./doc/动皮对应静皮存放.png)
+
+#### 播放语音功能
+
+增加播放语音功能. 在之前定义的几种条件下, 除了触发变换骨骼与播放特效外, 还支持播放语音. 以曹纯2血变身为例, 其他觉醒,限定技等写法一致. 
+
+播放特效语音的写法可以有3处, 任意一处均可.  但是优先级以此递减
+
+```js
+special: {
+					变身1: {
+						hp: 3,  // 如果血量低于3, 则会触发变身效果, 当血量恢复到2以上, 那么
+						name: 'caochun/虎年曹纯', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+                        // 第一处, 在有多个变身条件下, 可以单独指定一段语音, 触发改变身效果可以播放, 优先级最高
+						//audio: '神郭嘉/audio/skill/victory', // 触发限定技时候播放的语音
+						effect: 'shaohui', // 预留, 选择更换骨骼的特效 , 目前只有曹纯一个, 全部默认播放曹纯的换肤骨骼
+					},
+					变身2: {
+						hp: 1,  // 如果血量低于2, 则会触发变身效果, 当血量恢复到2以上, 那么
+						name: 'caochun/变身后', // 不同骨骼, 不填写表示同一个骨骼, 填写的话格式为 'hetaihou/战场绝版'  角色名+皮肤名称
+                        // 此处的语音可以和变身1不同, 当达成1血后播放的语音
+						// audio: '曹纯/audio/XingXiang', // 触发限定技时候播放的语音
+					},
+					play: {
+						name: "曹纯/变身后/chuchang",
+						scale: 1,
+						x: [0,0.8],
+						y: [0,0.4],
+						audio: '曹纯/audio/XingXiang', // 第二处位置, 播放动画时,可以同时播放语音文件, 优先级次之
+					},
+					condition: {
+						lowhp: {
+                            // 第三处位置, 语音文件定义在此处, 表示只要触发变身, 都会播放对应的语音文件.
+                            audio: '曹纯/audio/XingXiang', // 播放动画时,同时播放的语音文件, 优先级最低
+							transform: ['变身1', '变身2'],  // 设置血量需要变换的骨骼
+							recover: false,  // 恢复血量是否变回原来的,
+							play: 'play',
+						},
+					}
+				}
+```
+
+**参数说明**
+
+![](./doc/变身参数说明.png)
 
 
 
@@ -832,6 +994,34 @@ special: {
                     animation.qhlxBigAvatar = true
                 }
                 // 给当前node打一个大页面的标记 end
+```
+
+千幻大屏页面打不开出现bug
+
+需要修改函数.  搜索千幻ext函数 game.qhly_deepClone进行替换. 
+
+```js
+            game.qhly_deepClone = function (obj, newObj) {
+                var newObj = newObj || {};
+                for (let key in obj) {
+                    // 可能有的参数是null, 防止空指针异常
+                    if (obj[key] && obj[key].constructor === Array) {
+                        newObj[key] = [...obj[key]];
+
+                    } else if (typeof obj[key] == 'object') {
+                        // 检查下是否是循环引用自身, 如果是退出递归, skin参数暂时只会循环引用自身, 其他更复杂的循环引用就不检查了
+                        if (obj[key] === obj) {
+                            newObj[key] = newObj
+                            continue
+                        }
+                        newObj[key] = {};
+                        game.qhly_deepClone(obj[key], newObj[key]);
+                    } else {
+                        newObj[key] = obj[key]
+                    }
+                }
+                return newObj;
+            }
 ```
 
 
