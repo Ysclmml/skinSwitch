@@ -1987,7 +1987,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     game.players[i].playDynamic = Player.playDynamic;
                                     game.players[i].showCharacter = Player.showCharacter;
                                     game.players[i].reinit = pfqh_reinit;
-                                    game.players[i].uninit = pfqh_uninit;
+                                    // game.players[i].uninit = pfqh_uninit;
                                 }
 
                                 if (timer) {
@@ -4603,6 +4603,12 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         this.transformInitTime = new Date().getTime()
                     }
                     let initPlayerAudio = () => {
+                        if (!player.dynamic) {
+                            return
+                        }
+                        if (!player.dynamic.primary && !player.dynamic.deputy) {
+                            return
+                        }
                         let name = isPrimary ? player.name1 : player.name2
                         let id = player.dynamic.id
                         let skinId = isPrimary ? player.dynamic.primary.id : player.dynamic.deputy.id
