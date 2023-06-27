@@ -1,0 +1,286 @@
+
+SSZBB_JD_eff_changliangdeng.png
+size: 995,995
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+dianliangui_00
+  rotate: true
+  xy: 570, 247
+  size: 132, 133
+  orig: 160, 160
+  offset: 17, 12
+  index: -1
+dianliangui_01
+  rotate: false
+  xy: 163, 236
+  size: 134, 134
+  orig: 160, 160
+  offset: 16, 11
+  index: -1
+dianliangui_02
+  rotate: true
+  xy: 164, 372
+  size: 134, 135
+  orig: 160, 160
+  offset: 16, 11
+  index: -1
+dianliangui_03
+  rotate: true
+  xy: 162, 101
+  size: 133, 134
+  orig: 160, 160
+  offset: 16, 12
+  index: -1
+dianliangui_04
+  rotate: false
+  xy: 301, 372
+  size: 133, 134
+  orig: 160, 160
+  offset: 15, 13
+  index: -1
+dianliangui_05
+  rotate: false
+  xy: 299, 237
+  size: 134, 133
+  orig: 160, 160
+  offset: 15, 14
+  index: -1
+dianliangui_06
+  rotate: false
+  xy: 436, 376
+  size: 132, 134
+  orig: 160, 160
+  offset: 15, 13
+  index: -1
+dianliangui_07
+  rotate: false
+  xy: 570, 381
+  size: 133, 134
+  orig: 160, 160
+  offset: 15, 13
+  index: -1
+dianliangui_08
+  rotate: true
+  xy: 436, 241
+  size: 133, 132
+  orig: 160, 160
+  offset: 14, 13
+  index: -1
+dianliangui_09
+  rotate: true
+  xy: 705, 247
+  size: 132, 131
+  orig: 160, 160
+  offset: 14, 12
+  index: -1
+dianliangui_10
+  rotate: false
+  xy: 570, 116
+  size: 133, 129
+  orig: 160, 160
+  offset: 14, 14
+  index: -1
+dianliangui_11
+  rotate: false
+  xy: 705, 116
+  size: 133, 129
+  orig: 160, 160
+  offset: 14, 14
+  index: -1
+dianliangui_12
+  rotate: false
+  xy: 435, 111
+  size: 133, 128
+  orig: 160, 160
+  offset: 14, 15
+  index: -1
+dianliangui_13
+  rotate: true
+  xy: 705, 381
+  size: 134, 129
+  orig: 160, 160
+  offset: 14, 14
+  index: -1
+dianliangui_14
+  rotate: true
+  xy: 815, 540
+  size: 133, 130
+  orig: 160, 160
+  offset: 15, 14
+  index: -1
+dianliangui_15
+  rotate: false
+  xy: 840, 2
+  size: 132, 131
+  orig: 160, 160
+  offset: 16, 13
+  index: -1
+dianliangui_16
+  rotate: true
+  xy: 836, 405
+  size: 133, 131
+  orig: 160, 160
+  offset: 16, 13
+  index: -1
+dianliangui_17
+  rotate: false
+  xy: 838, 270
+  size: 132, 133
+  orig: 160, 160
+  offset: 17, 12
+  index: -1
+dianliangui_18
+  rotate: false
+  xy: 840, 135
+  size: 132, 133
+  orig: 160, 160
+  offset: 17, 12
+  index: -1
+dianliangui_19
+  rotate: false
+  xy: 298, 101
+  size: 132, 133
+  orig: 160, 160
+  offset: 17, 12
+  index: -1
+uiguangmang_00
+  rotate: false
+  xy: 2, 656
+  size: 160, 168
+  orig: 260, 260
+  offset: 53, 46
+  index: -1
+uiguangmang_01
+  rotate: false
+  xy: 333, 828
+  size: 158, 165
+  orig: 260, 260
+  offset: 54, 48
+  index: -1
+uiguangmang_02
+  rotate: true
+  xy: 493, 677
+  size: 154, 160
+  orig: 260, 260
+  offset: 53, 49
+  index: -1
+uiguangmang_03
+  rotate: false
+  xy: 323, 512
+  size: 154, 156
+  orig: 260, 260
+  offset: 51, 51
+  index: -1
+uiguangmang_04
+  rotate: false
+  xy: 164, 667
+  size: 155, 157
+  orig: 260, 260
+  offset: 51, 52
+  index: -1
+uiguangmang_05
+  rotate: true
+  xy: 333, 670
+  size: 156, 158
+  orig: 260, 260
+  offset: 49, 53
+  index: -1
+uiguangmang_06
+  rotate: false
+  xy: 164, 508
+  size: 157, 157
+  orig: 260, 260
+  offset: 49, 53
+  index: -1
+uiguangmang_07
+  rotate: false
+  xy: 655, 517
+  size: 158, 156
+  orig: 260, 260
+  offset: 47, 54
+  index: -1
+uiguangmang_08
+  rotate: false
+  xy: 817, 676
+  size: 159, 156
+  orig: 260, 260
+  offset: 47, 54
+  index: -1
+uiguangmang_09
+  rotate: false
+  xy: 493, 522
+  size: 160, 153
+  orig: 260, 260
+  offset: 46, 54
+  index: -1
+uiguangmang_10
+  rotate: true
+  xy: 2, 5
+  size: 160, 157
+  orig: 260, 260
+  offset: 49, 49
+  index: -1
+uiguangmang_11
+  rotate: false
+  xy: 655, 675
+  size: 160, 157
+  orig: 260, 260
+  offset: 48, 49
+  index: -1
+uiguangmang_12
+  rotate: false
+  xy: 493, 833
+  size: 160, 160
+  orig: 260, 260
+  offset: 48, 47
+  index: -1
+uiguangmang_13
+  rotate: false
+  xy: 818, 834
+  size: 159, 159
+  orig: 260, 260
+  offset: 48, 47
+  index: -1
+uiguangmang_14
+  rotate: false
+  xy: 2, 330
+  size: 159, 161
+  orig: 260, 260
+  offset: 48, 46
+  index: -1
+uiguangmang_15
+  rotate: true
+  xy: 655, 834
+  size: 159, 161
+  orig: 260, 260
+  offset: 47, 46
+  index: -1
+uiguangmang_16
+  rotate: false
+  xy: 2, 167
+  size: 158, 161
+  orig: 260, 260
+  offset: 48, 46
+  index: -1
+uiguangmang_17
+  rotate: false
+  xy: 2, 493
+  size: 160, 161
+  orig: 260, 260
+  offset: 48, 46
+  index: -1
+uiguangmang_18
+  rotate: false
+  xy: 167, 827
+  size: 164, 166
+  orig: 260, 260
+  offset: 49, 46
+  index: -1
+uiguangmang_19
+  rotate: false
+  xy: 2, 826
+  size: 163, 167
+  orig: 260, 260
+  offset: 50, 46
+  index: -1

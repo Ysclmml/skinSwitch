@@ -1,0 +1,209 @@
+
+huode.png
+size: 796,796
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+1-danci_01
+  rotate: true
+  xy: 614, 367
+  size: 152, 58
+  orig: 300, 260
+  offset: 73, 103
+  index: -1
+1-danci_03
+  rotate: false
+  xy: 177, 2
+  size: 168, 87
+  orig: 300, 260
+  offset: 65, 89
+  index: -1
+1-danci_05
+  rotate: true
+  xy: 675, 429
+  size: 178, 105
+  orig: 300, 260
+  offset: 60, 81
+  index: -1
+1-danci_07
+  rotate: true
+  xy: 677, 609
+  size: 185, 117
+  orig: 300, 260
+  offset: 56, 75
+  index: -1
+1-danci_09
+  rotate: false
+  xy: 198, 201
+  size: 189, 124
+  orig: 300, 260
+  offset: 54, 72
+  index: -1
+1-danci_11
+  rotate: false
+  xy: 400, 298
+  size: 192, 128
+  orig: 300, 260
+  offset: 53, 70
+  index: -1
+1-danci_13
+  rotate: false
+  xy: 202, 327
+  size: 196, 132
+  orig: 300, 260
+  offset: 51, 68
+  index: -1
+1-danci_15
+  rotate: false
+  xy: 2, 393
+  size: 198, 133
+  orig: 300, 260
+  offset: 50, 67
+  index: -1
+1-danci_17
+  rotate: false
+  xy: 214, 461
+  size: 199, 135
+  orig: 300, 260
+  offset: 50, 66
+  index: -1
+1-danci_19
+  rotate: false
+  xy: 623, 146
+  size: 171, 135
+  orig: 300, 260
+  offset: 80, 66
+  index: -1
+1-danci_21
+  rotate: true
+  xy: 485, 38
+  size: 173, 136
+  orig: 300, 260
+  offset: 79, 65
+  index: -1
+1-danci_23
+  rotate: true
+  xy: 347, 25
+  size: 174, 136
+  orig: 300, 260
+  offset: 78, 64
+  index: -1
+1-danci_25
+  rotate: false
+  xy: 2, 91
+  size: 176, 125
+  orig: 300, 260
+  offset: 77, 63
+  index: -1
+2-chixu_01
+  rotate: false
+  xy: 415, 428
+  size: 197, 91
+  orig: 340, 160
+  offset: 40, 19
+  index: -1
+2-chixu_03
+  rotate: false
+  xy: 2, 298
+  size: 194, 93
+  orig: 340, 160
+  offset: 42, 19
+  index: -1
+2-chixu_05
+  rotate: false
+  xy: 2, 218
+  size: 188, 78
+  orig: 340, 160
+  offset: 47, 18
+  index: -1
+2-chixu_07
+  rotate: false
+  xy: 180, 118
+  size: 142, 81
+  orig: 340, 160
+  offset: 92, 18
+  index: -1
+2-chixu_09
+  rotate: false
+  xy: 623, 61
+  size: 170, 83
+  orig: 340, 160
+  offset: 91, 19
+  index: -1
+2-chixu_11
+  rotate: false
+  xy: 2, 2
+  size: 173, 87
+  orig: 340, 160
+  offset: 89, 19
+  index: -1
+2-chixu_13
+  rotate: false
+  xy: 389, 213
+  size: 174, 83
+  orig: 340, 160
+  offset: 88, 19
+  index: -1
+2-chixu_15
+  rotate: false
+  xy: 594, 283
+  size: 174, 82
+  orig: 340, 160
+  offset: 87, 21
+  index: -1
+2-chixu_17
+  rotate: false
+  xy: 435, 521
+  size: 209, 85
+  orig: 340, 160
+  offset: 49, 19
+  index: -1
+2-chixu_19
+  rotate: false
+  xy: 459, 706
+  size: 216, 88
+  orig: 340, 160
+  offset: 40, 18
+  index: -1
+2-chixu_21
+  rotate: false
+  xy: 2, 632
+  size: 216, 92
+  orig: 340, 160
+  offset: 37, 18
+  index: -1
+2-chixu_23
+  rotate: false
+  xy: 459, 608
+  size: 214, 96
+  orig: 340, 160
+  offset: 37, 18
+  index: -1
+2-chixu_25
+  rotate: false
+  xy: 220, 598
+  size: 213, 100
+  orig: 340, 160
+  offset: 36, 19
+  index: -1
+2-chixu_27
+  rotate: false
+  xy: 2, 528
+  size: 210, 102
+  orig: 340, 160
+  offset: 37, 19
+  index: -1
+guang_00
+  rotate: false
+  xy: 231, 700
+  size: 226, 94
+  orig: 280, 100
+  offset: 30, 0
+  index: -1
+huode_00
+  rotate: false
+  xy: 2, 726
+  size: 227, 68
+  orig: 280, 100
+  offset: 31, 15
+  index: -1

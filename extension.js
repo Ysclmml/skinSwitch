@@ -7356,7 +7356,624 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
                 },
 
-                // 通过点击角色身上的按钮,打开设置动皮的变身事件
+                // 手杀藏珍阁
+                cangZhenGe: function () {
+                    const div = ui.create.div("#pfqhCzg", document.body);
+                    const cangzhengeCanvasWrapper = ui.create.div('.czg-canvas-wrapper', div)
+                    const bg = ui.create.div('.czgBg', div)
+
+                    const relW = 1920  // 参考宽度
+                    const relH = 1080  // 参考高度
+
+                    const ratio = relW / relH  // 以这个比例来进行统一规划
+                    const bodyW= skinSwitch.bodySize().width
+                    const bodyH = skinSwitch.bodySize().height
+                    let actualW, actualH
+
+                    if (bodyW / relW > bodyH / relH) {
+                        actualW = bodyH * ratio
+                        actualH = bodyH
+                        cangzhengeCanvasWrapper.style.height = bodyH + 'px'
+                        cangzhengeCanvasWrapper.style.width = bodyH * ratio + 'px'
+                    } else {
+                        actualW = bodyW
+                        actualH = bodyW / ratio
+                        cangzhengeCanvasWrapper.style.width = bodyW  + 'px'
+                        cangzhengeCanvasWrapper.style.height = bodyW / ratio  + 'px'
+                    }
+
+                    // const canvas = document.createElement('canvas')
+                    // cangzhengeCanvasWrapper.appendChild(canvas)
+                    // canvas.classList.add('cangzhenge-canvas')
+
+                    let dpr = Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1)
+                    // const animationManager = new AnimationManager(skinSwitch.url + 'images/cangZhenGe/spineAni/', canvas, 129919, {dpr: dpr, offscreen: false})
+                    const app = new PIXI.Application({
+                        width: actualW,
+                        height: actualH,
+                        backgroundAlpha: 0,
+                        resolution: dpr
+                    });
+                    cangzhengeCanvasWrapper.appendChild(app.view);
+                    // canvas.width = dpr * skinSwitch.bodySize().width
+                    // canvas.height = dpr * skinSwitch.bodySize().height
+                    let boxbeijing = null  // 抽卡盒子动画
+                    const loadAnimations = () => {
+                        app.loader
+                            .add("chouzhong", skinSwitch.url + "images/cangZhenGe/spineAni/Ss_M_WWJ_chouzhong.skel")
+                            .add("gongxihuode_daojuchuxian", skinSwitch.url + "images/cangZhenGe/spineAni/gongxihuode/gongxihuode_daojuchuxian.skel")
+                            .add("gongxihuode_gaojidaoju", skinSwitch.url + "images/cangZhenGe/spineAni/gongxihuode/gongxihuode_gaojidaoju.skel")
+                            .add("aar_cangbaoge", skinSwitch.url +"images/cangZhenGe/spineAni/aar_cangbaoge.skel")
+                            .add('back', skinSwitch.url + 'images/cangZhenGe/dialog2.png')
+                            .add('rr_yuan_pan', skinSwitch.url + 'images/cangZhenGe/rewardresult/rr_yuan_pan.png')
+                            .add('title', skinSwitch.url + 'images/cangZhenGe/rewardresult/rr_title.png')
+                            .add('item_board', skinSwitch.url + 'images/cangZhenGe/game_hist_headbg.png')
+                            .add('test', skinSwitch.url + 'images/cangZhenGe/zhenji/ZhanChang/daiji2.skel')
+                            .add('test2', skinSwitch.url + 'images/cangZhenGe/zhenji/HuaHaoYueYuan/daiji2.skel')
+                            .load(onAssetsLoaded);
+                    }
+
+                    function setDefaultAni(spineObj, loop) {
+                        const animation = spineObj.spineData.animations[0]
+                        spineObj.state.setAnimationWith(0, animation, loop)
+                    }
+
+                    function drawItem(itemInfo, count, resource, hasSpine) {
+                        // 奖励道具
+                        const rewardItem = new PIXI.Container()
+                        // 边框
+                        const board = new PIXI.Sprite.from(skinSwitch.url + 'images/cangZhenGe/game_hist_headbg.png')
+                        rewardItem.addChild(board)
+                        board.visible = false
+
+                        let item
+                        if (itemInfo.type === 'wujiang') {
+                            item = new PIXI.Sprite.from(skinSwitch.url + `images/cangZhenGe/wujiang/${itemInfo.id}.png`);
+                        } else {
+                            item = new PIXI.Sprite.from(skinSwitch.url + `images/cangZhenGe/items/${itemInfo.id}.png`);
+                        }
+
+                        rewardItem.scale.set(0.6)
+                        item.x = 88 / dpr * 0.04
+                        item.y = (88  ) / dpr * 0.03
+                        // item.scale.set(0.94)
+                        const ease = new Ease.Ease()
+                        item.scale.set(2)
+                        const scaleTime = 150
+                        ease.add(item, {scale: 0.94}, {repeat: false, duration: scaleTime})
+
+                        // 加上这个延时, 可以防止突然变化大小的闪屏
+                        setTimeout(() => {
+                            rewardItem.addChild(item)
+                        }, 20)
+                        setTimeout(() => {
+
+                            // ease.destroy()
+                            // item.visible = false
+                            board.visible = true
+                            if (hasSpine) {
+                                let chouzhong = new PIXI.spine.Spine(resource.gongxihuode_daojuchuxian.spineData)
+                                rewardItem.addChild(chouzhong)
+                                setDefaultAni(chouzhong, false)
+                                let localPos = chouzhong.getLocalBounds()
+                                chouzhong.position.set(
+                                    -localPos.x + (88  - localPos.width) / 2,
+                                    -localPos.y + (88- localPos.height) / 2,
+                                )
+                                chouzhong.state.timeScale = 0.7
+                                chouzhong.scale.set(1.1)
+
+                            }
+
+                            if (itemInfo.gaoji) {
+                                // 如果是高级道具, 添加边框特效
+                                let gaojidaoju = new PIXI.spine.Spine(resource.gongxihuode_gaojidaoju.spineData);
+                                rewardItem.addChild(gaojidaoju)
+                                setDefaultAni(gaojidaoju, true)
+                                let localPos = gaojidaoju.getLocalBounds()
+                                gaojidaoju.position.set(
+                                    -localPos.x + (88  - localPos.width) / 2 + 2,
+                                    -localPos.y + (88 - localPos.height) / 2,
+                                )
+                                gaojidaoju.state.timeScale = 1
+                                gaojidaoju.scale.set(0.86)
+                                gaojidaoju.zIndex = -1
+                            }
+                        }, scaleTime * 1.3)
+                        rewardItem.sortableChildren = true
+
+                        setTimeout(() => {
+                            // 添加宝珠物品的数量
+                            const countStyle = new PIXI.TextStyle({
+                                fontFamily: 'shousha',
+                                fontSize: 19,
+                                fill: 'white',
+                                padding: 2
+                            });
+
+                            const itemCount = new PIXI.Text(`x${count}`, countStyle);
+                            itemCount.x = board.width - itemCount.width - 5;
+                            itemCount.y = board.y + board.height - itemCount.height - 5
+
+                            rewardItem.addChild(itemCount);
+
+                            // 添加宝主物品的文字显示
+                            const style = new PIXI.TextStyle({
+                                fontFamily: 'shousha',
+                                fontSize: 20,
+                                fill: 'white',
+                                wordWrap: true,
+                                // wordWrapWidth: 12,
+                                align: 'center',
+                                lineJoin: 'round',
+                                leading: 0,
+
+                            });
+
+                            const itemName = new PIXI.Text(itemInfo.name, style);
+                            itemName.x = (board.width - itemName.width) / 2;
+                            itemName.y = board.y + board.height + 10
+
+                            rewardItem.addChild(itemName);
+
+                        }, 600)
+
+                        return rewardItem
+                    }
+
+                    function onAssetsLoaded(loader, resource) {
+                        boxbeijing = new PIXI.spine.Spine(resource.aar_cangbaoge.spineData);
+                        // debugger
+                        // set the position
+                        let localPos = boxbeijing.getLocalBounds()  // 骨骼的本地坐标
+                        let scale
+                        if (app.screen.width < 1200) {
+                            scale = Math.min(app.screen.width / localPos.width, app.screen.height / localPos.height) * 0.62
+                        } else {
+                            scale = Math.min(app.screen.width / localPos.width, app.screen.height / localPos.height) * 0.5
+                        }
+
+                        // 设置绝对偏移
+                        boxbeijing.scale.set(scale);  // 设置新的大小后, 本地坐标会进行偏移
+                        // 设置相对canvas的中心
+                        boxbeijing.position.set(
+                            -localPos.x + (app.screen.width / dpr  - localPos.width ) / 2 + 10,
+                            -localPos.y + (app.screen.height / dpr - localPos.height) / 2,
+                        )
+
+                        app.stage.addChild(boxbeijing)
+                        boxbeijing.state.setAnimation(0, 'play1', true)
+
+
+                        // todo: 添加统计面板, 统计抽取了多少次
+                    }
+
+                    bg.onclick = function (e) {
+                        e.stopPropagation();
+                    }
+
+                    // 藏珍阁logo
+                    ui.create.div(".czg-logo", bg);
+
+                    // 返回
+                    const back1 = ui.create.div(".back1", bg)
+                    back1.onclick = function() {
+                        setTimeout(() => {
+                            div.remove();
+                            // 清楚所有动画
+
+                        }, 50);
+                    }
+
+                    // 中间盒子抽卡动画的背景
+                    const choukaBg = ui.create.div('.chouka-bg', bg)
+
+                    const openOne = ui.create.div('.open-one', bg)
+                    const openAll = ui.create.div('.open-all', bg)
+
+
+                    const openAllTip = ui.create.div('.open-all-tip', bg)
+                    openAllTip.innerHTML = '<span style=\'color:#DEB887; text-shadow:0 0 1px black;font-weight:600;font-family:shousha\'>每次最多开50个</span>'
+
+                    // 盒子配置
+                    const boxSettings = skinSwitch.czgSettings.boxes.map(item => {
+                        return {
+                            name: item.name,
+                            isHot: item.isHot,
+                            tip: item.tip,
+                            count: 5000
+                        }
+                    })
+                    const boxBugTip = ui.create.div(".box-buy-tip", bg);
+                    boxBugTip.innerHTML = "<span style='color:red; text-shadow:0 0 0.5px gray,0 0 0.5px gray;font-weight:500;font-family:shousha'>2023年七夕活动首发，后续请关注每周末限时活动</span>";
+                    // 各个盒子部分
+                    const boxBg = ui.create.div('.box-bg', bg)
+                    const boxItems = []
+                    for (let i = 0; i < boxSettings.length; i++) {
+                        let boxInfo = boxSettings[i]
+                        const boxDiv = ui.create.div('.box-item', boxBg)
+                        const nameParent = ui.create.div('.name-parent', boxDiv)
+                        const boxNameDiv = ui.create.div(".box-item-name", nameParent)
+                        const boxCountDiv = ui.create.div(".box-item-count", nameParent)
+                        boxNameDiv.innerHTML = boxInfo.name
+                        boxCountDiv.innerHTML = `拥有：${boxInfo.count}`
+
+                        if (boxInfo.isHot) {
+                            const boxHotTag = ui.create.div(".box-item-hot-tag", boxDiv)
+                        }
+
+                        if (i === 0) {
+                            boxDiv.classList.add('box-item-select')
+                            boxBugTip.getElementsByTagName('span')[0].innerText = boxInfo.tip
+                        }
+                        boxItems.push(boxDiv)
+                        boxDiv.index = i
+                        boxDiv.listen(function () {
+                            skinSwitch.refreshDomList(boxItems, 'box-item-select', boxDiv)
+                            boxBugTip.getElementsByTagName('span')[0].innerText = boxInfo.tip
+                            currenBox = skinSwitch.czgSettings.boxes[this.index]
+                            setCurrentBoxUi(currenBox)
+                        })
+                    }
+
+                    // 当前抽取的盒子
+                    let currenBox = skinSwitch.czgSettings.boxes[0]
+
+                    // 稀世珍宝 右边的武将部分
+                    const xishi = ui.create.div('.xishizhenbao', bg)
+                    const xishiImg = ui.create.div('.xishizhenbao-img', xishi)
+                    const xishiText = ui.create.div('.xishizhenbao-text', xishi)  // 武将名字
+                    const xishiLabelText = ui.create.div('.xishizhenbao-label-text', xishi)  // 稀释珍宝标识
+                    const xishiRareLabel = ui.create.div('.xishizhenbao-rare-label', xishi)  // 史诗标识
+
+                    function setCurrentBoxUi(box) {
+                        xishi.style.backgroundImage = 'url("' + skinSwitch.url + `images/cangZhenGe/bskin/${box.xishizhenbao.id}.jpg")`
+                        xishiText.innerText = box.xishizhenbao.name
+                    }
+
+                    setCurrentBoxUi(currenBox)
+
+                    // 打开一个遮罩层
+                    const maskDiv = ui.create.div(div)
+                    maskDiv.style.width = '100%'
+                    maskDiv.style.height = '100%'
+                    maskDiv.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
+                    maskDiv.hide()
+
+                    let closeRewardResultWindow = null
+
+                    maskDiv.listen(() => {
+                        // 遮罩层关闭
+                        maskDiv.hide()
+                        console.log('遮罩层关闭')
+                        if (closeRewardResultWindow) {
+                            closeRewardResultWindow()
+                        }
+                    })
+                    function openRewardResult(counts) {
+                        maskDiv.show()
+                        // const clickContinue = ui.create.div('.clickContinue', maskDiv)
+                        // clickContinue.innerText = '请点击屏幕空白处继续'
+
+                        // 打开奖励窗口
+                        let resource = app.loader.resources
+                        // 圆盘
+                        const yuan_pan = new PIXI.Sprite(resource.rr_yuan_pan.texture)
+                        yuan_pan.anchor.set(0.5)
+                        yuan_pan.x = app.screen.width / dpr / 2;
+                        yuan_pan.y = app.screen.height / dpr * 0.48;
+                        yuan_pan.scale.set(0.62)
+                        app.stage.addChild(yuan_pan)
+
+                        yuan_pan.rotateForever = (delta) => {
+                            yuan_pan.rotation += 0.01 * delta;
+                        }
+
+                        app.ticker.add(yuan_pan.rotateForever);
+
+                        // 奖励区
+                        const back = new PIXI.Sprite(resource.back.texture)
+                        back.scale.set(0.54)
+                        back.anchor.set(0.5)
+                        back.x = app.screen.width / dpr / 2;
+                        back.y = app.screen.height / dpr * 0.54;
+                        app.stage.addChild(back)
+
+                        // 文字
+                        const title = new PIXI.Sprite(resource.title.texture)
+                        title.anchor.set(0.5)
+                        title.scale.set(0.80)
+                        title.x = app.screen.width / dpr / 2;
+                        title.y = back.y - back.height * 0.46  - title.height / 4;
+                        app.stage.addChild(title)
+
+                        const ease = new Ease.Ease()
+                        ease.add(title, {scale: 0.62}, {repeat: false, duration: 500})
+
+                        // 可滑动的窗口, 滑动奖励区域
+                        const scrollbox = new Scrollbox.Scrollbox({
+                            boxWidth: ( 88 * 6 + 5 * 40 + 120) * 0.6,
+                            boxHeight: (88 * 2 ),
+                            overflowY: 'hidden',
+                            overflowX: 'none',
+                            // stopPropagation: false,
+                            dragScroll: false
+
+                        })
+                        scrollbox.x = back.x - (88 + 40) * 0.6 * 2 - 60 * 0.6 - 88 * 0.6;
+                        scrollbox.y = back.y - 138 * 0.6 - 20
+                        window.scrollbox = scrollbox
+                        // 抽取盒子
+                        function drawOutBox(count) {
+                            // 根据当前盒子设置的稀有度等东西, 进行抽取
+                            // 方法, 将所有权重按从小到大的顺序铺好 随机抽取一个数字, 看数字落在哪个区间里, 就表示抽取到了哪个
+                            let result = []
+                            let start = 0
+                            let total_weight = 0
+                            let current_weight = 0
+                            const weight_steps = currenBox.items.map(itemInfo => {
+                                total_weight += itemInfo.weight
+                                return total_weight
+                            })
+
+                            // 放入必中的保底
+                            skinSwitch.czgSettings.fixed.forEach(i => {
+                                result.push({
+                                    id: i.id,
+                                    name: i.name,
+                                    count: count * i.count
+                                })
+                            })
+
+                            let randomR
+                            // 模拟抽取
+                            for (let i = 0; i < count; i++) {
+                                randomR = Math.random() * total_weight
+                                for (let j = 0; j < weight_steps.length; j++) {
+                                    if (randomR < weight_steps[j]) {
+                                        let isExist = false
+                                        // 如果存在, 则返回的结果数量累计
+                                        for (let r of result) {
+                                            if (r.id === currenBox.items[j].id){
+                                                r.count = (r.count || 1) + (currenBox.items[j].count || 1)
+                                                isExist = true
+                                                if (currenBox.items[j].gaoji) {
+                                                    r.gaoji = currenBox.items[j].gaoji
+                                                }
+
+                                                if (currenBox.items[j].weight < (r.weight || 1000)) {
+                                                    r.weight = currenBox.items[j].weight
+                                                }
+                                                break;
+                                            }
+                                        }
+                                        if (!isExist) {
+                                            result.push({...currenBox.items[j]});
+                                        }
+                                        break
+                                    }
+                                }
+                            }
+                            return result
+
+                        }
+
+                        let results = drawOutBox(counts)
+                        // 排序一下, 将稀有的物品放到前面
+                        if (results.length > 8) {
+                            results.sort((a, b) => {
+                                let w1 = a.weight || 1000
+                                let w2 = b.weight || 1000
+                                return w1 - w2
+                            })
+                        }
+                        // 从中间开始闪现出现items, 4个4个一起出现
+                        for (let i = 0; i < results.length; i++) {
+                            let itemInfo = results[i]
+
+                            const _drawItem = (i) => {
+                                let rewardItem = drawItem(itemInfo, itemInfo.count || 1, resource, i < 12)
+
+                                if (results.length <= 6) {
+                                    rewardItem.x =  48  * 0.6 + (6 - results.length) * 10 + (88 + 40 + (6 - results.length) * 20) * 0.6  * (i % results.length);
+                                    rewardItem.y = 56
+                                } else if (results.length < 12) {
+                                    rewardItem.x =  48 * 0.6 + (88 + 40) * 0.6  * (i % 6);
+                                    rewardItem.y = 12 + 8 + parseInt(i / 6) * (88 + 60) * 0.6
+                                } else {
+                                    rewardItem.x =  48 * 0.6 + (88 + 40) * 0.6  * (i % 6);
+                                    rewardItem.y = 12 + 8 + parseInt(i / 6) * (88 + 60) * 0.6
+                                }
+
+
+                                scrollbox.content.addChild(rewardItem)
+                            }
+
+                            if (i < 12) {
+                                let firstIndex = []
+                                let secondIndex = []
+                                let lastIndex = []
+                                if (results.length === 4) {
+                                    firstIndex = [1, 2]
+                                    secondIndex = [0, 3]
+                                } else if (results.length === 5) {
+                                    firstIndex = [1, 2, 3]
+                                    secondIndex = [0, 4]
+                                } else {
+                                    firstIndex = [2, 3, 8, 9]
+                                    secondIndex = [1, 4, 7, 10]
+                                    lastIndex = [0, 5, 6, 11]
+                                }
+                                if (firstIndex.includes(i)) {
+                                    _drawItem(i)
+                                } else if (secondIndex.includes(i)){
+                                    setTimeout(() => {
+                                        _drawItem(i)
+                                    }, 350)
+                                } else {
+                                    // 最后一批出现
+                                    setTimeout(() => {
+                                        _drawItem(i)
+                                    }, 700)
+                                }
+                            } else {
+                                _drawItem(i)
+                            }
+
+                        }
+                        // scrollbox.boxHeight = scrollbox.content.children[0].children[0].height * 1.8
+                        scrollbox.update()
+
+                        // 奖励物品可以滑动
+                        // add the viewport to the stage
+                        app.stage.addChild(scrollbox)
+
+
+                        // 页面上添加一个透明的div框来进行拖拽滑动
+                        const dragDiv = ui.create.div('.drag-div')
+                        dragDiv.style.width = scrollbox.boxWidth + 'px'
+                        dragDiv.style.height = scrollbox.boxHeight * 1.8 + 'px'
+                        div.appendChild(dragDiv)
+
+                        // 添加文字提示, 继续
+
+                        const continueTitleStyle = new PIXI.TextStyle({
+                            fontFamily: 'shousha',
+                            fontSize: 16,
+                            fill: '#DEB887',
+                            letterSpacing: 1
+                        })
+                        const continueTitle = new PIXI.Text('请点击屏幕空白处继续', continueTitleStyle)
+                        continueTitle.x = app.screen.width * 0.45 / dpr - 20;
+                        continueTitle.y = app.screen.height * 0.75 / dpr
+                        app.stage.addChild(continueTitle);
+
+
+                        let mousedownEvent = function (e) {
+                            this.isDown = true
+                            if (e.touches && e.touches.length) {
+                                this.posX = e.touches[0].clientX
+                                this.posY = e.touches[0].clientY
+                            } else {
+                                this.posX = e.clientX
+                                this.posY = e.clientY
+                            }
+                        }
+
+                        let mouseupEvent = function (e) {
+                            // 清空之前的数据
+                            if (this.posX) delete this.posX
+                            if (this.posY) delete this.posY
+                            this.isDown = false
+                        }
+
+                        let mousemoveEvent = function (e) {
+                            let curX, curY
+                            if (!this.isDown) return
+                            if (e.touches && e.touches.length) {
+                                curX = e.touches[0].clientX
+                                curY = e.touches[0].clientY
+                            } else {
+                                curX = e.clientX
+                                curY = e.clientY
+                            }
+                            let contentHeight = scrollbox.content.height
+                            let top = scrollbox.content.top
+                            let deltaY = curY - this.posY
+
+                            // 设置阈值, 如果变化小于5, 不进行变化
+                            const threshold = 5
+                            const factor = 0.75
+                            if (Math.abs(deltaY) < threshold) {
+                                return
+                            }
+                            deltaY *= factor;  // 放缓变化速度
+
+                            if (deltaY === 0 || top >= contentHeight && deltaY < 0 || deltaY > 0 && top <= 0) {
+                                return
+                            } else {
+                                top -= deltaY
+                                if (top <= 0) top = 0
+                                else if (top >= contentHeight) {
+                                    top = contentHeight
+                                }
+                                scrollbox.content.top = top
+                            }
+
+                            this.posX = curX
+                            this.posY = curY
+                        }
+
+                        dragDiv.addEventListener('touchstart', mousedownEvent);
+                        dragDiv.addEventListener('touchend', mouseupEvent);
+                        dragDiv.addEventListener('touchcancel', mouseupEvent);
+                        dragDiv.addEventListener('touchmove', mousemoveEvent);
+                        dragDiv.addEventListener('mousedown', mousedownEvent);
+                        dragDiv.addEventListener('mouseup', mouseupEvent);
+                        dragDiv.addEventListener('mouseleave', mouseupEvent);
+                        dragDiv.addEventListener('mousemove', mousemoveEvent);
+
+                        // 定义关闭当前奖励窗口函数
+                        closeRewardResultWindow = function () {
+                            yuan_pan.destroy()
+                            app.ticker.remove(yuan_pan.rotateForever)
+                            title.destroy()
+                            back.destroy()
+                            continueTitle.destroy()
+                            scrollbox.destroy()
+                            div.removeChild(dragDiv)
+                        };
+
+                        window.pixiApp = app
+                        window.pixiBeiJing = boxbeijing
+                    }
+
+                    openAll.listen(function () {
+                        if (boxbeijing) {
+                            boxbeijing.state.setAnimation(0, 'play2', false);
+                            boxbeijing.state.addAnimation(0, 'play1', true, 4);
+
+                            let lis  =  {
+                                complete: function (track) {
+                                    boxbeijing.state.setAnimation(0, 'play1', true)
+                                    boxbeijing.state.remove
+                                    // 打开奖励窗口
+                                    openRewardResult(3)
+                                    boxbeijing.state.removeListener(lis)
+                                }
+                            }
+
+                            boxbeijing.state.listeners = [lis]
+                        }
+                    })
+                    //
+                    openOne.listen(function () {
+                        if (boxbeijing) {
+                            boxbeijing.state.setAnimation(0, 'play2', false);
+                            boxbeijing.state.addAnimation(0, 'play1', true, 4);
+
+                            let lis  =  {
+                                complete: function (track) {
+                                    boxbeijing.state.setAnimation(0, 'play1', true)
+                                    boxbeijing.state.remove
+                                    // 打开奖励窗口
+                                    openRewardResult(1)
+                                    boxbeijing.state.removeListener(lis)
+                                }
+                            }
+
+                            boxbeijing.state.listeners = [lis]
+                        }
+                    })
+
+                    // 加载动画
+                    loadAnimations()
+                    // openRewardResult(50)
+
+
+                },
+
+                // todo: 通过点击角色身上的按钮,打开设置动皮的变身事件
                 openEventBindWindow: function (player, isPrimary) {
 
                     const eventBindWindow = ui.create.div('.eventBindWindow', document.body)
@@ -8720,6 +9337,20 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     if (lib.config[skinSwitch.configKey.showPreviewDynamicMenu]) {
                         ui.create.system('预览spine', function() {
                             skinSwitch.previewDynamic()
+                        }, true)
+                    }
+
+                    // 藏珍阁
+                    if (true) {
+                        lib.init.css(skinSwitch.url + "style", "cang-zhen-ge")
+                        lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi.min", () => {
+                            lib.init.js(skinSwitch.url, "czg_setting")
+                            lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi-spine.umd")
+                            lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi_viewport_scrollbox")
+                            lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi-ease")
+                        })
+                        ui.create.system('藏珍阁', function() {
+                            skinSwitch.cangZhenGe()
                         }, true)
                     }
 

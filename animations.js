@@ -1017,6 +1017,9 @@ class Animation3_6 extends BaseAnimation {
         for (var i = 0; i < nodes.length; i++) {
             if (!nodes[i].completed) {
                 // 不需要重新viewport那么, 更新node状态
+                // if (i === 3) {
+                //     debugger
+                // }
                 if (!nodes[i].viewportNode) {
                     nodes[i].update(ea);
                 }

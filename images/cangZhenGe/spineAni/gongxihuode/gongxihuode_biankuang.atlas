@@ -1,0 +1,111 @@
+
+gongxihuode_biankuang.png
+size: 1552,396
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+images/gaoji/gj_00000
+  rotate: false
+  xy: 785, 4
+  size: 183, 194
+  orig: 198, 196
+  offset: 3, 2
+  index: -1
+images/gaoji/gj_00004
+  rotate: false
+  xy: 596, 200
+  size: 192, 194
+  orig: 198, 196
+  offset: 3, 1
+  index: -1
+images/gaoji/gj_00008
+  rotate: true
+  xy: 396, 2
+  size: 196, 193
+  orig: 198, 196
+  offset: 2, 1
+  index: -1
+images/gaoji/gj_00012
+  rotate: true
+  xy: 591, 2
+  size: 196, 192
+  orig: 198, 196
+  offset: 1, 1
+  index: -1
+images/gaoji/gj_00016
+  rotate: false
+  xy: 201, 200
+  size: 196, 194
+  orig: 198, 196
+  offset: 1, 0
+  index: -1
+images/gaoji/gj_00020
+  rotate: false
+  xy: 790, 202
+  size: 194, 192
+  orig: 198, 196
+  offset: 1, 3
+  index: -1
+images/gaoji/gj_00024
+  rotate: false
+  xy: 970, 8
+  size: 193, 192
+  orig: 198, 196
+  offset: 1, 4
+  index: -1
+images/gaoji/gj_00028
+  rotate: false
+  xy: 1360, 8
+  size: 190, 192
+  orig: 198, 196
+  offset: 2, 3
+  index: -1
+images/gaoji/gj_00032
+  rotate: true
+  xy: 986, 202
+  size: 192, 194
+  orig: 198, 196
+  offset: 3, 2
+  index: -1
+images/gaoji/gj_00036
+  rotate: true
+  xy: 1182, 202
+  size: 192, 194
+  orig: 198, 196
+  offset: 3, 1
+  index: -1
+images/gaoji/gj_00040
+  rotate: false
+  xy: 2, 200
+  size: 197, 194
+  orig: 198, 196
+  offset: 0, 1
+  index: -1
+images/gaoji/gj_00044
+  rotate: false
+  xy: 399, 200
+  size: 195, 194
+  orig: 198, 196
+  offset: 1, 1
+  index: -1
+images/gaoji/gj_00048
+  rotate: false
+  xy: 2, 2
+  size: 195, 196
+  orig: 198, 196
+  offset: 1, 0
+  index: -1
+images/gaoji/gj_00052
+  rotate: false
+  xy: 199, 2
+  size: 195, 196
+  orig: 198, 196
+  offset: 1, 0
+  index: -1
+images/gaoji/gj_00056
+  rotate: true
+  xy: 1165, 8
+  size: 192, 193
+  orig: 198, 196
+  offset: 2, 2
+  index: -1
