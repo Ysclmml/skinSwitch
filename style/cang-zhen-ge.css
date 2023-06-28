@@ -32,6 +32,45 @@
     transform: translate(-50%,-50%);
 }
 
+#pfqhCzg .stat-btn {
+    width: 8%;
+    height: 8%;
+    left: 24%;
+    top: 2.2%;
+    background-image: url(../images/cangZhenGe/lobbyui1/czg_record_get.png);
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-position: center;
+    cursor: pointer;
+    z-index: 30;
+}
+
+#pfqhCzg .stat-bg {
+    width: 28%;
+    height: 80%;
+    top: 12%;
+    left: 12%;
+    z-index: 1000;
+    /* background-color: rgba(0, 0, 0, 0.3); */
+    background: rgb(255,255,255, 0.8);
+}
+
+#pfqhCzg .stat-close-btn {
+    right: 5%;
+    color: red;
+    font-size: 40px;
+    cursor: pointer;
+}
+
+#pfqhCzg .stat-text {
+    color: black;
+    font-size: 20px;
+    left: 5px;
+    max-height: 100%;
+    overflow: scroll;
+}
+}
+
 #pfqhCzg .back1 {
     width: 16%;
     height: 30%;
@@ -178,8 +217,9 @@
     font-size: 18px;
     left: 54%;
     top: 80.5%;
-    z-index: 999;
+    z-index: 0;
     transform: translate(-50%,-50%);
+
 }
 
 .czgBg .reword-div {
@@ -315,6 +355,49 @@
     font-size: 18px;
     text-shadow: 0 0 3px black, 0 0 3px black, 0 0 3px black, 0 0 3px black;
 }
+
+.cbgBtnsGroup {
+    width: 20%;
+    height: 10%;
+    left: 76%;
+    top: 84.8%;
+    position: relative;
+}
+
+.cbgBtnsGroup .cbgTehuiBtn {
+    width: 30%;
+    height: 100%;
+    background-image: url(../images/cangZhenGe/btn_tehui_activity.png);
+    background-repeat: no-repeat;
+    background-size: 113%;
+    position: relative;
+    top: 10%;
+    background-position: center;
+    margin-right: 2%;
+}
+.cbgBtnsGroup .cbgXinyuanBtn {
+    width: 30%;
+    height: 100%;
+    background-image: url(../images/cangZhenGe/btn_heart_shop.png);
+    background-repeat: no-repeat;
+    background-size: 92%;
+    background-position: center;
+    position: relative;
+    margin-right: 2%;
+
+}
+
+.cbgBtnsGroup .cbgYuranBtn {
+    width: 30%;
+    height: 100%;
+    background-image: url(../images/cangZhenGe/btn_rr_preview.png);
+    background-repeat: no-repeat;
+    background-size: 106%;
+    background-position: center;
+    position: relative;
+}
+
+
 
 /*.clickContinue {*/
 /*    color: #DEB887;*/

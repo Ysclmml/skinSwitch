@@ -2,6 +2,7 @@
 
 window.skinSwitch.czgSettings = {
     // 所有盒子固定的保底道具
+    drawCount: 5000,  // 一次抽取的数量
     fixed: [
         {id: '600012', name: '将魂', count: 2},
         {id: '620281', name: '心愿积分', count: 1},
@@ -28,7 +29,7 @@ window.skinSwitch.czgSettings = {
                 {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*66', count: 66, gaoji: true},
                 {id: 'majun', name: '马钧', weight: 5, type: 'wujiang', gaoji: true},
                 {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang', gaoji: true},
-                {id: '620138', name: '雪中舞刃*张春 华动态皮肤', weight: 1000, gaoji: true},
+                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10, gaoji: true},
                 {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000},
                 {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1', gaoji: true},
                 // 精良
@@ -62,13 +63,13 @@ window.skinSwitch.czgSettings = {
                 // 如果是道具, id对应资源文件的名称, 图片放入items目录下
 
                 // 稀有
-                {id: 're_jushou', name: '界答辩', weight: 1, type: 'wujiang'},
-                {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*66', count: 66},
-                {id: 're_xusheng', name: '界徐盛', weight: 20, type: 'wujiang'},
-                {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang'},
-                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10},
-                {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000},
-                {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1'},
+                {id: 're_jushou', name: '界答辩', weight: 1, type: 'wujiang',gaoji: true},
+                {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*66', count: 66,gaoji: true},
+                {id: 're_xusheng', name: '界徐盛', weight: 20, type: 'wujiang',gaoji: true},
+                {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang',gaoji: true},
+                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10,gaoji: true},
+                {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000,gaoji: true},
+                {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1',gaoji: true},
                 // 精良
                 {id: 'ruanhui', name: '阮慧', weight: 100, type: 'wujiang'},
                 {id: '620046', name: '菜篮子', weight: 200, itemName: '菜篮子*99', count: 99},
@@ -100,13 +101,13 @@ window.skinSwitch.czgSettings = {
                 // 如果是道具, id对应资源文件的名称, 图片放入items目录下
 
                 // 稀有
-                {id: 'shen_ganning', name: '神甘宁', weight: 1, type: 'wujiang'},
-                {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*66', count: 66},
-                {id: 'majun', name: '马钧', weight: 5, type: 'wujiang'},
-                {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang'},
-                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10},
-                {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000},
-                {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1'},
+                {id: 'shen_ganning', name: '神甘宁', weight: 1, type: 'wujiang',gaoji: true},
+                {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*66', count: 66, gaoji: true},
+                {id: 'majun', name: '马钧', weight: 5, type: 'wujiang', gaoji: true},
+                {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang', gaoji: true},
+                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10, gaoji: true},
+                {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000, gaoji: true},
+                {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1', gaoji: true},
                 // 精良
                 {id: 'ruanhui', name: '阮慧', weight: 100, type: 'wujiang'},
                 {id: '620046', name: '菜篮子', weight: 200, itemName: '菜篮子*99', count: 99},
@@ -138,13 +139,13 @@ window.skinSwitch.czgSettings = {
                 // 如果是道具, id对应资源文件的名称, 图片放入items目录下
 
                 // 稀有
-                {id: 're_jushou', name: '界答辩', weight: 1, type: 'wujiang'},
-                {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*66', count: 66},
-                {id: 'majun', name: '马钧', weight: 5, type: 'wujiang'},
-                {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang'},
-                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10},
-                {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000},
-                {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1'},
+                {id: 're_jushou', name: '界答辩', weight: 1, type: 'wujiang', gaoji: true},
+                {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*66', count: 66, gaoji: true},
+                {id: 'majun', name: '马钧', weight: 5, type: 'wujiang', gaoji: true},
+                {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang', gaoji: true},
+                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10, gaoji: true},
+                {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000, gaoji: true},
+                {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1', gaoji: true},
                 // 精良
                 {id: 'ruanhui', name: '阮慧', weight: 100, type: 'wujiang'},
                 {id: '620046', name: '菜篮子', weight: 200, itemName: '菜篮子*99', count: 99},
@@ -176,13 +177,13 @@ window.skinSwitch.czgSettings = {
                 // 如果是道具, id对应资源文件的名称, 图片放入items目录下
 
                 // 稀有
-                {id: 'sunhanhua', name: '孙寒华', weight: 1, type: 'wujiang'},
-                {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*33', count: 33},
-                {id: 'majun', name: '马钧', weight: 5, type: 'wujiang'},
-                {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang'},
-                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10},
-                {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000},
-                {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1'},
+                {id: 'sunhanhua', name: '孙寒华', weight: 1, type: 'wujiang', gaoji: true},
+                {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*33', count: 33, gaoji: true},
+                {id: 'majun', name: '马钧', weight: 5, type: 'wujiang', gaoji: true},
+                {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang', gaoji: true},
+                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10, gaoji: true},
+                {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000, gaoji: true},
+                {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1', gaoji: true},
                 // 精良
                 {id: 'ruanhui', name: '阮慧', weight: 100, type: 'wujiang'},
                 {id: '620046', name: '菜篮子', weight: 200, itemName: '菜篮子*99', count: 99},
@@ -214,13 +215,13 @@ window.skinSwitch.czgSettings = {
                 // 如果是道具, id对应资源文件的名称, 图片放入items目录下
 
                 // 稀有
-                {id: 'shen_xunyu', name: '神荀彧', weight: 1, type: 'wujiang'},
-                {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*66', count: 66},
-                {id: 'majun', name: '马钧', weight: 5, type: 'wujiang'},
-                {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang'},
-                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10},
-                {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000},
-                {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1'},
+                {id: 'shen_xunyu', name: '神荀彧', weight: 1, type: 'wujiang', gaoji: true},
+                {id: '620150', name: '史诗宝珠', weight: 1, itemName: '史诗宝珠*66', count: 66, gaoji: true},
+                {id: 'majun', name: '马钧', weight: 5, type: 'wujiang', gaoji: true},
+                {id: 'huaman', name: '花蔓', weight: 10, type: 'wujiang', gaoji: true},
+                {id: '620138', name: '雪中舞刃*张春华动态皮肤', weight: 10, gaoji: true},
+                {id: '600012', name: '将魂', weight: 15, itemName: '将魂*1000', count: 1000, gaoji: true},
+                {id: '620150', name: '史诗宝珠', weight: 100, itemName: '史诗宝珠*1', gaoji: true},
                 // 精良
                 {id: 'ruanhui', name: '阮慧', weight: 100, type: 'wujiang'},
                 {id: '620046', name: '菜篮子', weight: 200, itemName: '菜篮子*99', count: 99},

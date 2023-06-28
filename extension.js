@@ -7408,8 +7408,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             .add('rr_yuan_pan', skinSwitch.url + 'images/cangZhenGe/rewardresult/rr_yuan_pan.png')
                             .add('title', skinSwitch.url + 'images/cangZhenGe/rewardresult/rr_title.png')
                             .add('item_board', skinSwitch.url + 'images/cangZhenGe/game_hist_headbg.png')
-                            .add('test', skinSwitch.url + 'images/cangZhenGe/zhenji/ZhanChang/daiji2.skel')
-                            .add('test2', skinSwitch.url + 'images/cangZhenGe/zhenji/HuaHaoYueYuan/daiji2.skel')
+                            .add('previewBox', skinSwitch.url + `images/cangZhenGe/奖励预览框.png`)
                             .load(onAssetsLoaded);
                     }
 
@@ -7510,7 +7509,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                             });
 
-                            const itemName = new PIXI.Text(itemInfo.name, style);
+                            let name = itemInfo.name
+                            let newName = ''
+                            for (let i = 0; i < name.length; i+=7) {
+                                if (i > 0) {
+                                    newName += ' '
+                                }
+                                newName += name.slice(i, i + 7)
+                            }
+                            const itemName = new PIXI.Text(newName, style);
+
+                            // const itemName = new PIXI.Text(itemInfo.name, style);
                             itemName.x = (board.width - itemName.width) / 2;
                             itemName.y = board.y + board.height + 10
 
@@ -7554,6 +7563,44 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                     // 藏珍阁logo
                     ui.create.div(".czg-logo", bg);
+
+                    const statBtn = ui.create.div('.stat-btn', bg)
+
+                    const totalRewards = {
+                        totalCount: 0,
+                        items: {}
+                    }
+                    const statBg = ui.create.div('.stat-bg', bg)
+                    const closeBtn = ui.create.div('.stat-close-btn', statBg)
+                    closeBtn.innerHTML = 'X'
+                    closeBtn.listen(() => {statBg.hide()})
+                    const desc = ui.create.div('.stat-text', statBg)
+                    statBg.hide()
+
+                    const refreshStatData = () => {
+                        // 打开统计面板
+                        let title = '  累计抽取' + totalRewards.totalCount + '次\n\n'
+                        let res = []
+                        for (let k in totalRewards.items) {
+                            res.push(totalRewards.items[k])
+                        }
+                        res.sort((a, b) => {
+                            let w1 = a.weight || 3000
+                            let w2 = b.weight || 3000
+                            return w1 - w2
+                        })
+                        let textArray = [title]
+                        for (let item of res) {
+                            textArray.push(`${item.name} --- ${item.count}`)
+                        }
+                        desc.innerText = textArray.join('\n')
+                    }
+
+                    statBtn.listen(() => {
+                        statBg.show()
+                        refreshStatData()
+                    })
+
 
                     // 返回
                     const back1 = ui.create.div(".back1", bg)
@@ -7641,6 +7688,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     maskDiv.hide()
 
                     let closeRewardResultWindow = null
+                    let closeRewardPreviewWindow = null
 
                     maskDiv.listen(() => {
                         // 遮罩层关闭
@@ -7648,8 +7696,81 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         console.log('遮罩层关闭')
                         if (closeRewardResultWindow) {
                             closeRewardResultWindow()
+                            closeRewardResultWindow = null // 执行一次后,置空
+                        }
+
+                        if (closeRewardPreviewWindow) {
+                            closeRewardPreviewWindow()
+                            closeRewardPreviewWindow = null
                         }
                     })
+
+                    function bindDragEvent(divBg, scrollView) {
+                        let mousedownEvent = function (e) {
+                            this.isDown = true
+                            if (e.touches && e.touches.length) {
+                                this.posX = e.touches[0].clientX
+                                this.posY = e.touches[0].clientY
+                            } else {
+                                this.posX = e.clientX
+                                this.posY = e.clientY
+                            }
+                        }
+
+                        let mouseupEvent = function (e) {
+                            // 清空之前的数据
+                            if (this.posX) delete this.posX
+                            if (this.posY) delete this.posY
+                            this.isDown = false
+                        }
+
+                        let mousemoveEvent = function (e) {
+                            let curX, curY
+                            if (!this.isDown) return
+                            if (e.touches && e.touches.length) {
+                                curX = e.touches[0].clientX
+                                curY = e.touches[0].clientY
+                            } else {
+                                curX = e.clientX
+                                curY = e.clientY
+                            }
+                            let contentHeight = scrollView.content.height
+                            let top = scrollView.content.top
+                            let deltaY = curY - this.posY
+
+                            // 设置阈值, 如果变化小于5, 不进行变化
+                            const threshold = 5
+                            const factor = 0.75
+                            if (Math.abs(deltaY) < threshold) {
+                                return
+                            }
+                            deltaY *= factor;  // 放缓变化速度
+
+                            if (deltaY === 0 || top >= contentHeight && deltaY < 0 || deltaY > 0 && top <= 0) {
+                                return
+                            } else {
+                                top -= deltaY
+                                if (top <= 0) top = 0
+                                else if (top >= contentHeight) {
+                                    top = contentHeight
+                                }
+                                scrollView.content.top = top
+                            }
+
+                            this.posX = curX
+                            this.posY = curY
+                        }
+
+                        divBg.addEventListener('touchstart', mousedownEvent);
+                        divBg.addEventListener('touchend', mouseupEvent);
+                        divBg.addEventListener('touchcancel', mouseupEvent);
+                        divBg.addEventListener('touchmove', mousemoveEvent);
+                        divBg.addEventListener('mousedown', mousedownEvent);
+                        divBg.addEventListener('mouseup', mouseupEvent);
+                        divBg.addEventListener('mouseleave', mouseupEvent);
+                        divBg.addEventListener('mousemove', mousemoveEvent);
+                    }
+
                     function openRewardResult(counts) {
                         maskDiv.show()
                         // const clickContinue = ui.create.div('.clickContinue', maskDiv)
@@ -7702,7 +7823,6 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         })
                         scrollbox.x = back.x - (88 + 40) * 0.6 * 2 - 60 * 0.6 - 88 * 0.6;
                         scrollbox.y = back.y - 138 * 0.6 - 20
-                        window.scrollbox = scrollbox
                         // 抽取盒子
                         function drawOutBox(count) {
                             // 根据当前盒子设置的稀有度等东西, 进行抽取
@@ -7759,13 +7879,24 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                         let results = drawOutBox(counts)
+
+                        // 将抽奖结果添加到统计里面
+                        for (let r of results) {
+                            let v = totalRewards.items[r.id] || {id: r.id, name: r.name, count: 0, weight: r.weight || 3000}
+                            if (v.weight && v.weight > r.weight) {
+                                v.weight = r.weight
+                            }
+                            v.count += r.count || 1
+                            totalRewards.items[r.id] = v
+                        }
+
                         // 排序一下, 将稀有的物品放到前面
                         if (results.length > 8) {
                             results.sort((a, b) => {
                                 let w1 = a.weight || 1000
                                 let w2 = b.weight || 1000
                                 return w1 - w2
-                            })
+                            });
                         }
                         // 从中间开始闪现出现items, 4个4个一起出现
                         for (let i = 0; i < results.length; i++) {
@@ -7821,6 +7952,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             }
 
                         }
+
+                        // 为了防止内容撑不开容器, 再添加一个透明的填充物
+                        const tmp = new PIXI.Sprite.from(PIXI.Texture.EMPTY)
+                        tmp.height = 100
+                        tmp.width = 50
+                        scrollbox.content.addChild(tmp)
+
                         // scrollbox.boxHeight = scrollbox.content.children[0].children[0].height * 1.8
                         scrollbox.update()
 
@@ -7848,71 +7986,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         continueTitle.y = app.screen.height * 0.75 / dpr
                         app.stage.addChild(continueTitle);
 
-
-                        let mousedownEvent = function (e) {
-                            this.isDown = true
-                            if (e.touches && e.touches.length) {
-                                this.posX = e.touches[0].clientX
-                                this.posY = e.touches[0].clientY
-                            } else {
-                                this.posX = e.clientX
-                                this.posY = e.clientY
-                            }
-                        }
-
-                        let mouseupEvent = function (e) {
-                            // 清空之前的数据
-                            if (this.posX) delete this.posX
-                            if (this.posY) delete this.posY
-                            this.isDown = false
-                        }
-
-                        let mousemoveEvent = function (e) {
-                            let curX, curY
-                            if (!this.isDown) return
-                            if (e.touches && e.touches.length) {
-                                curX = e.touches[0].clientX
-                                curY = e.touches[0].clientY
-                            } else {
-                                curX = e.clientX
-                                curY = e.clientY
-                            }
-                            let contentHeight = scrollbox.content.height
-                            let top = scrollbox.content.top
-                            let deltaY = curY - this.posY
-
-                            // 设置阈值, 如果变化小于5, 不进行变化
-                            const threshold = 5
-                            const factor = 0.75
-                            if (Math.abs(deltaY) < threshold) {
-                                return
-                            }
-                            deltaY *= factor;  // 放缓变化速度
-
-                            if (deltaY === 0 || top >= contentHeight && deltaY < 0 || deltaY > 0 && top <= 0) {
-                                return
-                            } else {
-                                top -= deltaY
-                                if (top <= 0) top = 0
-                                else if (top >= contentHeight) {
-                                    top = contentHeight
-                                }
-                                scrollbox.content.top = top
-                            }
-
-                            this.posX = curX
-                            this.posY = curY
-                        }
-
-                        dragDiv.addEventListener('touchstart', mousedownEvent);
-                        dragDiv.addEventListener('touchend', mouseupEvent);
-                        dragDiv.addEventListener('touchcancel', mouseupEvent);
-                        dragDiv.addEventListener('touchmove', mousemoveEvent);
-                        dragDiv.addEventListener('mousedown', mousedownEvent);
-                        dragDiv.addEventListener('mouseup', mouseupEvent);
-                        dragDiv.addEventListener('mouseleave', mouseupEvent);
-                        dragDiv.addEventListener('mousemove', mousemoveEvent);
-
+                        bindDragEvent(dragDiv, scrollbox)
                         // 定义关闭当前奖励窗口函数
                         closeRewardResultWindow = function () {
                             yuan_pan.destroy()
@@ -7938,8 +8012,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     boxbeijing.state.setAnimation(0, 'play1', true)
                                     boxbeijing.state.remove
                                     // 打开奖励窗口
-                                    openRewardResult(3)
+                                    let c = skinSwitch.czgSettings.drawCount || 50
+                                    openRewardResult(c)
                                     boxbeijing.state.removeListener(lis)
+                                    totalRewards.totalCount += c
+                                    refreshStatData()
                                 }
                             }
 
@@ -7958,6 +8035,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                     boxbeijing.state.remove
                                     // 打开奖励窗口
                                     openRewardResult(1)
+                                    totalRewards.totalCount += 1
+                                    refreshStatData()
                                     boxbeijing.state.removeListener(lis)
                                 }
                             }
@@ -7965,6 +8044,203 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             boxbeijing.state.listeners = [lis]
                         }
                     })
+
+                    // 画预览的道具
+                    function drawPreviewItem(itemInfo) {
+                        let resource = app.loader.resources
+                        // 奖励道具
+                        const rewardItem = new PIXI.Container()
+                        // 边框
+                        const board = new PIXI.Sprite.from(skinSwitch.url + 'images/cangZhenGe/preview_reward.png')
+                        rewardItem.addChild(board)
+                        board.visible = true
+                        board.scale.set(0.672)  // 盒子尺寸/素材尺寸  131/88
+
+                        let item
+                        if (itemInfo.type === 'wujiang') {
+                            item = new PIXI.Sprite.from(skinSwitch.url + `images/cangZhenGe/wujiang/${itemInfo.id}.png`);
+                        } else {
+                            item = new PIXI.Sprite.from(skinSwitch.url + `images/cangZhenGe/items/${itemInfo.id}.png`);
+                        }
+                        rewardItem.scale.set(0.6)
+                        item.x = 88 / dpr * 0.025
+                        item.y = 88 / dpr * 0.01
+                        rewardItem.addChild(item)
+
+                        // 高级物品的边框
+                        if (itemInfo.gaoji) {
+                            // 如果是高级道具, 添加边框特效
+                            let gaojidaoju = new PIXI.spine.Spine(resource.gongxihuode_gaojidaoju.spineData);
+                            rewardItem.addChild(gaojidaoju)
+                            setDefaultAni(gaojidaoju, true)
+                            let localPos = gaojidaoju.getLocalBounds()
+                            gaojidaoju.position.set(
+                                -localPos.x + (88  - localPos.width) / 2 + 2,
+                                -localPos.y + (88 - localPos.height) / 2,
+                            )
+                            gaojidaoju.state.timeScale = 1
+                            gaojidaoju.scale.set(0.86)
+                            gaojidaoju.zIndex = -1
+                        }
+
+                        rewardItem.sortableChildren = true
+
+                        // 预览物品有点特殊, 只有宝珠物品需要区分66和单个, 也只有66宝珠需要画数量
+                        // 添加宝珠物品的数量, 只有权重少于100并且数量大于1的才显示数字
+                        if (itemInfo.count && itemInfo.count > 1 && itemInfo.weight < 100) {
+                            const countStyle = new PIXI.TextStyle({
+                                fontFamily: 'shousha',
+                                fontSize: 19,
+                                fill: 'white',
+                                letterSpacing: true
+                            });
+
+                            const itemCount = new PIXI.Text(`x${itemInfo.count}`, countStyle);
+                            itemCount.x = 88 - itemCount.width - 5;
+                            itemCount.y = board.y + 88 - itemCount.height - 5
+                            rewardItem.addChild(itemCount);
+                        }
+                        // 中文的换行宽度设置可能不起作用, 需要自己手动添加换行符, 分隔符等进行换行
+                        // 添加宝主物品的文字显示
+                        const style = new PIXI.TextStyle({
+                            fontFamily: 'shousha',
+                            fontSize: 20,
+                            fill: 'white',
+                            wordWrap: true,
+                            // breakWords: true,
+                            // wordWrapWidth: 20,
+                            align: 'center',
+                            lineJoin: 'round',
+                            leading: 0,
+                        });
+                        let name = itemInfo.name
+                        let newName = ''
+                        for (let i = 0; i < name.length; i+=5) {
+                            if (i > 0) {
+                                newName += ' '
+                            }
+                            newName += name.slice(i, i + 5)
+                        }
+                        const itemName = new PIXI.Text(newName, style);
+                        itemName.x = 44 - itemName.width / 2;
+                        itemName.y = 88 + 10
+
+                        rewardItem.addChild(itemName);
+
+                        return rewardItem
+
+
+                    }
+
+                    // 显示右下角的按钮组
+                    const btnGroups = ui.create.div('.cbgBtnsGroup', div)
+                    const tehui = ui.create.div('.cbgTehuiBtn', btnGroups)  // 特惠
+                    const xinyuan = ui.create.div('.cbgXinyuanBtn', btnGroups) // 心愿商城
+                    const preview = ui.create.div('.cbgYuranBtn', btnGroups)  // 预览
+                    preview.listen(() => {
+                        previewReward()
+                    })
+                    // 预览当前盒子的奖励物品
+                    function previewReward() {
+                        const resource = app.loader.resources
+                        const previewContaner = new PIXI.Container()
+                        const back = new PIXI.Sprite(resource.previewBox.texture);
+                        back.scale.set((88 * 5 + 25 * 4) / 1037)
+                        back.anchor.set(0.5)
+                        back.x = app.screen.width / dpr / 2;
+                        back.y = app.screen.height / dpr * 0.54;
+                        // 添加背景框
+                        previewContaner.addChild(back)
+
+                        // 添加一个可以滑动的窗口
+                        const scrollbox = new Scrollbox.Scrollbox({
+                            boxWidth: ( 88 * 5 + 4 * 25),
+                            boxHeight: (88 * 3),
+                            overflowY: 'hidden',
+                            overflowX: 'none',
+                            // stopPropagation: false,
+                            dragScroll: false
+
+                        })
+                        scrollbox.x = back.x - (88 + 25) * 0.6 * 2 - 60 * 0.6 - 88 * 0.6;
+                        scrollbox.y = back.y - 88 * 1.5
+                        // 抽取盒子
+
+                        function getPreviewItems() {
+
+                            maskDiv.show()
+
+                            let idSet = new Set()
+                            let result = []
+                            // 放入必中的保底
+                            skinSwitch.czgSettings.fixed.forEach(i => {
+                                result.push({
+                                    id: i.id,
+                                    name: i.name,
+                                    weight: 3000,  // 默认保底奖励, 权重3000
+                                })
+                            })
+
+                            for (let item of currenBox.items) {
+                                if (idSet.has(item.id)) {
+                                    if (item.weight && item.weight <= 100) {
+                                        result.push({...item})
+                                        idSet.add(item.id)
+                                    }
+                                } else {
+                                    idSet.add(item.id)
+                                    result.push({...item})
+                                }
+                            }
+
+                            // 排序一下, 将稀有的物品放到前面
+                            result.sort((a, b) => {
+                                let w1 = a.weight || 1000
+                                let w2 = b.weight || 1000
+                                return w1 - w2
+                            })
+
+                            return result
+                        }
+
+                        let results = getPreviewItems()
+
+                        // 遍历所有的奖励框
+                        for (let i = 0; i < results.length; i++) {
+                            let info = results[i]
+                            // 和之前一样的逻辑将奖励物品画进去
+                            const pItem = drawPreviewItem(info)
+                            pItem.x = 15 + (i % 5) * (88 + (back.width - 100 - 88 * 5) / 4)
+                            pItem.y = 6 + parseInt(i / 5) * (88 + 8) / dpr
+                            scrollbox.content.addChild(pItem)
+
+                        }
+                        scrollbox.content.top = 0
+
+                        previewContaner.addChild(scrollbox)
+                        scrollbox.update()
+                        window.preBox = scrollbox
+                        const dragDiv = ui.create.div('.drag-div')
+                        dragDiv.style.width = scrollbox.boxWidth + 'px'
+                        dragDiv.style.height = scrollbox.boxHeight * 1.8 + 'px'
+                        div.appendChild(dragDiv)
+                        bindDragEvent(dragDiv, scrollbox)
+
+                        // 为了防止内容撑不开容器, 再添加一个透明的填充物
+                        // const tmp = new PIXI.Sprite.from(PIXI.Texture.EMPTY)
+                        // tmp.height = 100
+                        // tmp.width = 50
+                        // scrollbox.content.addChild(tmp)
+
+                        app.stage.addChild(previewContaner)
+
+                        // 定义关闭函数
+                        closeRewardPreviewWindow = function () {
+                            console.log('销毁预览窗口')
+                            previewContaner.destroy({children: true})
+                            div.removeChild(dragDiv)
+                        }
+                    }
 
                     // 加载动画
                     loadAnimations()
