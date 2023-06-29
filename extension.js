@@ -2063,6 +2063,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     'lastPreviewPath': 'extension_皮肤切换_lastPreviewPath',  // 上一次预览的位置
                     'previewSkinsDynamic': 'extension_皮肤切换_previewSkinsDynamic',  // 预览动皮皮肤使用动皮
                     'clickPlayerDynamic': 'extension_皮肤切换_clickPlayerDynamic',  // 单击角色出现换肤功能
+                    'czgEnable': 'extension_皮肤切换_czgEnable',  // 藏珍阁开启
                 },
                 // 十周年UI的配置key
                 decadeKey: {
@@ -7368,45 +7369,38 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     const ratio = relW / relH  // 以这个比例来进行统一规划
                     const bodyW= skinSwitch.bodySize().width
                     const bodyH = skinSwitch.bodySize().height
-                    let actualW, actualH
 
-                    if (bodyW / relW > bodyH / relH) {
-                        actualW = bodyH * ratio
-                        actualH = bodyH
-                        cangzhengeCanvasWrapper.style.height = bodyH + 'px'
-                        cangzhengeCanvasWrapper.style.width = bodyH * ratio + 'px'
-                    } else {
-                        actualW = bodyW
-                        actualH = bodyW / ratio
-                        cangzhengeCanvasWrapper.style.width = bodyW  + 'px'
-                        cangzhengeCanvasWrapper.style.height = bodyW / ratio  + 'px'
-                    }
-
-                    // const canvas = document.createElement('canvas')
-                    // cangzhengeCanvasWrapper.appendChild(canvas)
-                    // canvas.classList.add('cangzhenge-canvas')
-
+                    // 屏幕分辨率问题, 参考https://blog.51cto.com/u_15064642/4040771
                     let dpr = Math.max(window.devicePixelRatio * (window.documentZoom ? window.documentZoom : 1), 1)
-                    // const animationManager = new AnimationManager(skinSwitch.url + 'images/cangZhenGe/spineAni/', canvas, 129919, {dpr: dpr, offscreen: false})
                     const app = new PIXI.Application({
-                        width: actualW,
-                        height: actualH,
+                        // width: actualW/ dpr,
+                        // height: actualH/ dpr,
+                        width: bodyW/ dpr,
+                        height: bodyH/ dpr,
                         backgroundAlpha: 0,
-                        resolution: dpr
+                        resolution: dpr,
+                        antialias: true,     // 消除锯齿
+                        autoDensity: true,
                     });
+                    app.renderer.resize(bodyW, bodyH);
                     cangzhengeCanvasWrapper.appendChild(app.view);
-                    // canvas.width = dpr * skinSwitch.bodySize().width
-                    // canvas.height = dpr * skinSwitch.bodySize().height
                     let boxbeijing = null  // 抽卡盒子动画
+
+                    // const loadResource = () => {
+                    //     if (!app.loader.resources.aar_cangbaoge) {
+                    //
+                    //     }
+                    // }
+
                     const loadAnimations = () => {
+
+                        app.loader.onError.add((err) => {
+                            console.log('err', err)
+                        })
+
                         app.loader
-                            .add("chouzhong", skinSwitch.url + "images/cangZhenGe/spineAni/Ss_M_WWJ_chouzhong.skel")
-                            .add("gongxihuode_daojuchuxian", skinSwitch.url + "images/cangZhenGe/spineAni/gongxihuode/gongxihuode_daojuchuxian.skel")
-                            .add("gongxihuode_gaojidaoju", skinSwitch.url + "images/cangZhenGe/spineAni/gongxihuode/gongxihuode_gaojidaoju.skel")
+                            .add("gongxihuode_biankuang", skinSwitch.url + "images/cangZhenGe/spineAni/gongxihuode/gongxihuode_biankuang.skel")
                             .add("aar_cangbaoge", skinSwitch.url +"images/cangZhenGe/spineAni/aar_cangbaoge.skel")
-                            .add('back', skinSwitch.url + 'images/cangZhenGe/dialog2.png')
-                            .add('rr_yuan_pan', skinSwitch.url + 'images/cangZhenGe/rewardresult/rr_yuan_pan.png')
-                            .add('title', skinSwitch.url + 'images/cangZhenGe/rewardresult/rr_title.png')
                             .add('item_board', skinSwitch.url + 'images/cangZhenGe/game_hist_headbg.png')
                             .add('previewBox', skinSwitch.url + `images/cangZhenGe/奖励预览框.png`)
                             .load(onAssetsLoaded);
@@ -7424,6 +7418,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         const board = new PIXI.Sprite.from(skinSwitch.url + 'images/cangZhenGe/game_hist_headbg.png')
                         rewardItem.addChild(board)
                         board.visible = false
+                        board.scale.set(boardFactor )
 
                         let item
                         if (itemInfo.type === 'wujiang') {
@@ -7433,13 +7428,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         }
 
                         rewardItem.scale.set(0.6)
-                        item.x = 88 / dpr * 0.04
-                        item.y = (88  ) / dpr * 0.03
+                        item.x = boardWidth  * 0.04
+                        item.y = boardWidth * 0.03
                         // item.scale.set(0.94)
                         const ease = new Ease.Ease()
                         item.scale.set(2)
                         const scaleTime = 150
-                        ease.add(item, {scale: 0.94}, {repeat: false, duration: scaleTime})
+                        ease.add(item, {scale: boardFactor * 0.92}, {repeat: false, duration: scaleTime})
 
                         // 加上这个延时, 可以防止突然变化大小的闪屏
                         setTimeout(() => {
@@ -7456,8 +7451,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 setDefaultAni(chouzhong, false)
                                 let localPos = chouzhong.getLocalBounds()
                                 chouzhong.position.set(
-                                    -localPos.x + (88  - localPos.width) / 2,
-                                    -localPos.y + (88- localPos.height) / 2,
+                                    -localPos.x + (boardWidth  - localPos.width) / 2,
+                                    -localPos.y + (boardWidth- localPos.height) / 2,
                                 )
                                 chouzhong.state.timeScale = 0.7
                                 chouzhong.scale.set(1.1)
@@ -7471,11 +7466,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 setDefaultAni(gaojidaoju, true)
                                 let localPos = gaojidaoju.getLocalBounds()
                                 gaojidaoju.position.set(
-                                    -localPos.x + (88  - localPos.width) / 2 + 2,
-                                    -localPos.y + (88 - localPos.height) / 2,
+                                    -localPos.x + (boardWidth  - localPos.width) / 2 + 2,
+                                    -localPos.y + (boardWidth - localPos.height) / 2,
                                 )
                                 gaojidaoju.state.timeScale = 1
-                                gaojidaoju.scale.set(0.86)
+                                gaojidaoju.scale.set(0.86 * boardFactor)
                                 gaojidaoju.zIndex = -1
                             }
                         }, scaleTime * 1.3)
@@ -7485,9 +7480,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             // 添加宝珠物品的数量
                             const countStyle = new PIXI.TextStyle({
                                 fontFamily: 'shousha',
-                                fontSize: 19,
+                                fontSize: parseInt(20 * boardFactor),
                                 fill: 'white',
-                                padding: 2
+                                letterSpacing: 1,
+                                dropShadow: true,
+                                dropShadowColor: 'black',
+                                dropShadowBlur: 1,
+                                dropShadowDistance: 1
                             });
 
                             const itemCount = new PIXI.Text(`x${count}`, countStyle);
@@ -7499,13 +7498,14 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             // 添加宝主物品的文字显示
                             const style = new PIXI.TextStyle({
                                 fontFamily: 'shousha',
-                                fontSize: 20,
+                                fontSize: parseInt(20 * boardFactor),
                                 fill: 'white',
                                 wordWrap: true,
                                 // wordWrapWidth: 12,
                                 align: 'center',
                                 lineJoin: 'round',
                                 leading: 0,
+
 
                             });
 
@@ -7536,28 +7536,31 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         // set the position
                         let localPos = boxbeijing.getLocalBounds()  // 骨骼的本地坐标
                         let scale
-                        if (app.screen.width < 1200) {
-                            scale = Math.min(app.screen.width / localPos.width, app.screen.height / localPos.height) * 0.62
-                        } else {
-                            scale = Math.min(app.screen.width / localPos.width, app.screen.height / localPos.height) * 0.5
-                        }
+                        scale = app.screen.width / localPos.width * 0.4
 
                         // 设置绝对偏移
                         boxbeijing.scale.set(scale);  // 设置新的大小后, 本地坐标会进行偏移
                         // 设置相对canvas的中心
                         boxbeijing.position.set(
-                            -localPos.x + (app.screen.width / dpr  - localPos.width ) / 2 + 10,
-                            -localPos.y + (app.screen.height / dpr - localPos.height) / 2,
+                            -localPos.x + (app.screen.width  - localPos.width ) / 2 + 20,
+                            -localPos.y + (app.screen.height - localPos.height) / 2 - 10,
                         )
 
                         app.stage.addChild(boxbeijing)
                         boxbeijing.state.setAnimation(0, 'play1', true)
 
-
-                        // todo: 添加统计面板, 统计抽取了多少次
+                        // 接着加载第二批资源
+                        app.loader
+                            .add("chouzhong", skinSwitch.url + "images/cangZhenGe/spineAni/Ss_M_WWJ_chouzhong.skel")
+                            .add("gongxihuode_daojuchuxian", skinSwitch.url + "images/cangZhenGe/spineAni/gongxihuode/gongxihuode_daojuchuxian.skel")
+                            .add("gongxihuode_gaojidaoju", skinSwitch.url + "images/cangZhenGe/spineAni/gongxihuode/gongxihuode_gaojidaoju.skel")
+                            .add("gongxihuode_lizi", skinSwitch.url +"images/cangZhenGe/spineAni/gongxihuode/gongxihuode_lizi.skel")
+                            .add('back', skinSwitch.url + 'images/cangZhenGe/dialog2.png')
+                            .add('rr_yuan_pan', skinSwitch.url + 'images/cangZhenGe/rewardresult/rr_yuan_pan.png')
+                            .add('title', skinSwitch.url + 'images/cangZhenGe/rewardresult/rr_title.png')
                     }
 
-                    bg.onclick = function (e) {
+                    bg.listen = function (e) {
                         e.stopPropagation();
                     }
 
@@ -7603,14 +7606,17 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
 
                     // 返回
-                    const back1 = ui.create.div(".back1", bg)
-                    back1.onclick = function() {
-                        setTimeout(() => {
-                            div.remove();
-                            // 清楚所有动画
+                    const back1 = ui.create.div(".ret-back1", bg)
+                    setTimeout(() => {
+                        back1.listen(() => {
+                            setTimeout(() => {
+                                div.remove();
+                                // 清楚所有动画
 
-                        }, 50);
-                    }
+                            }, 50);
+                        })
+
+                    }, 1000)
 
                     // 中间盒子抽卡动画的背景
                     const choukaBg = ui.create.div('.chouka-bg', bg)
@@ -7771,6 +7777,10 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         divBg.addEventListener('mousemove', mousemoveEvent);
                     }
 
+                    // 定义道具的宽度
+                    const boardFactor = app.screen.width / 1588 * 1.4
+                    const boardWidth = 88 * boardFactor
+
                     function openRewardResult(counts) {
                         maskDiv.show()
                         // const clickContinue = ui.create.div('.clickContinue', maskDiv)
@@ -7781,9 +7791,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         // 圆盘
                         const yuan_pan = new PIXI.Sprite(resource.rr_yuan_pan.texture)
                         yuan_pan.anchor.set(0.5)
-                        yuan_pan.x = app.screen.width / dpr / 2;
-                        yuan_pan.y = app.screen.height / dpr * 0.48;
-                        yuan_pan.scale.set(0.62)
+                        yuan_pan.x = app.screen.width / 2;
+                        yuan_pan.y = app.screen.height * 0.48;
+                        yuan_pan.scale.set(app.screen.width / yuan_pan.texture.orig.width * 0.25)
                         app.stage.addChild(yuan_pan)
 
                         yuan_pan.rotateForever = (delta) => {
@@ -7794,35 +7804,54 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         // 奖励区
                         const back = new PIXI.Sprite(resource.back.texture)
-                        back.scale.set(0.54)
+                        back.scale.set(app.screen.width / back.texture.orig.width * 0.62)
                         back.anchor.set(0.5)
-                        back.x = app.screen.width / dpr / 2;
-                        back.y = app.screen.height / dpr * 0.54;
+                        back.x = app.screen.width / 2;
+                        back.y = app.screen.height * 0.54;
                         app.stage.addChild(back)
+
 
                         // 文字
                         const title = new PIXI.Sprite(resource.title.texture)
                         title.anchor.set(0.5)
-                        title.scale.set(0.80)
-                        title.x = app.screen.width / dpr / 2;
-                        title.y = back.y - back.height * 0.46  - title.height / 4;
+                        let titleSize = app.screen.width / title.texture.orig.width * 0.15
+                        title.scale.set(titleSize * 1.5)
+                        title.x = app.screen.width / 2;
+                        title.y = back.y - back.height * 0.5;
                         app.stage.addChild(title)
 
                         const ease = new Ease.Ease()
-                        ease.add(title, {scale: 0.62}, {repeat: false, duration: 500})
+                        ease.add(title, {scale: titleSize   }, {repeat: false, duration: 500})
+
+                        // 奖励道具边框
+
 
                         // 可滑动的窗口, 滑动奖励区域
+                        let scrollBoxWidth = boardWidth * 6 + 5 * boardWidth * 0.2
+                        let scrollBoxHeight = boardWidth * 2 + 20
                         const scrollbox = new Scrollbox.Scrollbox({
-                            boxWidth: ( 88 * 6 + 5 * 40 + 120) * 0.6,
-                            boxHeight: (88 * 2 ),
+                            boxWidth: scrollBoxWidth,
+                            boxHeight: scrollBoxHeight,
                             overflowY: 'hidden',
                             overflowX: 'none',
                             // stopPropagation: false,
                             dragScroll: false
 
                         })
-                        scrollbox.x = back.x - (88 + 40) * 0.6 * 2 - 60 * 0.6 - 88 * 0.6;
-                        scrollbox.y = back.y - 138 * 0.6 - 20
+                        scrollbox.x = back.x - (scrollBoxWidth / 2);
+                        scrollbox.y = back.y - (scrollBoxHeight / 2)
+
+                        // const scrollbox = new Scrollbox.Scrollbox({
+                        //     boxWidth: (88 * 6 + 5 * 40 + 120) * 0.6,
+                        //     boxHeight: (88 * 2 ),
+                        //     overflowY: 'hidden',
+                        //     overflowX: 'none',
+                        //     // stopPropagation: false,
+                        //     dragScroll: false
+                        //
+                        // })
+                        // scrollbox.x = back.x - (88 + 40) * 0.6 * 2 - 60 * 0.6 - 88 * 0.6;
+                        // scrollbox.y = back.y - 138 * 0.6 - 20
                         // 抽取盒子
                         function drawOutBox(count) {
                             // 根据当前盒子设置的稀有度等东西, 进行抽取
@@ -7899,6 +7928,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             });
                         }
                         // 从中间开始闪现出现items, 4个4个一起出现
+                        game.playAudio('../extension/皮肤切换/images/cangZhenGe/mp3/guo1.mp3')
                         for (let i = 0; i < results.length; i++) {
                             let itemInfo = results[i]
 
@@ -7906,14 +7936,27 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                                 let rewardItem = drawItem(itemInfo, itemInfo.count || 1, resource, i < 12)
 
                                 if (results.length <= 6) {
-                                    rewardItem.x =  48  * 0.6 + (6 - results.length) * 10 + (88 + 40 + (6 - results.length) * 20) * 0.6  * (i % results.length);
+
+                                    if (results.length <= 4) {
+                                        let startX = (scrollBoxWidth - results.length * boardWidth * 1.2) / 2
+                                        rewardItem.x = startX * 1.7  + (boardWidth * 1.1) * (i % results.length);
+                                    } else if (results.length === 5) {
+                                        let startX = (scrollBoxWidth - results.length * boardWidth * 1.1) / 2
+                                        rewardItem.x = startX * 1.5 + (boardWidth * 1.1) * (i % results.length);
+                                    } else {
+                                        let startX = (scrollBoxWidth - 6 * boardWidth) / 2
+                                        rewardItem.x = startX * 1.5   + (boardWidth * 1.05) * (i % 6);
+                                    }
                                     rewardItem.y = 56
                                 } else if (results.length < 12) {
-                                    rewardItem.x =  48 * 0.6 + (88 + 40) * 0.6  * (i % 6);
-                                    rewardItem.y = 12 + 8 + parseInt(i / 6) * (88 + 60) * 0.6
+                                    let startX = (scrollBoxWidth - 6 * boardWidth) / 2
+                                    rewardItem.x = startX * 1.5   + (boardWidth * 1.05) * (i % 6);
+                                    rewardItem.y = 20 + parseInt(i / 6) * boardWidth * 1.2
                                 } else {
-                                    rewardItem.x =  48 * 0.6 + (88 + 40) * 0.6  * (i % 6);
-                                    rewardItem.y = 12 + 8 + parseInt(i / 6) * (88 + 60) * 0.6
+                                    let startX = (scrollBoxWidth - 6 * boardWidth) / 2
+                                    rewardItem.x = startX * 2   + (boardWidth * 0.96) * (i % 6);
+                                    rewardItem.y = 20 + parseInt(i / 6) * boardWidth * 1.2
+
                                 }
 
 
@@ -7957,6 +8000,28 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         const tmp = new PIXI.Sprite.from(PIXI.Texture.EMPTY)
                         tmp.height = 100
                         tmp.width = 50
+
+                        // 添加星星spine
+                        // debugger
+                        // set the position
+                        setTimeout(() => {
+                            const xingxingAni = new PIXI.spine.Spine(resource.gongxihuode_lizi.spineData);
+                            let localPos = xingxingAni.getLocalBounds()  // 骨骼的本地坐标
+                            let scale
+                            scale = scrollBoxWidth/ localPos.width * 0.15
+                            // 设置绝对偏移
+                            xingxingAni.scale.set(0.5 * boardFactor);  // 设置新的大小后, 本地坐标会进行偏移
+                            // 设置相对canvas的中心
+                            xingxingAni.position.set(
+                                -localPos.x + (scrollBoxWidth / 3 ) / 2,
+                                -localPos.y + (scrollBoxHeight / 2) / 2 ,
+                            )
+                            window.xingxingAni = xingxingAni
+                            xingxingAni.state.timeScale = 0.6
+                            setDefaultAni(xingxingAni, true)
+                            scrollbox.content.addChild(xingxingAni)
+                        }, 2000)
+
                         scrollbox.content.addChild(tmp)
 
                         // scrollbox.boxHeight = scrollbox.content.children[0].children[0].height * 1.8
@@ -7977,13 +8042,13 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
                         const continueTitleStyle = new PIXI.TextStyle({
                             fontFamily: 'shousha',
-                            fontSize: 16,
+                            fontSize: parseInt(18 * boardFactor),
                             fill: '#DEB887',
                             letterSpacing: 1
                         })
                         const continueTitle = new PIXI.Text('请点击屏幕空白处继续', continueTitleStyle)
-                        continueTitle.x = app.screen.width * 0.45 / dpr - 20;
-                        continueTitle.y = app.screen.height * 0.75 / dpr
+                        continueTitle.x = back.x - continueTitle.width / 2;
+                        continueTitle.y = back.y + back.height / 2
                         app.stage.addChild(continueTitle);
 
                         bindDragEvent(dragDiv, scrollbox)
@@ -8003,10 +8068,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
 
                     openAll.listen(function () {
+                        game.playAudio('../extension/皮肤切换/images/cangZhenGe/mp3/knock.mp3')
                         if (boxbeijing) {
                             boxbeijing.state.setAnimation(0, 'play2', false);
                             boxbeijing.state.addAnimation(0, 'play1', true, 4);
-
+                            game.playAudio('../extension/皮肤切换/images/cangZhenGe/mp3/guo.mp3')
                             let lis  =  {
                                 complete: function (track) {
                                     boxbeijing.state.setAnimation(0, 'play1', true)
@@ -8054,7 +8120,7 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         const board = new PIXI.Sprite.from(skinSwitch.url + 'images/cangZhenGe/preview_reward.png')
                         rewardItem.addChild(board)
                         board.visible = true
-                        board.scale.set(0.672)  // 盒子尺寸/素材尺寸  131/88
+                        board.scale.set(boardWidth / 131)  // 盒子尺寸/素材尺寸  131/88
 
                         let item
                         if (itemInfo.type === 'wujiang') {
@@ -8063,23 +8129,24 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             item = new PIXI.Sprite.from(skinSwitch.url + `images/cangZhenGe/items/${itemInfo.id}.png`);
                         }
                         rewardItem.scale.set(0.6)
-                        item.x = 88 / dpr * 0.025
-                        item.y = 88 / dpr * 0.01
+                        item.x = boardWidth  * 0.025
+                        item.y = boardWidth * 0.01
+                        item.scale.set(boardFactor)
                         rewardItem.addChild(item)
 
                         // 高级物品的边框
                         if (itemInfo.gaoji) {
                             // 如果是高级道具, 添加边框特效
-                            let gaojidaoju = new PIXI.spine.Spine(resource.gongxihuode_gaojidaoju.spineData);
+                            let gaojidaoju = new PIXI.spine.Spine(resource.gongxihuode_biankuang.spineData);
                             rewardItem.addChild(gaojidaoju)
                             setDefaultAni(gaojidaoju, true)
                             let localPos = gaojidaoju.getLocalBounds()
                             gaojidaoju.position.set(
-                                -localPos.x + (88  - localPos.width) / 2 + 2,
-                                -localPos.y + (88 - localPos.height) / 2,
+                                -localPos.x + (boardWidth  - localPos.width) / 2 + 2,
+                                -localPos.y + (boardWidth - localPos.height) / 2,
                             )
                             gaojidaoju.state.timeScale = 1
-                            gaojidaoju.scale.set(0.86)
+                            gaojidaoju.scale.set(0.88 * boardFactor)
                             gaojidaoju.zIndex = -1
                         }
 
@@ -8090,21 +8157,21 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         if (itemInfo.count && itemInfo.count > 1 && itemInfo.weight < 100) {
                             const countStyle = new PIXI.TextStyle({
                                 fontFamily: 'shousha',
-                                fontSize: 19,
+                                fontSize: parseInt(19 * boardFactor),
                                 fill: 'white',
                                 letterSpacing: true
                             });
 
                             const itemCount = new PIXI.Text(`x${itemInfo.count}`, countStyle);
-                            itemCount.x = 88 - itemCount.width - 5;
-                            itemCount.y = board.y + 88 - itemCount.height - 5
+                            itemCount.x = boardWidth - itemCount.width - 5;
+                            itemCount.y = board.y + boardWidth - itemCount.height - 5
                             rewardItem.addChild(itemCount);
                         }
                         // 中文的换行宽度设置可能不起作用, 需要自己手动添加换行符, 分隔符等进行换行
                         // 添加宝主物品的文字显示
                         const style = new PIXI.TextStyle({
                             fontFamily: 'shousha',
-                            fontSize: 20,
+                            fontSize: parseInt(20 * boardFactor),
                             fill: 'white',
                             wordWrap: true,
                             // breakWords: true,
@@ -8122,8 +8189,8 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             newName += name.slice(i, i + 5)
                         }
                         const itemName = new PIXI.Text(newName, style);
-                        itemName.x = 44 - itemName.width / 2;
-                        itemName.y = 88 + 10
+                        itemName.x = boardWidth / 2 - itemName.width / 2;
+                        itemName.y = boardWidth + 10
 
                         rewardItem.addChild(itemName);
 
@@ -8145,25 +8212,30 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                         const resource = app.loader.resources
                         const previewContaner = new PIXI.Container()
                         const back = new PIXI.Sprite(resource.previewBox.texture);
-                        back.scale.set((88 * 5 + 25 * 4) / 1037)
+                        back.scale.set((boardWidth * 5 + boardWidth * 0.25 * 4) / 1037)
                         back.anchor.set(0.5)
-                        back.x = app.screen.width / dpr / 2;
-                        back.y = app.screen.height / dpr * 0.54;
+                        back.x = app.screen.width / 2;
+                        back.y = app.screen.height * 0.54;
                         // 添加背景框
                         previewContaner.addChild(back)
 
                         // 添加一个可以滑动的窗口
+                        let scrollBoxWidth = (boardWidth * 5 + 4 *boardWidth * 0.25)
+                        let scrollBoxHeight = (boardWidth * 3)
                         const scrollbox = new Scrollbox.Scrollbox({
-                            boxWidth: ( 88 * 5 + 4 * 25),
-                            boxHeight: (88 * 3),
+                            boxWidth: scrollBoxWidth,
+                            boxHeight:scrollBoxHeight,
                             overflowY: 'hidden',
                             overflowX: 'none',
                             // stopPropagation: false,
                             dragScroll: false
 
                         })
-                        scrollbox.x = back.x - (88 + 25) * 0.6 * 2 - 60 * 0.6 - 88 * 0.6;
-                        scrollbox.y = back.y - 88 * 1.5
+
+                        scrollbox.x = back.x - (scrollBoxWidth / 2);
+                        scrollbox.y = back.y - (scrollBoxHeight / 2)
+                        // scrollbox.x = back.x - (88 + 25) * 0.6 * 2 - 60 * 0.6 - 88 * 0.6;
+                        // scrollbox.y = back.y - 88 * 1.5
                         // 抽取盒子
 
                         function getPreviewItems() {
@@ -8210,8 +8282,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                             let info = results[i]
                             // 和之前一样的逻辑将奖励物品画进去
                             const pItem = drawPreviewItem(info)
-                            pItem.x = 15 + (i % 5) * (88 + (back.width - 100 - 88 * 5) / 4)
-                            pItem.y = 6 + parseInt(i / 5) * (88 + 8) / dpr
+                            let startX = (scrollBoxWidth - 5 * boardWidth) / 2
+                            pItem.x = startX * 1   + (boardWidth * 1.05) * (i % 5);
+                            pItem.y = 6 + parseInt(i / 5) * boardWidth
                             scrollbox.content.addChild(pItem)
 
                         }
@@ -9617,14 +9690,22 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                     }
 
                     // 藏珍阁
-                    if (true) {
+                    if (lib.config[skinSwitch.configKey.czgEnable]) {
                         lib.init.css(skinSwitch.url + "style", "cang-zhen-ge")
-                        lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi.min", () => {
+                        if (skinSwitch.qhly_hasExtension('如真似幻')) {
                             lib.init.js(skinSwitch.url, "czg_setting")
-                            lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi-spine.umd")
+                            // lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi-spine.umd")
                             lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi_viewport_scrollbox")
                             lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi-ease")
-                        })
+                        }else {
+                            lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi.min", () => {
+                                lib.init.js(skinSwitch.url, "czg_setting")
+                                lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi-spine.umd")
+                                lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi_viewport_scrollbox")
+                                lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi-ease")
+                            });
+                        }
+
                         ui.create.system('藏珍阁', function() {
                             skinSwitch.cangZhenGe()
                         }, true)
@@ -9659,52 +9740,104 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
 
             if (lib.config[skinSwitch.configKey.l2dEnable]) {
                 lib.init.js(skinSwitch.url + 'component/live2d', 'live2dcubismcore.min', () => {
-                    lib.init.js(skinSwitch.url + 'component/live2d', 'pixi.min', () => {
-                        lib.init.js(skinSwitch.url + 'component/live2d', 'Live2dLoader', () => {
-                            // 读取l2d配置
-                            let initL2d = () => {
-                                let curVal = lib.config[skinSwitch.configKey.l2dSetting]
-                                if (curVal in pfqhLive2dSettings.models) {
-                                    let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
-                                    for (let k in pfqhLive2dSettings.models[curVal]) {
-                                        base[k] = pfqhLive2dSettings.models[curVal][k]
+
+                    if (skinSwitch.qhly_hasExtension('如真似幻')) {
+                        lib.init.js(skinSwitch.url + 'component/live2d', 'pixi.min', () => {
+                            lib.init.js(skinSwitch.url + 'component/live2d', 'Live2dLoader', () => {
+                                // 读取l2d配置
+                                let initL2d = () => {
+                                    let curVal = lib.config[skinSwitch.configKey.l2dSetting]
+                                    if (curVal in pfqhLive2dSettings.models) {
+                                        let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
+                                        for (let k in pfqhLive2dSettings.models[curVal]) {
+                                            base[k] = pfqhLive2dSettings.models[curVal][k]
+                                        }
+                                        base.role = lib.assetURL + base.basePath + base.role
+                                        base.key = curVal
+                                        skinSwitch.l2dLoader = new CustomLive2dLoader([
+                                            base
+                                        ]);
                                     }
-                                    base.role = lib.assetURL + base.basePath + base.role
-                                    base.key = curVal
-                                    skinSwitch.l2dLoader = new CustomLive2dLoader([
-                                        base
-                                    ]);
                                 }
-                            }
-                            lib.init.js(skinSwitch.url, 'l2dSettings', function () {
-                                // 加载l2d
-                                lib.arenaReady.push(function() {
-                                    initL2d()
-                                })
-                            }, () => {
-                                skinSwitch.qhly_checkFileExist(skinSwitch.path + '/l2dSettings.js', exists => {
-                                    if (!exists) {
-                                        game.readFile(skinSwitch.path + '/l2dSettings_示例.js', function (data) {
-                                            game.writeFile(data, skinSwitch.path, 'l2dSettings.js', function () {
-                                                console.log('初始化l2dSettings.js成功')
-                                                setTimeout(() => {
-                                                    // 重新执行一下js内容
-                                                    lib.init.js(skinSwitch.url, 'l2dSettings', function () {
-                                                        // 加载l2d
-                                                        initL2d()
-                                                    }, () => {
-                                                        console.log('重新执行js失败')
-                                                    })
-                                                }, 1000)
+                                lib.init.js(skinSwitch.url, 'l2dSettings', function () {
+                                    // 加载l2d
+                                    lib.arenaReady.push(function() {
+                                        initL2d()
+                                    })
+                                }, () => {
+                                    skinSwitch.qhly_checkFileExist(skinSwitch.path + '/l2dSettings.js', exists => {
+                                        if (!exists) {
+                                            game.readFile(skinSwitch.path + '/l2dSettings_示例.js', function (data) {
+                                                game.writeFile(data, skinSwitch.path, 'l2dSettings.js', function () {
+                                                    console.log('初始化l2dSettings.js成功')
+                                                    setTimeout(() => {
+                                                        // 重新执行一下js内容
+                                                        lib.init.js(skinSwitch.url, 'l2dSettings', function () {
+                                                            // 加载l2d
+                                                            initL2d()
+                                                        }, () => {
+                                                            console.log('重新执行js失败')
+                                                        })
+                                                    }, 1000)
+                                                })
                                             })
-                                        })
-                                    } else {
-                                        console.log('加载l2d失败')
-                                    }
-                                })
-                            });
+                                        } else {
+                                            console.log('加载l2d失败')
+                                        }
+                                    })
+                                });
+                            })
                         })
-                    })
+                    }else {
+                        lib.init.js(skinSwitch.url + "spine-lib/pixi", "pixi.min", () => {
+                            lib.init.js(skinSwitch.url + 'component/live2d', 'pixi.min', () => {
+                                lib.init.js(skinSwitch.url + 'component/live2d', 'Live2dLoader', () => {
+                                    // 读取l2d配置
+                                    let initL2d = () => {
+                                        let curVal = lib.config[skinSwitch.configKey.l2dSetting]
+                                        if (curVal in pfqhLive2dSettings.models) {
+                                            let base = Object.assign({}, pfqhLive2dSettings.baseSetting)
+                                            for (let k in pfqhLive2dSettings.models[curVal]) {
+                                                base[k] = pfqhLive2dSettings.models[curVal][k]
+                                            }
+                                            base.role = lib.assetURL + base.basePath + base.role
+                                            base.key = curVal
+                                            skinSwitch.l2dLoader = new CustomLive2dLoader([
+                                                base
+                                            ]);
+                                        }
+                                    }
+                                    lib.init.js(skinSwitch.url, 'l2dSettings', function () {
+                                        // 加载l2d
+                                        lib.arenaReady.push(function() {
+                                            initL2d()
+                                        })
+                                    }, () => {
+                                        skinSwitch.qhly_checkFileExist(skinSwitch.path + '/l2dSettings.js', exists => {
+                                            if (!exists) {
+                                                game.readFile(skinSwitch.path + '/l2dSettings_示例.js', function (data) {
+                                                    game.writeFile(data, skinSwitch.path, 'l2dSettings.js', function () {
+                                                        console.log('初始化l2dSettings.js成功')
+                                                        setTimeout(() => {
+                                                            // 重新执行一下js内容
+                                                            lib.init.js(skinSwitch.url, 'l2dSettings', function () {
+                                                                // 加载l2d
+                                                                initL2d()
+                                                            }, () => {
+                                                                console.log('重新执行js失败')
+                                                            })
+                                                        }, 1000)
+                                                    })
+                                                })
+                                            } else {
+                                                console.log('加载l2d失败')
+                                            }
+                                        })
+                                    });
+                                })
+                            })
+                        });
+                    }
                 })
             }
 
@@ -9844,7 +9977,11 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
                 "init": true,
                 "intro": "点击角色弹出换肤功能",
             },
-
+            'czgEnable': {
+                name: "是否开启藏珍阁",
+                init:  false,
+                intro: '点击开启后会加入右边菜单'
+            },
 
         },
         help:{},
@@ -10051,4 +10188,9 @@ game.import("extension",function(lib,game,ui,get,ai,_status) {
     1) 使命技失败和成功
     2) 添加受伤时机, 更改以前的受伤次数时机
  2. 修复了安装特效测试使用静皮可能报错的问题.
+ */
+
+/** 1.20版本更新
+ 1. 修复自由选将报id错误
+ 1) 添加藏宝阁功能
  */

@@ -2,7 +2,7 @@
 
 window.skinSwitch.czgSettings = {
     // 所有盒子固定的保底道具
-    drawCount: 5000,  // 一次抽取的数量
+    drawCount: 50,  // 一次抽取的数量
     fixed: [
         {id: '600012', name: '将魂', count: 2},
         {id: '620281', name: '心愿积分', count: 1},

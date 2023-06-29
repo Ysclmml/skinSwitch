@@ -19,6 +19,19 @@
     /*transform: translate(-50%,-50%);*/
 }
 
+.ret-back1 {
+    z-index: 999;
+    width: 16%;
+    height: 30%;
+    background-image: url(../images/cangZhenGe/back.png);
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-position: center;
+    left: 92.3%;
+    top: 11.8%;
+    transform: translate(-50%,-50%);
+}
+
 #pfqhCzg .czg-logo {
     z-index: 999;
     width: 18.5%;
@@ -187,7 +200,7 @@
     background-size: 100%;
     background-position: center;
     left: 42%;
-    top: 87%;
+    top: 90%;
     transform: translate(-50%,-50%);
     cursor: pointer;
 }
@@ -200,7 +213,7 @@
     background-size: 100%;
     background-position: center;
     left: 65%;
-    top: 87%;
+    top: 90%;
     transform: translate(-50%,-50%);
     cursor: pointer;
 }
@@ -208,7 +221,7 @@
 .czgBg .open-all-tip {
     font-size: 15px;
     left: 65.3%;
-    top: 93%;
+    top: 95%;
     z-index: 999;
     transform: translate(-50%,-50%);
 }
